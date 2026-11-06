@@ -58,6 +58,57 @@ h1 {
   line-height: 1.55;
 }
 
+.field {
+  display: block;
+  margin-top: 14px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+select {
+  width: 100%;
+  margin-top: 6px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: white;
+  color: var(--ink);
+  font: inherit;
+}
+
+.metrics {
+  display: grid;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.metric {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 8px 10px;
+  border: 2px solid transparent;
+  border-radius: 10px;
+  background: #eef2f6;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.metric span {
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.metric.active {
+  background: #e4e9ff;
+  border-color: var(--blue);
+}
+
+.metric.active strong { color: var(--blue); }
+
+.metric.active span { color: var(--ink); }
+
 .status, .distance {
   margin: 14px 0 0;
   padding: 10px 12px;

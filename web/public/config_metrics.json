@@ -1,0 +1,42 @@
+{
+  "sample_count": 20000,
+  "seed": 0,
+  "voxel_size_m": 0.05,
+  "joint_range_rad": [
+    -6.28,
+    6.28
+  ],
+  "jacobian": "translational_rows",
+  "manipulability": "yoshikawa_sqrt_det_jjt",
+  "description": "六个模块、五个连接朝向。基准全为 0。变体把第 4 个模块（XML 中的 base）相对上一模块绕连接轴转动 π/2。",
+  "configs": [
+    {
+      "id": "baseline",
+      "label": "基准构型",
+      "orientations_rad": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "occupied_voxels": 3581,
+      "workspace_volume_m3": 0.447625,
+      "median_translational_manipulability": 0.00645372
+    },
+    {
+      "id": "middle",
+      "label": "中间模块旋转 90°",
+      "orientations_rad": [
+        0.0,
+        0.0,
+        1.5707963267948966,
+        0.0,
+        0.0
+      ],
+      "occupied_voxels": 3580,
+      "workspace_volume_m3": 0.4475,
+      "median_translational_manipulability": 0.00606202
+    }
+  ]
+}

@@ -4,6 +4,8 @@
 
 上面的链接是浏览器里的运动学演示地址。Pages 还没有发布成功时，打开它会是 404；仓库里的代码已经在 `main` 上。请在 Settings → Pages 把 Source 选成 GitHub Actions 并保存一次，之后推送到 `main` 会把页面部署到这个地址。
 
+网页演示可以切换两种六模块构型。基准构型的五个连接朝向都是 0，关节轴仍是 `0 0 1`，与 `assets/zbot_6/ZBOT6.xml` 一致。另一种把中间模块（从肩部数起的第 4 个，XML 里的 `base`）相对上一模块绕连接轴转动 90°。在仓库根目录运行 `python scripts/evaluate_config.py`（需要 NumPy）会用同一批 20000 组关节角比较两者的工作空间体素占用，以及平移 Yoshikawa 可操作度的中位数，并把结果写入 `web/public/config_metrics.json` 供页面显示。
+
 本仓库包含两部分：
 
 1. **本地 MJLab 训练**。肩部固定的六模块 Z-Bot 手臂学习接触托盘上的橙色工具。训练在本机运行，不在浏览器里进行。
@@ -67,6 +69,7 @@ python scripts/play.py --agent trained --checkpoint logs/rsl_rl/zbot_exolimb_gra
 打开上面的 Pages 地址后：
 
 - 拖动画面旋转，滚动缩放。
+- 「构型」在基准构型与「中间模块旋转 90°」之间切换，并显示两种构型的体素占用和可操作度中位数。
 - 六个滑块对应 joint1–joint6，范围 ±6.28 rad。
 - 「名义姿态」和「伸直」立即切换姿态。
 - 「播放接近演示」用约 3 秒从伸直插值到名义姿态。
