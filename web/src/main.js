@@ -4,7 +4,9 @@ import { STLLoader } from "three/addons/loaders/STLLoader.js";
 import {
   A_TO_B,
   B_TO_A,
+  BASELINE_ORIENTATION,
   GRASP_DISTANCE,
+  MIDDLE_ORIENTATION,
   NOMINAL,
   SHOULDER,
   STRAIGHT,
@@ -12,6 +14,7 @@ import {
   TOOL_RADIUS,
   TRAY_HALF,
   TRAY_POS,
+  attachmentQuat,
   distanceToTool,
 } from "./kinematics.js";
 
@@ -22,11 +25,27 @@ const nominalButton = document.querySelector("#nominal");
 const straightButton = document.querySelector("#straight");
 const playButton = document.querySelector("#play");
 const viewport = document.querySelector("#viewport");
+const configSelect = document.querySelector("#config");
+const metricsEl = document.querySelector("#metrics");
+
+const ORIENTATIONS = {
+  baseline: BASELINE_ORIENTATION,
+  middle: MIDDLE_ORIENTATION,
+};
 
 const q = STRAIGHT.slice();
 const sliders = [];
 let playing = false;
 let playStart = 0;
+let activeId = "baseline";
+let metricsData = null;
+let armRoot = null;
+let aGeometry = null;
+let bGeometry = null;
+
+function currentOrientation() {
+  return ORIENTATIONS[activeId] ?? BASELINE_ORIENTATION;
+}
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -112,24 +131,36 @@ function addFrame(parent, pos, quat, geometry, material) {
   return frame;
 }
 
-function buildArm(aGeometry, bGeometry) {
+function buildArm(linkA, linkB, orientation) {
   const root = new THREE.Group();
-  let parent = addFrame(root, SHOULDER, [1, 0, 0, 0], aGeometry, aMaterial);
+  let parent = addFrame(root, SHOULDER, [1, 0, 0, 0], linkA, aMaterial);
   joints = [];
   for (let index = 0; index < 6; index += 1) {
     const body = addFrame(parent, A_TO_B.pos, A_TO_B.quat, null, null);
     const joint = new THREE.Group();
     body.add(joint);
-    const mesh = new THREE.Mesh(bGeometry, bMaterial);
+    const mesh = new THREE.Mesh(linkB, bMaterial);
     mesh.castShadow = true;
     mesh.receiveShadow = true;
     joint.add(mesh);
     joints.push(joint);
     if (index < 5) {
-      parent = addFrame(joint, B_TO_A.pos, B_TO_A.quat, aGeometry, aMaterial);
+      parent = addFrame(joint, B_TO_A.pos, attachmentQuat(orientation[index]), linkA, aMaterial);
     }
   }
   scene.add(root);
+  return root;
+}
+
+function mountArm() {
+  if (!aGeometry || !bGeometry) {
+    return;
+  }
+  if (armRoot) {
+    scene.remove(armRoot);
+  }
+  armRoot = buildArm(aGeometry, bGeometry, currentOrientation());
+  setJoints(q, false);
 }
 
 function setJoints(next, updateSliders = true) {
@@ -146,8 +177,32 @@ function setJoints(next, updateSliders = true) {
   renderStatus();
 }
 
+function renderMetrics() {
+  metricsEl.replaceChildren();
+  if (!metricsData) {
+    const pending = document.createElement("p");
+    pending.className = "metric";
+    pending.textContent = "采样指标尚未载入";
+    metricsEl.append(pending);
+    return;
+  }
+  for (const config of metricsData.configs) {
+    const row = document.createElement("p");
+    row.className = "metric";
+    if (config.id === activeId) {
+      row.classList.add("active");
+    }
+    const title = document.createElement("strong");
+    title.textContent = config.label;
+    const detail = document.createElement("span");
+    detail.textContent = `体素 ${config.occupied_voxels} · 可操作度中位数 ${Number(config.median_translational_manipulability).toFixed(5)}`;
+    row.append(title, detail);
+    metricsEl.append(row);
+  }
+}
+
 function renderStatus() {
-  const distance = distanceToTool(q);
+  const distance = distanceToTool(q, currentOrientation());
   distanceEl.textContent = `末端原点距离 ${distance.toFixed(3)} m`;
   const inside = distance < GRASP_DISTANCE;
   statusEl.textContent = inside ? "进入抓取距离" : "尚未进入抓取距离";
@@ -194,6 +249,12 @@ straightButton.addEventListener("click", () => {
   stopPlayback();
   setJoints(STRAIGHT);
 });
+configSelect.addEventListener("change", () => {
+  activeId = configSelect.value === "middle" ? "middle" : "baseline";
+  mountArm();
+  renderMetrics();
+});
+
 playButton.addEventListener("click", () => {
   if (playing) {
     stopPlayback();
@@ -224,15 +285,32 @@ const base = import.meta.env.BASE_URL;
 Promise.all([
   loader.loadAsync(`${base}meshes/a.STL`),
   loader.loadAsync(`${base}meshes/b.STL`),
-]).then(([aGeometry, bGeometry]) => {
-  aGeometry.computeVertexNormals();
-  bGeometry.computeVertexNormals();
-  buildArm(aGeometry, bGeometry);
-  setJoints(STRAIGHT);
+]).then(([linkA, linkB]) => {
+  linkA.computeVertexNormals();
+  linkB.computeVertexNormals();
+  aGeometry = linkA;
+  bGeometry = linkB;
+  mountArm();
   statusEl.textContent = "尚未进入抓取距离";
 }).catch(() => {
   statusEl.textContent = "模块网格加载失败";
 });
+
+fetch(`${base}config_metrics.json`)
+  .then((response) => {
+    if (!response.ok) {
+      throw new Error(String(response.status));
+    }
+    return response.json();
+  })
+  .then((payload) => {
+    metricsData = payload;
+    renderMetrics();
+  })
+  .catch(() => {
+    metricsData = null;
+    metricsEl.textContent = "采样指标没有加载";
+  });
 
 window.addEventListener("resize", () => {
   camera.aspect = window.innerWidth / window.innerHeight;
