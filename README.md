@@ -2,6 +2,8 @@
 
 在线运动学演示：<https://zhuyanhe1975-hit.github.io/zbot_mjlab_exolimb_grasp/>
 
+如果这个地址还是 404，请在仓库 Settings → Pages 里把 Source 选成 GitHub Actions 并保存一次。`actions/configure-pages` 已设置 `enablement: true`，但 GitHub 不允许 Actions 令牌新建 Pages 站点；站点存在之后，推送到 `main` 会自动部署。
+
 本仓库包含两部分：
 
 1. **本地 MJLab 训练**。肩部固定的六模块 Z-Bot 手臂学习接触托盘上的橙色工具。训练在本机运行，不在浏览器里进行。
