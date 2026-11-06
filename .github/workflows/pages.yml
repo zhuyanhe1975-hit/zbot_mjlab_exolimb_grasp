@@ -10,6 +10,8 @@ permissions:
   contents: read
   pages: write
   id-token: write
+  # configure-pages 的 enablement 要创建 Pages 站点，仅有 pages: write 会被 GitHub 拒绝。
+  administration: write
 
 concurrency:
   group: pages
