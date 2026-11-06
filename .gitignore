@@ -1,0 +1,12 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+logs/
+outputs/
+MUJOCO_LOG.TXT
+*.pt
+.pytest_cache/
+web/node_modules/
+web/dist/
+.DS_Store

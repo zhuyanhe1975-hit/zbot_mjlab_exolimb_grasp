@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Z-Bot 外肢体抓取演示</title>
+    <link rel="stylesheet" href="./src/style.css" />
+  </head>
+  <body>
+    <div id="viewport"></div>
+    <aside id="panel">
+      <header>
+        <p class="eyebrow">运动学演示</p>
+        <h1>Z-Bot 外肢体抓取</h1>
+        <p class="lead">固定肩部的六模块手臂、托盘和橙色工具。此页不运行 MJLab，也不在浏览器里训练。</p>
+      </header>
+      <p id="status" class="status">正在加载模块网格……</p>
+      <p id="distance" class="distance">末端原点距离 —</p>
+      <div id="joints"></div>
+      <div class="actions">
+        <button id="nominal" type="button">名义姿态</button>
+        <button id="straight" type="button">伸直</button>
+        <button id="play" type="button">播放接近演示</button>
+      </div>
+      <p class="hint">拖动旋转视角，滚动缩放。接近演示从伸直插值到名义姿态；距离小于 0.08 m 时显示「进入抓取距离」。这里只比较原点距离，不计算接触力。</p>
+    </aside>
+    <script type="module" src="./src/main.js"></script>
+  </body>
+</html>

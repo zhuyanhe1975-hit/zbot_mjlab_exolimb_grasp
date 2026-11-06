@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "zbot-exolimb-grasp"
+version = "0.1.0"
+description = "固定六模块 Z-Bot 外肢体抓取的 MJLab 训练任务"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = []
+
+[project.entry-points."mjlab.tasks"]
+zbot_exolimb_grasp = "zbot_exolimb_grasp"
+
+[tool.setuptools.packages.find]
+where = ["src"]
