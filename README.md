@@ -1,8 +1,8 @@
 # Z-Bot 外肢体抓取
 
-在线运动学演示：<https://zhuyanhe1975-hit.github.io/zbot_mjlab_exolimb_grasp/>
+[在线演示（部署后可直接打开运行）](https://zhuyanhe1975-hit.github.io/zbot_mjlab_exolimb_grasp/)
 
-如果这个地址还是 404，请在仓库 Settings → Pages 里把 Source 选成 GitHub Actions 并保存一次。`actions/configure-pages` 已设置 `enablement: true`，但 GitHub 不允许 Actions 令牌新建 Pages 站点；站点存在之后，推送到 `main` 会自动部署。
+上面的链接是浏览器里的运动学演示地址。Pages 还没有发布成功时，打开它会是 404；仓库里的代码已经在 `main` 上。请在 Settings → Pages 把 Source 选成 GitHub Actions 并保存一次，之后推送到 `main` 会把页面部署到这个地址。
 
 本仓库包含两部分：
 
