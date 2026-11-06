@@ -1,0 +1,207 @@
+{
+  "sample_count": 20000,
+  "seed": 0,
+  "voxel_size_m": 0.05,
+  "joint_range_rad": [
+    -6.28,
+    6.28
+  ],
+  "sequence_count": 32,
+  "pareto_count": 3,
+  "jacobian": "translational_rows",
+  "manipulability": "yoshikawa_sqrt_det_jjt",
+  "note": "五个连接各取 0 或 π/2，合法序列共 32 条，已全部评估。基准构型的可操作度中位数最高；另外两条在帕累托前沿上，体素更多、可操作度略低。中间模块旋转 90° 留作对照。",
+  "pareto": [
+    {
+      "id": "baseline",
+      "label": "基准构型",
+      "bits": "00000",
+      "orientations_rad": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "occupied_voxels": 3581,
+      "workspace_volume_m3": 0.447625,
+      "median_translational_manipulability": 0.00645372,
+      "pareto": true,
+      "representative": true
+    },
+    {
+      "id": "bits-00011",
+      "label": "连接 4、5 旋转 90°",
+      "bits": "00011",
+      "orientations_rad": [
+        0.0,
+        0.0,
+        0.0,
+        1.5707963267948966,
+        1.5707963267948966
+      ],
+      "occupied_voxels": 3617,
+      "workspace_volume_m3": 0.452125,
+      "median_translational_manipulability": 0.00620332,
+      "pareto": true,
+      "representative": true
+    },
+    {
+      "id": "bits-01001",
+      "label": "连接 2、5 旋转 90°",
+      "bits": "01001",
+      "orientations_rad": [
+        0.0,
+        1.5707963267948966,
+        0.0,
+        0.0,
+        1.5707963267948966
+      ],
+      "occupied_voxels": 3674,
+      "workspace_volume_m3": 0.45925,
+      "median_translational_manipulability": 0.00608223,
+      "pareto": true,
+      "representative": true
+    }
+  ],
+  "representatives": [
+    {
+      "id": "baseline",
+      "label": "基准构型",
+      "bits": "00000",
+      "orientations_rad": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "occupied_voxels": 3581,
+      "workspace_volume_m3": 0.447625,
+      "median_translational_manipulability": 0.00645372,
+      "pareto": true,
+      "picked_for": "对照"
+    },
+    {
+      "id": "middle",
+      "label": "中间模块旋转 90°",
+      "bits": "00100",
+      "orientations_rad": [
+        0.0,
+        0.0,
+        1.5707963267948966,
+        0.0,
+        0.0
+      ],
+      "occupied_voxels": 3580,
+      "workspace_volume_m3": 0.4475,
+      "median_translational_manipulability": 0.00606202,
+      "pareto": false,
+      "picked_for": "对照"
+    },
+    {
+      "id": "bits-00011",
+      "label": "连接 4、5 旋转 90°",
+      "bits": "00011",
+      "orientations_rad": [
+        0.0,
+        0.0,
+        0.0,
+        1.5707963267948966,
+        1.5707963267948966
+      ],
+      "occupied_voxels": 3617,
+      "workspace_volume_m3": 0.452125,
+      "median_translational_manipulability": 0.00620332,
+      "pareto": true,
+      "picked_for": "前沿上可操作度较高"
+    },
+    {
+      "id": "bits-01001",
+      "label": "连接 2、5 旋转 90°",
+      "bits": "01001",
+      "orientations_rad": [
+        0.0,
+        1.5707963267948966,
+        0.0,
+        0.0,
+        1.5707963267948966
+      ],
+      "occupied_voxels": 3674,
+      "workspace_volume_m3": 0.45925,
+      "median_translational_manipulability": 0.00608223,
+      "pareto": true,
+      "picked_for": "体素最多"
+    }
+  ],
+  "configs": [
+    {
+      "id": "baseline",
+      "label": "基准构型",
+      "bits": "00000",
+      "orientations_rad": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "occupied_voxels": 3581,
+      "workspace_volume_m3": 0.447625,
+      "median_translational_manipulability": 0.00645372,
+      "pareto": true,
+      "picked_for": "对照"
+    },
+    {
+      "id": "middle",
+      "label": "中间模块旋转 90°",
+      "bits": "00100",
+      "orientations_rad": [
+        0.0,
+        0.0,
+        1.5707963267948966,
+        0.0,
+        0.0
+      ],
+      "occupied_voxels": 3580,
+      "workspace_volume_m3": 0.4475,
+      "median_translational_manipulability": 0.00606202,
+      "pareto": false,
+      "picked_for": "对照"
+    },
+    {
+      "id": "bits-00011",
+      "label": "连接 4、5 旋转 90°",
+      "bits": "00011",
+      "orientations_rad": [
+        0.0,
+        0.0,
+        0.0,
+        1.5707963267948966,
+        1.5707963267948966
+      ],
+      "occupied_voxels": 3617,
+      "workspace_volume_m3": 0.452125,
+      "median_translational_manipulability": 0.00620332,
+      "pareto": true,
+      "picked_for": "前沿上可操作度较高"
+    },
+    {
+      "id": "bits-01001",
+      "label": "连接 2、5 旋转 90°",
+      "bits": "01001",
+      "orientations_rad": [
+        0.0,
+        1.5707963267948966,
+        0.0,
+        0.0,
+        1.5707963267948966
+      ],
+      "occupied_voxels": 3674,
+      "workspace_volume_m3": 0.45925,
+      "median_translational_manipulability": 0.00608223,
+      "pareto": true,
+      "picked_for": "体素最多"
+    }
+  ]
+}

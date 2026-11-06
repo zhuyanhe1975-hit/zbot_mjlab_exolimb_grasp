@@ -44,6 +44,13 @@ let aGeometry = null;
 let bGeometry = null;
 
 function currentOrientation() {
+  const configs = metricsData?.configs;
+  if (configs) {
+    const match = configs.find((config) => config.id === activeId);
+    if (match?.orientations_rad) {
+      return match.orientations_rad;
+    }
+  }
   return ORIENTATIONS[activeId] ?? BASELINE_ORIENTATION;
 }
 
@@ -195,10 +202,37 @@ function renderMetrics() {
     const title = document.createElement("strong");
     title.textContent = config.label;
     const detail = document.createElement("span");
-    detail.textContent = `体素 ${config.occupied_voxels} · 可操作度中位数 ${Number(config.median_translational_manipulability).toFixed(5)}`;
+    const picked = config.picked_for ? ` · ${config.picked_for}` : "";
+    detail.textContent = `体素 ${config.occupied_voxels} · 可操作度中位数 ${Number(config.median_translational_manipulability).toFixed(5)}${picked}`;
     row.append(title, detail);
     metricsEl.append(row);
   }
+  if (metricsData.note) {
+    const note = document.createElement("p");
+    note.className = "hint";
+    note.textContent = metricsData.note;
+    metricsEl.append(note);
+  }
+}
+
+function applyMetrics(payload) {
+  const configs = payload.configs ?? payload.representatives;
+  if (!Array.isArray(configs) || configs.length === 0) {
+    throw new Error("指标里没有构型");
+  }
+  metricsData = { ...payload, configs };
+  const previous = activeId;
+  configSelect.replaceChildren();
+  for (const config of configs) {
+    const option = document.createElement("option");
+    option.value = config.id;
+    option.textContent = config.label;
+    configSelect.append(option);
+  }
+  activeId = configs.some((config) => config.id === previous) ? previous : configs[0].id;
+  configSelect.value = activeId;
+  mountArm();
+  renderMetrics();
 }
 
 function renderStatus() {
@@ -250,7 +284,7 @@ straightButton.addEventListener("click", () => {
   setJoints(STRAIGHT);
 });
 configSelect.addEventListener("change", () => {
-  activeId = configSelect.value === "middle" ? "middle" : "baseline";
+  activeId = configSelect.value || "baseline";
   mountArm();
   renderMetrics();
 });
@@ -296,16 +330,20 @@ Promise.all([
   statusEl.textContent = "模块网格加载失败";
 });
 
-fetch(`${base}config_metrics.json`)
+fetch(`${base}config_batch_summary.json`)
   .then((response) => {
-    if (!response.ok) {
-      throw new Error(String(response.status));
+    if (response.ok) {
+      return response.json();
     }
-    return response.json();
+    return fetch(`${base}config_metrics.json`).then((fallback) => {
+      if (!fallback.ok) {
+        throw new Error(String(fallback.status));
+      }
+      return fallback.json();
+    });
   })
   .then((payload) => {
-    metricsData = payload;
-    renderMetrics();
+    applyMetrics(payload);
   })
   .catch(() => {
     metricsData = null;
