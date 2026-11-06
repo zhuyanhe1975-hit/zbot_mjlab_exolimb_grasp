@@ -1,2 +1,0 @@
-[mjlab.tasks]
-zbot_exolimb_grasp = zbot_exolimb_grasp
