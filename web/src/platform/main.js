@@ -320,6 +320,13 @@ function describe(metrics) {
     "未解出的格点只表示这个预算没找到，不是严格不可达。",
     `可行解上的平移可操作度 ${manip}`,
     `可行解上的速度能力 ${speed}（速度上限是假设）`,
+    metrics.task_torque_margin_median_nm == null
+      ? "静载裕度 无效"
+      : `可行解静载裕度中位数 ${metrics.task_torque_margin_median_nm.toFixed(2)} N·m`,
+    metrics.position_rank_deficient_fraction == null
+      ? "平移雅可比秩 无效"
+      : `平移雅可比秩不足的可行解 ${(metrics.position_rank_deficient_fraction * 100).toFixed(0)}%（只看位置 3 行，不是姿态 6 维）`,
+    `驱动关节 ${metrics.driven_joint_count ?? "—"}，ZBot 被动 a 连杆 ${metrics.passive_body_count ?? "—"}`,
     `末端落盒比例 ${hit}`,
     metrics.q0_collision ? "零位有胶囊相交，仅作诊断，不否决这条设计。" : "零位没有非相邻胶囊相交。这也只是诊断。",
     `零位峰值静力矩 ${metrics.q0_peak_torque_nm.toFixed(3)} N·m。`,
@@ -470,6 +477,13 @@ function frame() {
 }
 requestAnimationFrame(frame);
 
+document.querySelector("#lock6").addEventListener("click", () => {
+  state.count = 6;
+  document.querySelector("#count-min").value = "6";
+  document.querySelector("#count-max").value = "6";
+  document.querySelector("#count-lock").checked = true;
+  refresh();
+});
 document.querySelector("#count-now").addEventListener("change", () => {
   state.count = Math.min(8, Math.max(3, num("#count-now")));
   document.querySelector("#count-now").value = String(state.count);

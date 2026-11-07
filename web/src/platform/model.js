@@ -415,6 +415,8 @@ export function evaluateDesign(design, task, samples = null, includeCloud = fals
   const reached = [];
   const taskManips = [];
   const taskSpeeds = [];
+  const torqueMargins = [];
+  let rankDeficient = 0;
   let example = null;
   targets.forEach((target) => {
     const solved = solveTarget(design, target, task);
@@ -422,8 +424,12 @@ export function evaluateDesign(design, task, samples = null, includeCloud = fals
     if (!solved) return;
     if (!example) example = solved.pose.slice();
     const matrix = jacobianMatrix(solved.chain);
-    taskManips.push(manipulability(matrix));
+    const manip = manipulability(matrix);
+    taskManips.push(manip);
     taskSpeeds.push(velocityCapability(matrix, task.velocity_limit_rad_s));
+    const tau = torques(solved.chain, task.payload_kg);
+    torqueMargins.push(task.effort_limit_nm - Math.max(...tau.map((value) => Math.abs(value))));
+    if (manip < 1e-8) rankDeficient += 1;
   });
   const reachedCount = reached.filter(Boolean).length;
   const straight = forwardDesign(design, Array(count).fill(0));
@@ -478,6 +484,10 @@ export function evaluateDesign(design, task, samples = null, includeCloud = fals
     task_manipulability_valid: taskManips.length > 0,
     task_velocity_median: taskSpeeds.length ? median(taskSpeeds) : null,
     task_velocity_valid: taskSpeeds.length > 0,
+    task_torque_margin_median_nm: torqueMargins.length ? median(torqueMargins) : null,
+    position_rank_deficient_fraction: reachedCount ? rankDeficient / reachedCount : null,
+    driven_joint_count: count,
+    passive_body_count: design.module_ids.filter((id) => id === "zbot_r3").length,
     posture_manipulability_median: postureManip,
     posture_velocity_median: postureSpeed,
     collision_rate: collisionRate,

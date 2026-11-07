@@ -378,6 +378,8 @@ def evaluate_design(
     reached_flags: list[bool] = []
     task_manips: list[float] = []
     task_speeds: list[float] = []
+    torque_margins: list[float] = []
+    rank_deficient = 0
     example: list[float] | None = None
     for target in targets:
         pose, jacobian = solve_target(design, target, task)
@@ -387,8 +389,14 @@ def evaluate_design(
             continue
         if example is None:
             example = pose.tolist()
-        task_manips.append(float(translational_manipulability(jacobian.reshape(1, 3, count))[0]))
+        manip = float(translational_manipulability(jacobian.reshape(1, 3, count))[0])
+        task_manips.append(manip)
         task_speeds.append(float(velocity_capability(jacobian.reshape(1, 3, count), task.velocity_limit_rad_s)[0]))
+        solved = forward_chain(design, pose.reshape(1, -1))
+        peak = float(np.max(np.abs(static_torques(solved, task.payload_kg, task.gravity_m_s2)[0])))
+        torque_margins.append(float(task.effort_limit_nm) - peak)
+        if manip < 1e-8:
+            rank_deficient += 1
     reached_count = int(sum(reached_flags))
     fraction = reached_count / float(targets.shape[0])
     manip_valid = bool(task_manips)
@@ -439,7 +447,11 @@ def evaluate_design(
         "task_manipulability_valid": manip_valid,
         "task_velocity_median": _median(task_speeds) if speed_valid else None,
         "task_velocity_valid": speed_valid,
+        "task_torque_margin_median_nm": _median(torque_margins) if torque_margins else None,
+        "position_rank_deficient_fraction": (rank_deficient / reached_count) if reached_count else None,
+        "position_rank_note": "这是平移雅可比 3 行的秩是否不足 3。不是姿态 6 维的秩，6 个关节也不表示任意姿态可控。",
         "task_metric_domain": "只统计该预算下找到的可行任务解。没有可行解时指标无效，优化里用惩罚，不用 NaN。",
+        **actuation_report(design),
         "posture_manipulability_median": posture_manip,
         "posture_velocity_median": posture_speed,
         "posture_metric_definition": "全体关节样本的中位数，包含任务区外和不可行姿态，不是任务性能。",
@@ -478,6 +490,28 @@ def baseline_design() -> Design:
         twists_rad=tuple(0.0 for _ in range(5)),
         parameters=tuple({} for _ in range(6)),
     )
+
+
+def actuation_report(design: Design) -> dict[str, object]:
+    """驱动关节数不等于随便数模块。当前库里每个模块恰有一个驱动转动关节。"""
+    driven = 0
+    passive = 0
+    for module_id in design.module_ids:
+        spec = module_spec(module_id)
+        driven += len(spec.joints)
+        if module_id == "zbot_r3":
+            passive += 1
+    return {
+        "driven_joint_count": driven,
+        "module_count": len(design.module_ids),
+        "passive_body_count": passive,
+        "actuation_note": (
+            "每个已注册模块有 1 个驱动转动关节，所以驱动数等于模块数。"
+            "ZBot 的 a 连杆没有自己的关节，计为被动结构件。"
+            "概念轴向连杆随自身关节运动，不计被动件。"
+            "6 个驱动关节只说明位置任务的雅可比最多 3 行；本轮不保证姿态 6 维可控。"
+        ),
+    }
 
 
 def zbot_chain(count: int, twists: tuple[float, ...] | None = None) -> Design:

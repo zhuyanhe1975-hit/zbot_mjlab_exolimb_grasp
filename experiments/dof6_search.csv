@@ -1,0 +1,7 @@
+index,feasible,modules,twists_rad,mass_kg,task_feasible_fraction,task_target_count,task_targets_reached,position_tolerance_m,grid_divisions,ik_starts,ik_iterations,task_manipulability_median,task_velocity_median,pose_hit_rate,violation
+0,1,zbot_r3 zbot_r3 zbot_r3 zbot_r3 zbot_r3 zbot_r3,0 0 0 0 0,4.278540,0.937500,64,60,0.050000,4,8,16,0.00976404,0.349541,,0.000000
+1,1,zbot_r3 zbot_r3 zbot_r3 zbot_r3 zbot_r3 zbot_r3,0 0 0 0 0,4.278540,0.937500,64,60,0.050000,4,8,16,0.00976404,0.349541,,0.000000
+2,1,zbot_r3 zbot_r3 zbot_r3 zbot_r3 zbot_r3 zbot_r3,0 0 0 0 1.5708,4.278540,0.937500,64,60,0.050000,4,8,16,0.00976970,0.349532,,0.000000
+3,1,zbot_r3 zbot_r3 zbot_r3 zbot_r3 zbot_r3 zbot_r3,1.5708 1.5708 0 0 0,4.278540,0.953125,64,61,0.050000,4,8,16,0.00740499,0.236643,,0.000000
+4,1,concept_axial concept_axial concept_axial concept_axial zbot_r3 concept_axial,1.5708 1.5708 0 1.5708 0,3.166599,0.953125,64,61,0.050000,4,8,16,0.00987602,0.238628,,0.000000
+5,1,concept_axial concept_axial concept_axial concept_axial zbot_r3 zbot_r3,1.5708 0 0 1.5708 0,3.313841,0.671875,64,43,0.050000,4,8,16,0.00930080,0.179796,,0.000000

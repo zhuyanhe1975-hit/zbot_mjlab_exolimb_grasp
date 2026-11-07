@@ -15,6 +15,7 @@ from zbot_exolimb_grasp.config_gen import BASELINE, forward_kinematics
 from zbot_exolimb_grasp.constants import NOMINAL_JOINT_POS, STRAIGHT_JOINT_POS, TOTAL_MASS
 from zbot_exolimb_grasp.platform.exporting import assert_mjcf_matches, export_mjcf
 from zbot_exolimb_grasp.platform.model import (
+    actuation_report,
     assembly_errors,
     baseline_design,
     evaluate_design,
@@ -170,6 +171,34 @@ class SearchTests(unittest.TestCase):
         front = feasible_front(pop)
         self.assertTrue(front)
         self.assertTrue(all(item.violation == 0.0 and item.objectives[0] >= -1e-9 for item in front))
+
+
+class SixDofTests(unittest.TestCase):
+    def test_module_count_is_driven_joint_count(self) -> None:
+        baseline = actuation_report(baseline_design())
+        self.assertEqual(baseline["driven_joint_count"], 6)
+        self.assertEqual(baseline["module_count"], 6)
+        self.assertEqual(baseline["passive_body_count"], 6)
+        mixed = Design(
+            ("zbot_r3", "zbot_r3", "zbot_r3", "zbot_r3", "zbot_r3", "concept_axial"),
+            (0.0, 0.0, 0.0, 0.0, 0.0),
+            ({}, {}, {}, {}, {}, {"length_m": 0.1}),
+        )
+        report = actuation_report(mixed)
+        self.assertEqual(report["driven_joint_count"], 6)
+        self.assertEqual(report["passive_body_count"], 5)
+        self.assertEqual(actuation_report(zbot_chain(4))["driven_joint_count"], 4)
+
+    def test_physical_six_has_exactly_32_legal_twists(self) -> None:
+        seen = set()
+        for mask in range(32):
+            twists = tuple((math_pi() / 2 if mask & (1 << index) else 0.0) for index in range(5))
+            design = zbot_chain(6, twists)
+            self.assertEqual(assembly_errors(design), [])
+            self.assertEqual(actuation_report(design)["driven_joint_count"], 6)
+            seen.add(tuple(round(value, 6) for value in design.twists_rad))
+        self.assertEqual(len(seen), 32)
+        self.assertIn((0.0, 0.0, 0.0, 0.0, 0.0), seen)
 
 
 class MetricTests(unittest.TestCase):
