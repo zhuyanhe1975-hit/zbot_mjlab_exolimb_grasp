@@ -1,3 +1,4 @@
+import { evaluateDesign } from "./model.js";
 import { runSearch } from "./search.js";
 
 let stop = false;
@@ -6,6 +7,15 @@ self.onmessage = async (event) => {
   const message = event.data;
   if (message.type === "cancel") {
     stop = true;
+    return;
+  }
+  if (message.type === "reeval") {
+    try {
+      const rows = message.designs.map((design) => evaluateDesign(design, message.task, null, true));
+      self.postMessage({ type: "reeval", rows });
+    } catch (error) {
+      self.postMessage({ type: "error", message: error instanceof Error ? error.message : String(error) });
+    }
     return;
   }
   if (message.type !== "start") return;

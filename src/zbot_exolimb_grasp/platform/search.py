@@ -11,7 +11,7 @@ import numpy as np
 from .library import module_spec
 from .model import assembly_errors, baseline_design, evaluate_design
 from .nsga2 import Individual, feasible_front, nsga2
-from .schema import OBJECTIVE_LABELS, OBJECTIVE_SENSE, COUNT_MAX, Design, SearchSpec, TaskSpec
+from .schema import MISSING_OBJECTIVE, OBJECTIVE_LABELS, OBJECTIVE_SENSE, COUNT_MAX, Design, SearchSpec, TaskSpec
 
 
 @dataclass
@@ -52,8 +52,16 @@ def validate_search(spec: SearchSpec) -> list[str]:
         errors.append("种群须为 4–80 的偶数")
     if spec.generations < 1 or spec.generations > 80:
         errors.append("代数须为 1–80")
-    if spec.task.sample_count < 32 or spec.task.sample_count > 20000:
-        errors.append("每次评价的采样数须为 32–20000")
+    if spec.task.sample_count < 0 or spec.task.sample_count > 20000:
+        errors.append("末端落盒诊断采样数须为 0–20000，0 表示不算这项")
+    if spec.task.grid_divisions < 1 or spec.task.grid_divisions > 6:
+        errors.append("任务格点每轴份数须为 1–6")
+    if spec.task.ik_starts < 1 or spec.task.ik_starts > 16:
+        errors.append("IK 起点数须为 1–16")
+    if spec.task.ik_iterations < 1 or spec.task.ik_iterations > 40:
+        errors.append("IK 迭代数须为 1–40")
+    if not 0.005 <= spec.task.position_tolerance_m <= 0.2:
+        errors.append("位置容差须在 0.005–0.2 m")
     if spec.task.payload_kg < 0 or spec.task.payload_kg > 20:
         errors.append("载荷质量须在 0–20 kg")
     if spec.task.velocity_limit_rad_s <= 0 or spec.task.velocity_limit_rad_s > 20:
@@ -210,11 +218,21 @@ def _vary(left: Genome, right: Genome, rng: np.random.Generator, spec: SearchSpe
 
 
 def _objectives(metrics: dict[str, object], names: tuple[str, ...]) -> list[float]:
+    manip = (
+        -float(metrics["task_manipulability_median"])
+        if metrics.get("task_manipulability_valid")
+        else MISSING_OBJECTIVE
+    )
+    speed = (
+        -float(metrics["task_velocity_median"])
+        if metrics.get("task_velocity_valid")
+        else MISSING_OBJECTIVE
+    )
     values = {
-        "coverage": -float(metrics["task_coverage"]),
-        "manipulability": -float(metrics["median_translational_manipulability"]),
+        "coverage": -float(metrics["task_feasible_fraction"]),
+        "manipulability": manip,
         "mass": float(metrics["mass_kg"]),
-        "velocity": -float(metrics["median_velocity_capability_m_s"]),
+        "velocity": speed,
     }
     return [values[name] for name in names]
 
@@ -399,7 +417,12 @@ def _assumptions(spec: SearchSpec) -> list[str]:
         f"关节速度上限 {spec.task.velocity_limit_rad_s} rad/s 是假设，仓库里没有 R3 实测速度。",
         "力矩上限默认 20 N·m，来自该项目位置伺服的力矩上限；界面改过则视为用户覆盖。",
         "自碰撞是非相邻胶囊的近似。静力矩是质点重力模型。",
-        f"每个个体用 {spec.task.sample_count} 个关节样本。覆盖率标准误差约为 sqrt(p(1-p)/n)。",
+        (
+            f"任务指标用每轴 {spec.task.grid_divisions} 份格点、容差 {spec.task.position_tolerance_m} m、"
+            f"{spec.task.ik_starts} 个 IK 起点、{spec.task.ik_iterations} 次迭代。"
+            "未解出不是严格不可达。末端落盒比例如果计算，只是关节采样诊断。"
+        ),
+        "零位碰撞不否决设计。可操作度和速度能力只在可行任务解上取中位数，没有可行解就用惩罚。",
         "demo_flange 与 zbot_flange 没有装配规则，混合链会被拒绝。",
     ]
     if spec.task.effort_is_override:
@@ -429,7 +452,11 @@ def spec_to_dict(spec: SearchSpec) -> dict[str, object]:
             "velocity_limit_rad_s": task.velocity_limit_rad_s,
             "sample_count": task.sample_count,
             "seed": task.seed,
-            "rate_limit": task.rate_limit,
+            "grid_divisions": task.grid_divisions,
+            "position_tolerance_m": task.position_tolerance_m,
+            "ik_starts": task.ik_starts,
+            "ik_iterations": task.ik_iterations,
+            "ik_damping": task.ik_damping,
         },
     }
 
@@ -443,9 +470,13 @@ def spec_from_dict(payload: dict[str, object]) -> SearchSpec:
         effort_limit_nm=float(task_payload.get("effort_limit_nm", 20.0)),
         effort_is_override=bool(task_payload.get("effort_is_override", False)),
         velocity_limit_rad_s=float(task_payload.get("velocity_limit_rad_s", 1.5)),
-        sample_count=int(task_payload.get("sample_count", 256)),
+        sample_count=int(task_payload.get("sample_count", 0)),
         seed=int(task_payload.get("seed", payload.get("seed", 1))),
-        rate_limit=float(task_payload.get("rate_limit", 0.85)),
+        grid_divisions=int(task_payload.get("grid_divisions", 2)),
+        position_tolerance_m=float(task_payload.get("position_tolerance_m", 0.05)),
+        ik_starts=int(task_payload.get("ik_starts", 3)),
+        ik_iterations=int(task_payload.get("ik_iterations", 8)),
+        ik_damping=float(task_payload.get("ik_damping", 0.08)),
     )
     lock = payload.get("count_lock")
     return SearchSpec(

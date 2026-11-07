@@ -19,6 +19,7 @@ from zbot_exolimb_grasp.platform.model import (
     baseline_design,
     evaluate_design,
     forward_chain,
+    task_targets,
     zbot_chain,
 )
 from zbot_exolimb_grasp.platform.nsga2 import Individual, dominates, feasible_front, nsga2
@@ -123,7 +124,7 @@ class SearchTests(unittest.TestCase):
             population=6,
             generations=2,
             seed=7,
-            task=TaskSpec(sample_count=48, seed=7, payload_kg=0.2),
+            task=TaskSpec(sample_count=0, seed=7, payload_kg=0.2, grid_divisions=2, ik_starts=2, ik_iterations=4),
         )
         first = run_search(spec, start=baseline_design())
         second = run_search(spec, start=baseline_design())
@@ -169,6 +170,71 @@ class SearchTests(unittest.TestCase):
         front = feasible_front(pop)
         self.assertTrue(front)
         self.assertTrue(all(item.violation == 0.0 and item.objectives[0] >= -1e-9 for item in front))
+
+
+class MetricTests(unittest.TestCase):
+    def test_same_task_grid_for_different_module_counts(self) -> None:
+        task = TaskSpec(grid_divisions=3, sample_count=0, ik_starts=1, ik_iterations=1)
+        targets = task_targets(task)
+        self.assertEqual(targets.shape, (27, 3))
+        again = task_targets(task)
+        self.assertTrue(np.allclose(targets, again))
+        short = evaluate_design(zbot_chain(3), task)
+        long = evaluate_design(zbot_chain(6), task)
+        self.assertEqual(short["task_target_count"], long["task_target_count"])
+        self.assertEqual(short["position_tolerance_m"], long["position_tolerance_m"])
+        self.assertNotIn("task_coverage", short)
+
+    def test_clustered_reach_is_not_full_spatial_coverage(self) -> None:
+        design = Design(
+            ("concept_axial", "concept_axial", "concept_axial"),
+            (0.0, 0.0),
+            ({"length_m": 0.06}, {"length_m": 0.06}, {"length_m": 0.06}),
+        )
+        task = TaskSpec(
+            center_m=(0.2, 0.2, 0.7),
+            half_m=(0.4, 0.4, 0.4),
+            grid_divisions=3,
+            ik_starts=3,
+            ik_iterations=8,
+            position_tolerance_m=0.05,
+            sample_count=80,
+            seed=1,
+            payload_kg=0.0,
+        )
+        metrics = evaluate_design(design, task)
+        self.assertLess(metrics["task_feasible_fraction"], 0.5)
+        self.assertIsNotNone(metrics["pose_hit_rate"])
+        self.assertGreater(metrics["pose_hit_rate"], metrics["task_feasible_fraction"])
+
+    def test_infeasible_poses_do_not_count_as_task_coverage(self) -> None:
+        task = TaskSpec(
+            sample_count=60,
+            seed=0,
+            effort_limit_nm=0.05,
+            payload_kg=2.0,
+            grid_divisions=2,
+            ik_starts=2,
+            ik_iterations=6,
+        )
+        metrics = evaluate_design(baseline_design(), task)
+        self.assertGreater(metrics["pose_hit_rate"], 0.0)
+        self.assertEqual(metrics["task_feasible_fraction"], 0.0)
+        self.assertFalse(metrics["task_manipulability_valid"])
+        self.assertIsNone(metrics["task_manipulability_median"])
+        self.assertTrue(metrics["feasible"])
+        self.assertFalse(metrics["q0_is_design_veto"])
+
+    def test_resolution_changes_denominator_without_claiming_monotonicity(self) -> None:
+        design = zbot_chain(4)
+        coarse_task = TaskSpec(grid_divisions=2, ik_starts=2, ik_iterations=5, sample_count=0)
+        fine_task = TaskSpec(grid_divisions=3, ik_starts=2, ik_iterations=5, sample_count=0)
+        coarse = evaluate_design(design, coarse_task)
+        fine = evaluate_design(design, fine_task)
+        self.assertEqual(coarse["task_target_count"], 8)
+        self.assertEqual(fine["task_target_count"], 27)
+        self.assertGreaterEqual(coarse["task_feasible_fraction"], 0.0)
+        self.assertLessEqual(fine["task_feasible_fraction"], 1.0)
 
 
 class ExportTests(unittest.TestCase):

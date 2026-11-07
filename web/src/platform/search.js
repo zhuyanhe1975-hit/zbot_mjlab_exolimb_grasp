@@ -11,7 +11,10 @@ export function validateSpec(spec) {
   if (spec.count_min < 3 || spec.count_max > COUNT_MAX) errors.push(`模块数量范围须落在 3–${COUNT_MAX}`);
   if (spec.population < 4 || spec.population > 24 || spec.population % 2) errors.push("在线种群须为 4–24 的偶数");
   if (spec.generations < 1 || spec.generations > 20) errors.push("在线代数须为 1–20");
-  if (spec.task.sample_count < 32 || spec.task.sample_count > 800) errors.push("在线采样须为 32–800，更大预算请用 Python");
+  if (spec.task.sample_count < 0 || spec.task.sample_count > 400) errors.push("在线落盒诊断采样须为 0–400，0 表示不算");
+  if (spec.task.grid_divisions < 1 || spec.task.grid_divisions > 4) errors.push("在线格点每轴份数须为 1–4");
+  if (spec.task.ik_starts < 1 || spec.task.ik_starts > 8) errors.push("在线 IK 起点须为 1–8");
+  if (spec.task.ik_iterations < 1 || spec.task.ik_iterations > 20) errors.push("在线 IK 迭代须为 1–20");
   if (spec.task.payload_kg < 0 || spec.task.payload_kg > 20) errors.push("载荷质量须在 0–20 kg");
   if (!(spec.task.velocity_limit_rad_s > 0 && spec.task.velocity_limit_rad_s <= 20)) errors.push("关节速度上限须在 (0, 20] rad/s");
   if (!(spec.task.effort_limit_nm > 0 && spec.task.effort_limit_nm <= 200)) errors.push("力矩上限须在 (0, 200] N·m");
@@ -64,10 +67,10 @@ function salt(genome) {
 
 function objectivesOf(metrics, names) {
   const values = {
-    coverage: -metrics.task_coverage,
-    manipulability: -metrics.median_translational_manipulability,
+    coverage: -metrics.task_feasible_fraction,
+    manipulability: metrics.task_manipulability_valid ? -metrics.task_manipulability_median : 1,
     mass: metrics.mass_kg,
-    velocity: -metrics.median_velocity_capability_m_s,
+    velocity: metrics.task_velocity_valid ? -metrics.task_velocity_median : 1,
   };
   return names.map((name) => values[name]);
 }
@@ -192,7 +195,7 @@ function vary(left, right, rand, spec) {
 
 function score(genome, spec, base) {
   const design = toDesign(genome, base);
-  const samples = sampleFor(genome, spec);
+  const samples = spec.task.sample_count > 0 ? sampleFor(genome, spec) : null;
   const metrics = evaluateDesign(design, spec.task, samples, false);
   return { genome, objectives: objectivesOf(metrics, spec.objectives), violation: metrics.violation, metrics, design };
 }
@@ -249,7 +252,9 @@ export async function runSearch(spec, start, hooks = {}) {
   sortFronts(pop);
   const front = pop.filter((item) => item.violation === 0 && item.rank === 0);
   const baselineRand = mulberry32(spec.task.seed >>> 0);
-  const baselinePose = Array.from({ length: spec.task.sample_count }, () => Array.from({ length: 6 }, () => (baselineRand() * 2 - 1) * 6.28));
+  const baselinePose = spec.task.sample_count > 0
+    ? Array.from({ length: spec.task.sample_count }, () => Array.from({ length: 6 }, () => (baselineRand() * 2 - 1) * 6.28))
+    : null;
   const baselineMetrics = evaluateDesign(baselineDesign(), spec.task, baselinePose, true);
   return {
     platform_version: "0.1.0",
@@ -283,7 +288,7 @@ export async function runSearch(spec, start, hooks = {}) {
 }
 
 function labelOf(id) {
-  return { coverage: "任务区覆盖率", manipulability: "平移可操作度中位数", mass: "质量", velocity: "速度能力中位数" }[id];
+  return { coverage: "任务格点可行比例", manipulability: "可行解上的可操作度", mass: "质量", velocity: "可行解上的速度能力" }[id];
 }
 
 function truncate(pop, population) {

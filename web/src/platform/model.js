@@ -338,70 +338,160 @@ function jacobianMatrix(chain) {
   return [0, 1, 2].map((row) => chain.jacobian.map((column) => column[row]).slice(0, n));
 }
 
-export function evaluateDesign(design, task, samples, includeCloud = false) {
+function linspace(start, stop, count) {
+  if (count <= 1) return [start];
+  return Array.from({ length: count }, (_, index) => start + ((stop - start) * index) / (count - 1));
+}
+
+export function taskTargets(task) {
+  const divisions = task.grid_divisions ?? 2;
+  const xs = linspace(task.center_m[0] - task.half_m[0], task.center_m[0] + task.half_m[0], divisions);
+  const ys = linspace(task.center_m[1] - task.half_m[1], task.center_m[1] + task.half_m[1], divisions);
+  const zs = linspace(task.center_m[2] - task.half_m[2], task.center_m[2] + task.half_m[2], divisions);
+  const points = [];
+  xs.forEach((x) => ys.forEach((y) => zs.forEach((z) => points.push([x, y, z]))));
+  return points;
+}
+
+function ikStarts(count, starts, limit) {
+  const poses = [Array(count).fill(0)];
+  for (let index = 1; index < starts; index += 1) {
+    poses.push(Array.from({ length: count }, (_, joint) => {
+      const value = limit * 0.55 * Math.sin((index + 1) * (joint + 1) * 0.7);
+      return Math.min(limit, Math.max(-limit, value));
+    }));
+  }
+  return poses;
+}
+
+function dampedStep(rows, error, damping) {
+  const width = rows[0].length;
+  const gram = [0, 1, 2].map((row) => [0, 1, 2].map((col) => {
+    let sum = row === col ? damping * damping : 0;
+    for (let joint = 0; joint < width; joint += 1) sum += rows[row][joint] * rows[col][joint];
+    return sum;
+  }));
+  const lagrange = solve3(gram, error);
+  if (!lagrange) return Array(width).fill(0);
+  return Array.from({ length: width }, (_, joint) =>
+    rows[0][joint] * lagrange[0] + rows[1][joint] * lagrange[1] + rows[2][joint] * lagrange[2]);
+}
+
+function poseIsFeasible(chain, task) {
+  if (collides(chain)) return false;
+  const torque = torques(chain, task.payload_kg);
+  return Math.max(...torque.map((value) => Math.abs(value))) <= task.effort_limit_nm + 1e-9;
+}
+
+function solveTarget(design, target, task) {
   const count = design.module_ids.length;
-  const poses = samples ?? [Array(count).fill(0)];
+  const limit = task.joint_sample_limit ?? 6.28;
+  const tolerance = task.position_tolerance_m ?? 0.05;
+  const damping = task.ik_damping ?? 0.08;
+  for (const start of ikStarts(count, task.ik_starts ?? 3, limit)) {
+    let pose = start.slice();
+    for (let step = 0; step < (task.ik_iterations ?? 8); step += 1) {
+      const chain = forwardDesign(design, pose);
+      const error = sub(target, chain.ee);
+      if (norm(error) <= tolerance && poseIsFeasible(chain, task)) return { pose, chain };
+      const delta = dampedStep(jacobianMatrix(chain), error, damping);
+      pose = pose.map((value, index) => Math.min(limit, Math.max(-limit, value + delta[index])));
+    }
+  }
+  return null;
+}
+
+function median(values) {
+  if (!values.length) return null;
+  const sorted = values.slice().sort((a, b) => a - b);
+  return sorted.length % 2
+    ? sorted[(sorted.length - 1) / 2]
+    : 0.5 * (sorted[sorted.length / 2 - 1] + sorted[sorted.length / 2]);
+}
+
+export function evaluateDesign(design, task, samples = null, includeCloud = false) {
+  const count = design.module_ids.length;
+  const targets = taskTargets(task);
+  const reached = [];
+  const taskManips = [];
+  const taskSpeeds = [];
+  let example = null;
+  targets.forEach((target) => {
+    const solved = solveTarget(design, target, task);
+    reached.push(Boolean(solved));
+    if (!solved) return;
+    if (!example) example = solved.pose.slice();
+    const matrix = jacobianMatrix(solved.chain);
+    taskManips.push(manipulability(matrix));
+    taskSpeeds.push(velocityCapability(matrix, task.velocity_limit_rad_s));
+  });
+  const reachedCount = reached.filter(Boolean).length;
   const straight = forwardDesign(design, Array(count).fill(0));
   const torque0 = torques(straight, task.payload_kg);
   const peak0 = Math.max(...torque0.map((value) => Math.abs(value)));
-  const collide0 = collides(straight);
-  const torque0Ok = peak0 <= task.effort_limit_nm + 1e-9;
-  let insideCount = 0;
-  let collideCount = 0;
-  let torqueFail = 0;
-  const manips = [];
-  const speeds = [];
-  let example = Array(count).fill(0);
-  let found = false;
-  const cloud = [];
-  poses.forEach((pose, index) => {
-    const chain = forwardDesign(design, pose);
-    const hit = collides(chain);
-    const tau = torques(chain, task.payload_kg);
-    const badTorque = tau.some((value) => Math.abs(value) > task.effort_limit_nm + 1e-9);
-    const inside = insideBox(chain.ee, task);
-    if (inside) insideCount += 1;
-    if (hit) collideCount += 1;
-    if (badTorque) torqueFail += 1;
-    const matrix = jacobianMatrix(chain);
-    manips.push(manipulability(matrix));
-    speeds.push(velocityCapability(matrix, task.velocity_limit_rad_s));
-    if (!found && inside && !hit && !badTorque) {
-      example = pose.slice();
-      found = true;
-    }
-    if (includeCloud && index % Math.max(1, Math.floor(poses.length / 120)) === 0 && cloud.length < 120) {
-      cloud.push({ p: chain.ee.slice(), inside, collide: hit, torque_ok: !badTorque });
-    }
-  });
-  const n = poses.length;
-  const coverage = insideCount / n;
-  const collisionRate = collideCount / n;
-  const torqueFailRate = torqueFail / n;
-  const limit = task.rate_limit ?? 0.85;
-  let violation = (collide0 ? 1 : 0) + (torque0Ok ? 0 : 1);
-  violation += Math.max(0, collisionRate - limit) + Math.max(0, torqueFailRate - limit);
-  const sortedManip = manips.slice().sort((a, b) => a - b);
-  const sortedSpeed = speeds.slice().sort((a, b) => a - b);
-  const mid = (values) => values.length % 2 ? values[(values.length - 1) / 2] : 0.5 * (values[values.length / 2 - 1] + values[values.length / 2]);
+  let poseHit = null;
+  let poseSe = null;
+  let postureManip = null;
+  let postureSpeed = null;
+  let collisionRate = null;
+  let torqueFailRate = null;
+  let sampleCount = 0;
+  if (samples && samples.length) {
+    let insideCount = 0;
+    let collideCount = 0;
+    let torqueFail = 0;
+    const manips = [];
+    const speeds = [];
+    samples.forEach((pose) => {
+      const chain = forwardDesign(design, pose);
+      const hit = collides(chain);
+      const tau = torques(chain, task.payload_kg);
+      const badTorque = tau.some((value) => Math.abs(value) > task.effort_limit_nm + 1e-9);
+      if (insideBox(chain.ee, task)) insideCount += 1;
+      if (hit) collideCount += 1;
+      if (badTorque) torqueFail += 1;
+      const matrix = jacobianMatrix(chain);
+      manips.push(manipulability(matrix));
+      speeds.push(velocityCapability(matrix, task.velocity_limit_rad_s));
+    });
+    sampleCount = samples.length;
+    poseHit = insideCount / sampleCount;
+    poseSe = Math.sqrt(Math.max(poseHit * (1 - poseHit), 0) / sampleCount);
+    collisionRate = collideCount / sampleCount;
+    torqueFailRate = torqueFail / sampleCount;
+    postureManip = median(manips);
+    postureSpeed = median(speeds);
+  }
   return {
     mass_kg: straight.mass,
-    task_coverage: coverage,
-    coverage_se: Math.sqrt(Math.max(coverage * (1 - coverage), 0) / n),
-    sample_count: n,
-    median_translational_manipulability: mid(sortedManip),
-    median_velocity_capability_m_s: mid(sortedSpeed),
+    task_feasible_fraction: reachedCount / targets.length,
+    task_target_count: targets.length,
+    task_targets_reached: reachedCount,
+    grid_divisions: task.grid_divisions ?? 2,
+    position_tolerance_m: task.position_tolerance_m ?? 0.05,
+    ik_starts: task.ik_starts ?? 3,
+    ik_iterations: task.ik_iterations ?? 8,
+    pose_hit_rate: poseHit,
+    pose_hit_se: poseSe,
+    sample_count: sampleCount,
+    task_manipulability_median: taskManips.length ? median(taskManips) : null,
+    task_manipulability_valid: taskManips.length > 0,
+    task_velocity_median: taskSpeeds.length ? median(taskSpeeds) : null,
+    task_velocity_valid: taskSpeeds.length > 0,
+    posture_manipulability_median: postureManip,
+    posture_velocity_median: postureSpeed,
     collision_rate: collisionRate,
     torque_fail_rate: torqueFailRate,
-    q0_collision: collide0,
-    q0_torque_ok: torque0Ok,
+    q0_collision: collides(straight),
+    q0_torque_ok: peak0 <= task.effort_limit_nm + 1e-9,
     q0_peak_torque_nm: peak0,
-    violation,
-    feasible: violation === 0,
-    example_q: example,
+    q0_is_design_veto: false,
+    violation: 0,
+    feasible: true,
+    example_q: example ?? Array(count).fill(0),
     ee_straight: straight.ee,
     unsupported: UNSUPPORTED.slice(),
-    cloud: includeCloud ? cloud : undefined,
+    cloud: includeCloud ? targets.map((point, index) => ({ p: point, reached: reached[index] })) : undefined,
   };
 }
 

@@ -28,22 +28,21 @@ if (Math.abs(mixedChain.mass - golden.mixed.mass_kg) > 1e-6) {
   throw new Error(`质量 ${mixedChain.mass} != ${golden.mixed.mass_kg}`);
 }
 
-const task = {
-  center_m: [0, 0.05, 0.72],
-  half_m: [0.22, 0.22, 0.22],
-  payload_kg: 0.4,
-  effort_limit_nm: 20,
-  velocity_limit_rad_s: 1.5,
-  rate_limit: 0.85,
-};
+const task = golden.diagnostic_task;
 const metrics = evaluateDesign(baseline, task, golden.baseline_samples.q);
-if (Math.abs(metrics.task_coverage - golden.baseline_samples.task_coverage) > 1e-9) {
-  throw new Error(`覆盖率 ${metrics.task_coverage}`);
+if (Math.abs(metrics.pose_hit_rate - golden.baseline_samples.pose_hit_rate) > 1e-9) {
+  throw new Error(`落盒比例 ${metrics.pose_hit_rate}`);
 }
-if (Math.abs(metrics.median_translational_manipulability - golden.baseline_samples.median_translational_manipulability) > 1e-6) {
-  throw new Error(`可操作度 ${metrics.median_translational_manipulability} != ${golden.baseline_samples.median_translational_manipulability}`);
+if (Math.abs(metrics.posture_manipulability_median - golden.baseline_samples.posture_manipulability_median) > 1e-6) {
+  throw new Error(`全姿态可操作度 ${metrics.posture_manipulability_median}`);
 }
-if (metrics.feasible !== golden.baseline_samples.feasible) throw new Error("可行性不一致");
+const ik = evaluateDesign(baseline, golden.ik_task, null);
+if (ik.task_targets_reached !== golden.baseline_ik.task_targets_reached) {
+  throw new Error(`格点可行数 ${ik.task_targets_reached} != ${golden.baseline_ik.task_targets_reached}`);
+}
+if (Math.abs(ik.task_feasible_fraction - golden.baseline_ik.task_feasible_fraction) > 1e-9) {
+  throw new Error(`格点可行比例 ${ik.task_feasible_fraction}`);
+}
 
 const spec = {
   mode: "mixed",
@@ -56,7 +55,20 @@ const spec = {
   length_lower_m: 0.08,
   length_upper_m: 0.12,
   seed: 2,
-  task: { ...task, sample_count: 32, seed: 2, payload_kg: 0.2 },
+  task: {
+    center_m: [0, 0.05, 0.72],
+    half_m: [0.22, 0.22, 0.22],
+    payload_kg: 0.2,
+    effort_limit_nm: 20,
+    velocity_limit_rad_s: 1.5,
+    sample_count: 0,
+    seed: 2,
+    grid_divisions: 2,
+    position_tolerance_m: 0.05,
+    ik_starts: 2,
+    ik_iterations: 4,
+    ik_damping: 0.08,
+  },
 };
 const wide = await runSearch({ ...spec, length_upper_m: 0.16, length_lower_m: 0.06 }, baseline);
 const narrow = await runSearch(spec, {
@@ -80,4 +92,4 @@ for (const design of [baseline, golden.mixed.design]) {
     throw new Error(`MJCF 结构不对 open ${open} close ${close} joints ${jointCount}`);
   }
 }
-console.log(`平台模型核对通过。覆盖率 ${metrics.task_coverage.toFixed(3)}，在线搜索评价 ${wide.evaluations} 次。`);
+console.log(`平台模型核对通过。格点可行 ${ik.task_targets_reached}/${ik.task_target_count}，在线搜索评价 ${wide.evaluations} 次。`);

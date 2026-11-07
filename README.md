@@ -12,10 +12,10 @@
 
 ```bash
 python -m unittest tests.test_platform
-python scripts/design_optimize.py --mode mixed --count-min 3 --count-max 5 --pop 12 --gen 5 --samples 180 --seed 1 --out experiments/platform_seed1.json
+python scripts/design_optimize.py --mode mixed --count-min 3 --count-max 5 --pop 12 --gen 4 --grid 2 --ik-starts 3 --ik-iterations 8 --reeval-grid 3 --reeval-starts 5 --reeval-iterations 12 --seed 1 --out experiments/platform_seed1.json
 ```
 
-`--mode physical` 只搜索 ZBot R3 的数量和连接方位，不缩放实物尺寸。`--mode mixed` 允许插入轴向概念连杆，并优化它的长度。网页里的搜索在 Web Worker 中完成，预算低于命令行；两边用同一套目标函数和约束，但随机数流不同，同一种子不会逐个个体相同。
+`--mode physical` 只搜索 ZBot R3 的数量和连接方位，不缩放实物尺寸。`--mode mixed` 允许插入轴向概念连杆，并优化它的长度。任务主指标是固定格点里找到可行解的比例，不是随机关节样本掉进盒子的比例。网页里的搜索在 Web Worker 中完成；两边用同一套目标函数，IK 没有随机数所以格点结果可以对齐，搜索个体的随机数流仍然不同。
 
 本地打开设计页：
 

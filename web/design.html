@@ -54,23 +54,29 @@
               <span class="pair"><input id="len-min" type="number" min="0.06" max="0.16" step="0.01" value="0.06" /><input id="len-max" type="number" min="0.06" max="0.16" step="0.01" value="0.16" /></span>
             </label>
           </div>
-          <p class="help">默认力矩 20 N·m 来自本仓库位置伺服。速度没有 R3 实测值，改它会改变速度能力，不会假装成标定数据。</p>
+          <div class="grid-3">
+            <label>格点每轴<input id="grid" type="number" min="1" max="4" value="2" /></label>
+            <label>位置容差 m<input id="tolerance" type="number" min="0.005" max="0.2" step="0.005" value="0.05" /></label>
+            <label>IK 起点<input id="ik-starts" type="number" min="1" max="8" value="3" /></label>
+            <label>IK 迭代<input id="ik-iters" type="number" min="1" max="20" value="8" /></label>
+            <label>落盒诊断样本<input id="samples" type="number" min="0" max="400" step="16" value="0" /></label>
+          </div>
+          <p class="help">主指标是固定格点里找到可行解的比例，分母是格点数。未解出不是不可达。落盒诊断是随机关节样本掉进盒子的比例，不是覆盖率。力矩默认 20 N·m。速度没有实测值。</p>
         </section>
         <section>
           <h2>4 搜索</h2>
           <div class="checks" id="objectives">
-            <label><input type="checkbox" value="coverage" checked /> 任务区覆盖率</label>
-            <label><input type="checkbox" value="manipulability" checked /> 平移可操作度</label>
+            <label><input type="checkbox" value="coverage" checked /> 任务格点可行比例</label>
+            <label><input type="checkbox" value="manipulability" checked /> 可行解上的可操作度</label>
             <label><input type="checkbox" value="mass" checked /> 质量</label>
-            <label><input type="checkbox" value="velocity" /> 速度能力</label>
+            <label><input type="checkbox" value="velocity" /> 可行解上的速度能力</label>
           </div>
-          <div class="grid-3">
+          <div class="grid-2">
             <label>种群<input id="pop" type="number" min="4" max="24" step="2" value="8" /></label>
             <label>代数<input id="gen" type="number" min="1" max="20" value="4" /></label>
-            <label>采样<input id="samples" type="number" min="32" max="800" step="32" value="128" /></label>
           </div>
           <label>随机种子<input id="seed" type="number" value="1" /></label>
-          <p class="help">在线计算在本页的 Web Worker 里完成。种群、代数和采样是预算；覆盖率带有 √[p(1-p)/n] 的抽样误差。更大预算用 Python 命令行。</p>
+          <p class="help">在线计算在本页的 Web Worker 里完成。格点、IK 起点和迭代是预算，漏检不等于不可达。更高预算用本页的复核，或 Python 命令行。</p>
         </section>
       </aside>
       <div id="viewport"></div>
@@ -79,6 +85,7 @@
           <div class="run-row">
             <button id="run" type="button">开始搜索</button>
             <button id="cancel" type="button" class="secondary" disabled>取消</button>
+            <button id="reeval" type="button" class="secondary" disabled>更高预算复核</button>
           </div>
           <p id="progress" class="help">还没有运行。改装配或任务后再搜索，结果会跟着变。</p>
           <canvas id="pareto" width="320" height="180"></canvas>
@@ -97,7 +104,7 @@
         </section>
         <details>
           <summary>假设与未支持项</summary>
-          <p class="help">胶囊自碰撞和质点静力矩是近似。不提供网格精确碰撞、完整动力学、加速度能力，也不把转动可操作度混进平移分数。平台只生成串联链。demo_flange 不能与 zbot_flange 装配。</p>
+          <p class="help">任务格点可行比例的分母是固定格点。灰色点表示这个预算没找到可行解，不是证明不可达。末端落盒比例是另一项关节采样诊断。胶囊自碰撞和质点静力矩是近似。零位碰撞不否决设计。不提供网格精确碰撞、完整动力学和加速度能力。平台只生成串联链。</p>
         </details>
       </aside>
     </div>

@@ -297,10 +297,73 @@ def velocity_capability(jacobian: np.ndarray, speed_limit: float) -> np.ndarray:
     return capability
 
 
-def _coverage(points: np.ndarray, task: TaskSpec) -> np.ndarray:
+def points_in_box(points: np.ndarray, task: TaskSpec) -> np.ndarray:
+    """末端是否落在任务盒里。这是几何包含，不是可行到达。"""
     center = np.asarray(task.center_m, dtype=np.float64)
     half = np.asarray(task.half_m, dtype=np.float64)
     return np.all(np.abs(points - center) <= half + 1e-12, axis=-1)
+
+
+def task_targets(task: TaskSpec) -> np.ndarray:
+    """任务盒上的固定格点。与设计无关，分母对所有机构相同。"""
+    divisions = int(task.grid_divisions)
+    axes = []
+    for center, half in zip(task.center_m, task.half_m, strict=True):
+        if divisions <= 1:
+            axes.append(np.array([float(center)], dtype=np.float64))
+        else:
+            axes.append(np.linspace(float(center) - float(half), float(center) + float(half), divisions))
+    grid = np.stack(np.meshgrid(*axes, indexing="ij"), axis=-1)
+    return np.ascontiguousarray(grid.reshape(-1, 3))
+
+
+def ik_start_poses(count: int, starts: int, limit: float) -> list[np.ndarray]:
+    """确定性的多起点。不用随机数，便于 Python 和浏览器对齐。"""
+    poses = [np.zeros(count, dtype=np.float64)]
+    for index in range(1, int(starts)):
+        pose = np.array(
+            [limit * 0.55 * math.sin((index + 1) * (joint + 1) * 0.7) for joint in range(count)],
+            dtype=np.float64,
+        )
+        poses.append(np.clip(pose, -limit, limit))
+    return poses
+
+
+def _damped_step(jacobian: np.ndarray, error: np.ndarray, damping: float) -> np.ndarray:
+    gram = jacobian @ jacobian.T + (damping**2) * np.eye(3)
+    try:
+        lagrange = np.linalg.solve(gram, error)
+    except np.linalg.LinAlgError:
+        return np.zeros(jacobian.shape[1], dtype=np.float64)
+    return jacobian.T @ lagrange
+
+
+def _pose_is_feasible(chain: dict[str, object], task: TaskSpec) -> bool:
+    if bool(collision_mask(chain)[0]):
+        return False
+    torque = static_torques(chain, task.payload_kg, task.gravity_m_s2)[0]
+    return float(np.max(np.abs(torque))) <= float(task.effort_limit_nm) + 1e-9
+
+
+def solve_target(design: Design, target: np.ndarray, task: TaskSpec) -> tuple[np.ndarray | None, np.ndarray | None]:
+    """多起点阻尼最小二乘。成功必须同时满足位置容差、关节限位、无胶囊碰撞和静力矩。"""
+    count = len(design.module_ids)
+    limit = float(task.joint_sample_limit)
+    target = np.asarray(target, dtype=np.float64)
+    for start in ik_start_poses(count, task.ik_starts, limit):
+        pose = start.copy()
+        for _ in range(int(task.ik_iterations)):
+            chain = forward_chain(design, pose.reshape(1, -1))
+            error = target - chain["ee"][0]
+            if float(np.linalg.norm(error)) <= float(task.position_tolerance_m) and _pose_is_feasible(chain, task):
+                return pose, chain["jacobian"][0]
+            step = _damped_step(chain["jacobian"][0], error, float(task.ik_damping))
+            pose = np.clip(pose + step, -limit, limit)
+    return None, None
+
+
+def _median(values: list[float]) -> float:
+    return float(np.median(np.asarray(values, dtype=np.float64)))
 
 
 def evaluate_design(
@@ -311,76 +374,99 @@ def evaluate_design(
     include_cloud: bool = False,
 ) -> dict[str, object]:
     count = len(design.module_ids)
-    if q is None:
-        rng = np.random.default_rng(task.seed)
-        q = rng.uniform(-task.joint_sample_limit, task.joint_sample_limit, size=(task.sample_count, count))
-    joints = _as_batch(q, count)
-    chain = forward_chain(design, joints)
+    targets = task_targets(task)
+    reached_flags: list[bool] = []
+    task_manips: list[float] = []
+    task_speeds: list[float] = []
+    example: list[float] | None = None
+    for target in targets:
+        pose, jacobian = solve_target(design, target, task)
+        reached = pose is not None and jacobian is not None
+        reached_flags.append(reached)
+        if not reached:
+            continue
+        if example is None:
+            example = pose.tolist()
+        task_manips.append(float(translational_manipulability(jacobian.reshape(1, 3, count))[0]))
+        task_speeds.append(float(velocity_capability(jacobian.reshape(1, 3, count), task.velocity_limit_rad_s)[0]))
+    reached_count = int(sum(reached_flags))
+    fraction = reached_count / float(targets.shape[0])
+    manip_valid = bool(task_manips)
+    speed_valid = bool(task_speeds)
     straight = forward_chain(design, np.zeros((1, count)))
-    torque = static_torques(chain, task.payload_kg, task.gravity_m_s2)
     torque0 = static_torques(straight, task.payload_kg, task.gravity_m_s2)[0]
-    collide = collision_mask(chain)
-    collide0 = bool(collision_mask(straight)[0])
-    limit = float(task.effort_limit_nm)
-    torque_bad = np.any(np.abs(torque) > limit + 1e-9, axis=1)
     torque0_peak = float(np.max(np.abs(torque0)))
-    torque0_ok = torque0_peak <= limit + 1e-9
-    inside = _coverage(chain["ee"], task)
-    coverage = float(np.mean(inside))
-    se = math.sqrt(max(coverage * (1.0 - coverage), 0.0) / joints.shape[0])
-    manip = translational_manipulability(chain["jacobian"])
-    velocity = velocity_capability(chain["jacobian"], task.velocity_limit_rad_s)
-    collision_rate = float(np.mean(collide))
-    torque_fail_rate = float(np.mean(torque_bad))
-    violation = 0.0
-    if collide0:
-        violation += 1.0
-    if not torque0_ok:
-        violation += 1.0
-    violation += max(0.0, collision_rate - task.rate_limit)
-    violation += max(0.0, torque_fail_rate - task.rate_limit)
-    good = inside & ~collide & ~torque_bad
-    if np.any(good):
-        example = joints[int(np.argmax(good))].tolist()
-    elif np.any(inside):
-        example = joints[int(np.argmax(inside))].tolist()
-    else:
-        example = [0.0] * count
+    pose_hit_rate = None
+    pose_hit_se = None
+    posture_manip = None
+    posture_speed = None
+    collision_rate = None
+    torque_fail_rate = None
+    if task.sample_count > 0:
+        if q is None:
+            rng = np.random.default_rng(task.seed)
+            q = rng.uniform(-task.joint_sample_limit, task.joint_sample_limit, size=(task.sample_count, count))
+        joints = _as_batch(q, count)
+        chain = forward_chain(design, joints)
+        torque = static_torques(chain, task.payload_kg, task.gravity_m_s2)
+        collide = collision_mask(chain)
+        torque_bad = np.any(np.abs(torque) > float(task.effort_limit_nm) + 1e-9, axis=1)
+        inside = points_in_box(chain["ee"], task)
+        pose_hit_rate = float(np.mean(inside))
+        pose_hit_se = math.sqrt(max(pose_hit_rate * (1.0 - pose_hit_rate), 0.0) / joints.shape[0])
+        collision_rate = float(np.mean(collide))
+        torque_fail_rate = float(np.mean(torque_bad))
+        posture_manip = float(np.median(translational_manipulability(chain["jacobian"])))
+        posture_speed = float(np.median(velocity_capability(chain["jacobian"], task.velocity_limit_rad_s)))
     result: dict[str, object] = {
-        "mass_kg": chain["mass_kg"],
-        "task_coverage": coverage,
-        "coverage_se": se,
-        "sample_count": int(joints.shape[0]),
-        "median_translational_manipulability": float(np.median(manip)),
-        "median_velocity_capability_m_s": float(np.median(velocity)),
+        "mass_kg": straight["mass_kg"],
+        "task_feasible_fraction": fraction,
+        "task_target_count": int(targets.shape[0]),
+        "task_targets_reached": reached_count,
+        "grid_divisions": int(task.grid_divisions),
+        "position_tolerance_m": float(task.position_tolerance_m),
+        "ik_starts": int(task.ik_starts),
+        "ik_iterations": int(task.ik_iterations),
+        "task_coverage_definition": (
+            "固定任务格点中，在位置容差、关节限位、胶囊自碰撞和静力矩约束下找到可行解的比例。"
+            "分母是格点数。未解出只表示该预算下没找到，不是严格不可达，也不是工作空间体积。"
+        ),
+        "pose_hit_rate": pose_hit_rate,
+        "pose_hit_se": pose_hit_se,
+        "pose_hit_definition": "随机关节样本里末端落入任务盒的比例，含碰撞和超力矩姿态。不是任务覆盖率。",
+        "sample_count": 0 if pose_hit_rate is None else int(np.asarray(q).reshape(-1, count).shape[0]),
+        "task_manipulability_median": _median(task_manips) if manip_valid else None,
+        "task_manipulability_valid": manip_valid,
+        "task_velocity_median": _median(task_speeds) if speed_valid else None,
+        "task_velocity_valid": speed_valid,
+        "task_metric_domain": "只统计该预算下找到的可行任务解。没有可行解时指标无效，优化里用惩罚，不用 NaN。",
+        "posture_manipulability_median": posture_manip,
+        "posture_velocity_median": posture_speed,
+        "posture_metric_definition": "全体关节样本的中位数，包含任务区外和不可行姿态，不是任务性能。",
         "collision_rate": collision_rate,
         "torque_fail_rate": torque_fail_rate,
-        "q0_collision": collide0,
-        "q0_torque_ok": torque0_ok,
+        "q0_collision": bool(collision_mask(straight)[0]),
+        "q0_torque_ok": torque0_peak <= float(task.effort_limit_nm) + 1e-9,
         "q0_peak_torque_nm": torque0_peak,
-        "violation": violation,
-        "feasible": violation == 0.0,
-        "example_q": example,
+        "q0_is_design_veto": False,
+        "q0_note": "零位碰撞或超力矩只作诊断。可重构装配的零位不必是工作姿态，不能据此判定整机不可用。",
+        "violation": 0.0,
+        "feasible": True,
+        "example_q": example if example is not None else [0.0] * count,
         "ee_straight": straight["ee"][0].tolist(),
         "unsupported": list(UNSUPPORTED),
         "approximations": [
             "自碰撞用胶囊，半径是网格外接尺寸的近似，不是 STL 精确碰撞",
             "静力矩把连杆质量集中在质心，只平衡重力与末端载荷，不含惯性力",
             "速度能力是伪逆下界，关节速度上限由用户给定，R3 没有实测速度",
-            "覆盖率是蒙特卡洛比例，标准误差 sqrt(p(1-p)/n)，不是体积证书",
+            "任务格点可行比例取决于格点分辨率、位置容差和 IK 起点/迭代预算，漏检不等于不可达",
+            "末端落盒比例若计算，其二项标准误差只描述关节采样，不能挪用来当任务空间覆盖的误差",
         ],
     }
     if include_cloud:
-        step = max(1, joints.shape[0] // 120)
-        chosen = np.arange(0, joints.shape[0], step)[:120]
         result["cloud"] = [
-            {
-                "p": chain["ee"][int(i)].tolist(),
-                "inside": bool(inside[int(i)]),
-                "collide": bool(collide[int(i)]),
-                "torque_ok": not bool(torque_bad[int(i)]),
-            }
-            for i in chosen
+            {"p": target.tolist(), "reached": reached}
+            for target, reached in zip(targets, reached_flags, strict=True)
         ]
     return result
 

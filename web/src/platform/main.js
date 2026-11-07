@@ -77,7 +77,12 @@ function specFromState() {
       velocity_limit_rad_s: num("#velocity"),
       sample_count: num("#samples"),
       seed: num("#seed"),
-      rate_limit: 0.85,
+      grid_divisions: num("#grid"),
+      position_tolerance_m: num("#tolerance"),
+      ik_starts: num("#ik-starts"),
+      ik_iterations: num("#ik-iters"),
+      ik_damping: 0.08,
+      joint_sample_limit: 6.28,
     },
   };
 }
@@ -287,7 +292,7 @@ function showCloud(metrics) {
   const colors = new Float32Array(cloud.length * 3);
   cloud.forEach((point, index) => {
     positions.set(point.p, index * 3);
-    const color = point.collide ? [0.8, 0.25, 0.2] : point.inside ? [0.15, 0.45, 0.95] : [0.55, 0.6, 0.66];
+    const color = point.reached ? [0.12, 0.42, 0.95] : [0.62, 0.66, 0.7];
     colors.set(color, index * 3);
   });
   const geometry = new THREE.BufferGeometry();
@@ -298,16 +303,26 @@ function showCloud(metrics) {
 }
 
 function describe(metrics) {
-  if (!metrics) return "还没有采样指标。";
+  if (!metrics) return "还没有指标。";
+  const manip = metrics.task_manipulability_valid
+    ? metrics.task_manipulability_median.toFixed(5)
+    : "无效（没有可行任务解，优化中按惩罚处理）";
+  const speed = metrics.task_velocity_valid
+    ? `${metrics.task_velocity_median.toFixed(3)} m/s`
+    : "无效";
+  const hit = metrics.pose_hit_rate == null
+    ? "未计算"
+    : `${(metrics.pose_hit_rate * 100).toFixed(1)}%（关节样本比例，标准误差 ±${((metrics.pose_hit_se || 0) * 100).toFixed(1)} 个百分点，不是任务覆盖）`;
   return [
     `质量 ${metrics.mass_kg.toFixed(3)} kg`,
-    `覆盖率 ${(metrics.task_coverage * 100).toFixed(1)}%（标准误差 ±${(metrics.coverage_se * 100).toFixed(1)} 个百分点）`,
-    `平移可操作度中位数 ${metrics.median_translational_manipulability.toFixed(5)}`,
-    `速度能力中位数 ${metrics.median_velocity_capability_m_s.toFixed(3)} m/s（速度上限是假设）`,
-    `自碰撞样本 ${(metrics.collision_rate * 100).toFixed(0)}%，静力矩超限 ${(metrics.torque_fail_rate * 100).toFixed(0)}%`,
-    metrics.feasible ? "约束满足，可以进入可行前沿。" : "约束不满足，不会进入可行前沿。",
-    metrics.q0_collision ? "伸直姿态胶囊相交。" : "伸直姿态没有非相邻胶囊相交。",
-    `伸直姿态峰值静力矩 ${metrics.q0_peak_torque_nm.toFixed(3)} N·m。`,
+    `任务格点可行 ${metrics.task_targets_reached}/${metrics.task_target_count} = ${(metrics.task_feasible_fraction * 100).toFixed(1)}%`,
+    `格点每轴 ${metrics.grid_divisions}，容差 ${metrics.position_tolerance_m} m，IK 起点 ${metrics.ik_starts}，迭代 ${metrics.ik_iterations}`,
+    "未解出的格点只表示这个预算没找到，不是严格不可达。",
+    `可行解上的平移可操作度 ${manip}`,
+    `可行解上的速度能力 ${speed}（速度上限是假设）`,
+    `末端落盒比例 ${hit}`,
+    metrics.q0_collision ? "零位有胶囊相交，仅作诊断，不否决这条设计。" : "零位没有非相邻胶囊相交。这也只是诊断。",
+    `零位峰值静力矩 ${metrics.q0_peak_torque_nm.toFixed(3)} N·m。`,
   ].join("\n");
 }
 
@@ -325,7 +340,7 @@ function drawPareto() {
     ctx.fillText("可行前沿会画在这里", 16, 28);
     return;
   }
-  const xs = rows.map((row) => row.metrics.task_coverage);
+  const xs = rows.map((row) => row.metrics.task_feasible_fraction);
   const ys = rows.map((row) => row.metrics.mass_kg);
   const minX = Math.min(...xs);
   const maxX = Math.max(...xs);
@@ -338,12 +353,12 @@ function drawPareto() {
   rows.forEach((row, index) => {
     ctx.beginPath();
     ctx.fillStyle = index === state.selected ? "#1e2bff" : "#e36a12";
-    ctx.arc(px(row.metrics.task_coverage), py(row.metrics.mass_kg), 5, 0, Math.PI * 2);
+    ctx.arc(px(row.metrics.task_feasible_fraction), py(row.metrics.mass_kg), 5, 0, Math.PI * 2);
     ctx.fill();
   });
   ctx.fillStyle = "#5c6775";
   ctx.font = "11px sans-serif";
-  ctx.fillText("覆盖率 →", width - 70, height - 6);
+  ctx.fillText("格点可行比例 →", width - 108, height - 6);
   ctx.fillText("质量", 4, 16);
   paretoCanvas.onclick = (event) => {
     const rect = paretoCanvas.getBoundingClientRect();
@@ -352,7 +367,7 @@ function drawPareto() {
     let best = 0;
     let bestDist = Infinity;
     rows.forEach((row, index) => {
-      const dx = px(row.metrics.task_coverage) - x;
+      const dx = px(row.metrics.task_feasible_fraction) - x;
       const dy = py(row.metrics.mass_kg) - y;
       const dist = dx * dx + dy * dy;
       if (dist < bestDist) {
@@ -394,7 +409,8 @@ function renderResult() {
     button.type = "button";
     button.className = "candidate";
     const modules = row.design.module_ids ?? row.design.modules.map((item) => item.id);
-    button.innerHTML = `<strong>${modules.map((id) => LIBRARY[id]?.label ?? id).join(" / ")}</strong><span>覆盖 ${(row.metrics.task_coverage * 100).toFixed(0)}% · 质量 ${row.metrics.mass_kg.toFixed(2)} kg · 可操作度 ${row.metrics.median_translational_manipulability.toFixed(4)}</span>`;
+    const manip = row.metrics.task_manipulability_valid ? row.metrics.task_manipulability_median.toFixed(4) : "无效";
+    button.innerHTML = `<strong>${modules.map((id) => LIBRARY[id]?.label ?? id).join(" / ")}</strong><span>格点可行 ${(row.metrics.task_feasible_fraction * 100).toFixed(0)}% · 质量 ${row.metrics.mass_kg.toFixed(2)} kg · 可操作度 ${manip}</span>`;
     button.addEventListener("click", () => selectCandidate(index));
     candidatesEl.append(button);
   });
@@ -482,6 +498,7 @@ runButton.addEventListener("click", () => {
   const spec = specFromState();
   runButton.disabled = true;
   cancelButton.disabled = false;
+  document.querySelector("#reeval").disabled = true;
   progressEl.textContent = "正在本页计算，不连接外部求解服务。";
   worker?.terminate();
   worker = new Worker(new URL("./worker.js", import.meta.url), { type: "module" });
@@ -492,10 +509,22 @@ runButton.addEventListener("click", () => {
       state.result = event.data.result;
       progressEl.textContent = event.data.cancelled
         ? "已取消。下面是停下来之前的可行前沿。"
-        : `完成 ${state.result.evaluations} 次评价。基准覆盖率 ${(state.result.baseline.metrics.task_coverage * 100).toFixed(1)}%，可行前沿 ${state.result.feasible_pareto.length} 条。`;
+        : `完成 ${state.result.evaluations} 次评价。基准格点可行 ${(state.result.baseline.metrics.task_feasible_fraction * 100).toFixed(1)}%（${state.result.baseline.metrics.task_targets_reached}/${state.result.baseline.metrics.task_target_count}），前沿 ${state.result.feasible_pareto.length} 条。`;
       renderResult();
       runButton.disabled = false;
       cancelButton.disabled = true;
+      document.querySelector("#reeval").disabled = false;
+    } else if (event.data.type === "reeval") {
+      event.data.rows.forEach((metrics, index) => {
+        if (index === 0) state.result.baseline.metrics = metrics;
+        else if (state.result.feasible_pareto[index - 1]) state.result.feasible_pareto[index - 1].metrics = metrics;
+      });
+      const reviewed = event.data.rows[0];
+      progressEl.textContent = `复核完成。格点每轴 ${reviewed.grid_divisions}，基准可行 ${reviewed.task_targets_reached}/${reviewed.task_target_count}。没找到的格点不是严格不可达。`;
+      renderResult();
+      runButton.disabled = false;
+      cancelButton.disabled = true;
+      document.querySelector("#reeval").disabled = false;
     } else if (event.data.type === "error") {
       progressEl.textContent = event.data.message;
       runButton.disabled = false;
@@ -505,6 +534,32 @@ runButton.addEventListener("click", () => {
   worker.postMessage({ type: "start", spec, design });
 });
 cancelButton.addEventListener("click", () => worker?.postMessage({ type: "cancel" }));
+document.querySelector("#reeval").addEventListener("click", () => {
+  if (!state.result || !worker) return;
+  const spec = specFromState();
+  const task = {
+    ...spec.task,
+    grid_divisions: Math.min(4, spec.task.grid_divisions + 1),
+    ik_starts: Math.min(8, spec.task.ik_starts + 2),
+    ik_iterations: Math.min(20, spec.task.ik_iterations + 4),
+    sample_count: 0,
+  };
+  const designs = [state.result.baseline.design, ...state.result.feasible_pareto.slice(0, 3).map((row) => row.design)]
+    .map(normalizeDesign);
+  progressEl.textContent = `正在用每轴 ${task.grid_divisions} 份格点、${task.ik_starts} 个起点复核，不把漏检当成不可达。`;
+  document.querySelector("#reeval").disabled = true;
+  worker.postMessage({ type: "reeval", task, designs });
+});
+
+function normalizeDesign(design) {
+  if (design.module_ids) return design;
+  return {
+    module_ids: design.modules.map((item) => item.id),
+    twists_rad: design.modules.slice(0, -1).map((item) => item.twist_to_next_rad ?? 0),
+    parameters: design.modules.map((item) => item.parameters ?? {}),
+    base_position_m: design.base_position_m ?? [0, 0, 0.4],
+  };
+}
 
 document.querySelector("#export-json").addEventListener("click", () => {
   const payload = state.result ?? { design: designFromState(), note: "尚未搜索，只导出当前装配" };

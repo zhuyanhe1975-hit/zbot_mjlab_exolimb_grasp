@@ -120,6 +120,27 @@
     ],
     "mass_kg": 1.86618
   },
+  "diagnostic_task": {
+    "center_m": [
+      0.0,
+      0.05,
+      0.72
+    ],
+    "half_m": [
+      0.22,
+      0.22,
+      0.22
+    ],
+    "payload_kg": 0.4,
+    "effort_limit_nm": 20.0,
+    "velocity_limit_rad_s": 1.5,
+    "grid_divisions": 2,
+    "position_tolerance_m": 0.05,
+    "ik_starts": 2,
+    "ik_iterations": 6,
+    "ik_damping": 0.08,
+    "joint_sample_limit": 6.28
+  },
   "baseline_samples": {
     "q": [
       [
@@ -315,11 +336,34 @@
         -4.452852360377161
       ]
     ],
-    "task_coverage": 0.2916666666666667,
-    "median_translational_manipulability": 0.006686922473525359,
-    "mass_kg": 4.2785400000000005,
-    "collision_rate": 0.5833333333333334,
-    "q0_peak_torque_nm": 0.00019244566906833805,
-    "feasible": true
+    "pose_hit_rate": 0.2916666666666667,
+    "posture_manipulability_median": 0.006686922473525359
+  },
+  "ik_task": {
+    "center_m": [
+      0.0,
+      0.05,
+      0.72
+    ],
+    "half_m": [
+      0.22,
+      0.22,
+      0.22
+    ],
+    "payload_kg": 0.4,
+    "effort_limit_nm": 20.0,
+    "velocity_limit_rad_s": 1.5,
+    "grid_divisions": 2,
+    "position_tolerance_m": 0.05,
+    "ik_starts": 2,
+    "ik_iterations": 6,
+    "ik_damping": 0.08,
+    "joint_sample_limit": 6.28
+  },
+  "baseline_ik": {
+    "task_feasible_fraction": 0.75,
+    "task_targets_reached": 6,
+    "task_target_count": 8,
+    "task_manipulability_median": 0.01204010737224773
   }
 }

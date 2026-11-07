@@ -91,11 +91,15 @@ class TaskSpec:
     effort_limit_nm: float = 20.0
     effort_is_override: bool = False
     velocity_limit_rad_s: float = 1.5
-    sample_count: int = 256
+    # 关节空间诊断采样。0 表示不算末端落盒比例。它不是任务覆盖率。
+    sample_count: int = 0
     seed: int = 0
     joint_sample_limit: float = JOINT_LIMIT
-    # 采样里自碰撞或静力矩失败的比例超过该值，则整条设计不可行。
-    rate_limit: float = 0.85
+    grid_divisions: int = 2
+    position_tolerance_m: float = 0.05
+    ik_starts: int = 3
+    ik_iterations: int = 8
+    ik_damping: float = 0.08
 
     def __post_init__(self) -> None:
         self.center_m = tuple(float(v) for v in self.center_m)  # type: ignore[assignment]
@@ -125,11 +129,14 @@ class SearchSpec:
 
 
 OBJECTIVE_LABELS = {
-    "coverage": "任务区覆盖率",
-    "manipulability": "平移可操作度中位数",
+    "coverage": "任务格点可行比例",
+    "manipulability": "任务可行解上的平移可操作度",
     "mass": "质量",
-    "velocity": "速度能力中位数",
+    "velocity": "任务可行解上的速度能力",
 }
+
+# 没有可行任务解时，最小化目标用这个惩罚，避免 NaN 进前沿。
+MISSING_OBJECTIVE = 1.0
 
 OBJECTIVE_SENSE = {
     "coverage": "max",

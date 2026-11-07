@@ -190,12 +190,16 @@ def candidates_csv(result: dict[str, object]) -> str:
         "modules",
         "twists_rad",
         "mass_kg",
-        "task_coverage",
-        "coverage_se",
-        "median_translational_manipulability",
-        "median_velocity_capability_m_s",
-        "collision_rate",
-        "torque_fail_rate",
+        "task_feasible_fraction",
+        "task_target_count",
+        "task_targets_reached",
+        "position_tolerance_m",
+        "grid_divisions",
+        "ik_starts",
+        "ik_iterations",
+        "task_manipulability_median",
+        "task_velocity_median",
+        "pose_hit_rate",
         "violation",
     ]
     writer = csv.DictWriter(buffer, fieldnames=fields)
@@ -217,12 +221,22 @@ def candidates_csv(result: dict[str, object]) -> str:
                     for item in modules[:-1]
                 ),
                 "mass_kg": f"{metrics['mass_kg']:.6f}",
-                "task_coverage": f"{metrics['task_coverage']:.6f}",
-                "coverage_se": f"{metrics['coverage_se']:.6f}",
-                "median_translational_manipulability": f"{metrics['median_translational_manipulability']:.8f}",
-                "median_velocity_capability_m_s": f"{metrics['median_velocity_capability_m_s']:.6f}",
-                "collision_rate": f"{metrics['collision_rate']:.6f}",
-                "torque_fail_rate": f"{metrics['torque_fail_rate']:.6f}",
+                "task_feasible_fraction": f"{metrics['task_feasible_fraction']:.6f}",
+                "task_target_count": metrics["task_target_count"],
+                "task_targets_reached": metrics["task_targets_reached"],
+                "position_tolerance_m": f"{metrics['position_tolerance_m']:.6f}",
+                "grid_divisions": metrics["grid_divisions"],
+                "ik_starts": metrics["ik_starts"],
+                "ik_iterations": metrics["ik_iterations"],
+                "task_manipulability_median": ""
+                if metrics.get("task_manipulability_median") is None
+                else f"{metrics['task_manipulability_median']:.8f}",
+                "task_velocity_median": ""
+                if metrics.get("task_velocity_median") is None
+                else f"{metrics['task_velocity_median']:.6f}",
+                "pose_hit_rate": ""
+                if metrics.get("pose_hit_rate") is None
+                else f"{metrics['pose_hit_rate']:.6f}",
                 "violation": f"{float(row.get('violation', 0.0)):.6f}",
             }
         )

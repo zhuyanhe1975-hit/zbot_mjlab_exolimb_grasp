@@ -60,16 +60,17 @@ export function exportMjcf(design) {
 }
 
 export function candidatesCsv(result) {
-  const header = ["index", "modules", "mass_kg", "task_coverage", "coverage_se", "manipulability", "velocity", "violation"];
+  const header = ["index", "modules", "mass_kg", "task_feasible_fraction", "task_target_count", "task_targets_reached", "manipulability", "velocity", "pose_hit_rate"];
   const rows = [result.baseline, ...result.feasible_pareto].map((row, index) => [
     index,
     row.design.module_ids ? row.design.module_ids.join(" ") : row.design.modules.map((item) => item.id).join(" "),
     row.metrics.mass_kg.toFixed(6),
-    row.metrics.task_coverage.toFixed(6),
-    row.metrics.coverage_se.toFixed(6),
-    row.metrics.median_translational_manipulability.toFixed(8),
-    row.metrics.median_velocity_capability_m_s.toFixed(6),
-    (row.violation ?? 0).toFixed(6),
+    row.metrics.task_feasible_fraction.toFixed(6),
+    row.metrics.task_target_count,
+    row.metrics.task_targets_reached,
+    row.metrics.task_manipulability_median == null ? "" : row.metrics.task_manipulability_median.toFixed(8),
+    row.metrics.task_velocity_median == null ? "" : row.metrics.task_velocity_median.toFixed(6),
+    row.metrics.pose_hit_rate == null ? "" : row.metrics.pose_hit_rate.toFixed(6),
   ]);
   return [header.join(","), ...rows.map((row) => row.join(","))].join("\n") + "\n";
 }
