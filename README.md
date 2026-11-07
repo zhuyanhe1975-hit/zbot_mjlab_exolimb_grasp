@@ -1,14 +1,48 @@
-# Z-Bot 外肢体抓取
+# 模块化可重构臂综合设计与参数优化平台
 
 [在线演示（部署后可直接打开运行）](https://zhuyanhe1975-hit.github.io/zbot_mjlab_exolimb_grasp/)
 
-上面的链接是浏览器里的运动学演示地址。Pages 还没有发布成功时，打开它会是 404；仓库里的代码已经在 `main` 上。请在 Settings → Pages 把 Source 选成 GitHub Actions 并保存一次，之后推送到 `main` 会把页面部署到这个地址。
+这是一个串联可重构臂的设计平台：模块库和接口规则决定哪些模块能装在一起，构型搜索再决定模块类型、数量、次序和连接方位，并与允许的连续结构参数一起做多目标优化。ZBot R3 是第一套放进模块库的实物，用来回归已核对的运动学；它不是平台唯一能表达的机构。抓取强化学习还留在仓库里，但不是这个设计工具的主体。
 
-网页演示可以切换六模块构型。基准构型的五个连接朝向都是 0，关节轴仍是 `0 0 1`，与 `assets/zbot_6/ZBOT6.xml` 一致。另一种把中间模块（从肩部数起的第 4 个，XML 里的 `base`）相对上一模块绕连接轴转动 90°。在仓库根目录运行 `python scripts/evaluate_config.py`（需要 NumPy）会用同一批 20000 组关节角比较这两条的工作空间体素占用，以及平移 Yoshikawa 可操作度的中位数，并把结果写入 `web/public/config_metrics.json`。
+设计页面在 `web/design.html`。上面的链接仍是原来的抓取运动学演示；Pages 只在推送到 `main` 之后更新，未合并的分支不会出现在这个地址上。
 
-五个连接各自只能取 0 或 π/2，合法序列一共 32 条。`python scripts/evaluate_batch.py` 会把这 32 条全部评完，写出 `web/public/config_batch.csv` 和帕累托摘要 `web/public/config_batch_summary.json`。页面下拉框保留基准构型和「中间模块旋转 90°」，并加上摘要里比基准更好的一到两个代表构型。
+## 使用
 
-本仓库包含两部分：
+需要 Python 3.10 和 NumPy。在仓库根目录：
+
+```bash
+python -m unittest tests.test_platform
+python scripts/design_optimize.py --mode mixed --count-min 3 --count-max 5 --pop 12 --gen 4 --grid 2 --ik-starts 3 --ik-iterations 8 --reeval-grid 3 --reeval-starts 5 --reeval-iterations 12 --seed 1 --out experiments/platform_seed1.json
+```
+
+`--mode physical` 只搜索 ZBot R3 的数量和连接方位，不缩放实物尺寸。`--mode mixed` 允许插入轴向概念连杆，并优化它的长度。任务主指标是固定格点里找到可行解的比例，不是随机关节样本掉进盒子的比例。网页里的搜索在 Web Worker 中完成；两边用同一套目标函数，IK 没有随机数所以格点结果可以对齐，搜索个体的随机数流仍然不同。
+
+固定 6 个驱动关节时，先枚举实物连接，再用更严的容差和两套任务点复核：
+
+```bash
+python scripts/design_6dof.py --out experiments/dof6_search.json
+python scripts/design_6dof_refine.py --out experiments/dof6_refine.json
+```
+
+六个 ZBot 模块的 32 种 0/π/2 连接在随机一般位形上六维几何雅可比都不结构退化。概念轴向连杆若相邻连接为 0，关节轴保持平行，六维秩结构退化，重新制造补不上这个缺失。默认任务盒没有用户给定的工况来源。在 1 cm、125 个端点格点和另一套单元中心点上，没有实物方案同时稳住更高的可行比例，并保住可操作度和速度。这不是说全 0 对任何任务都最优。
+
+本地打开设计页：
+
+```bash
+cd web
+npm install
+npm run dev
+```
+
+然后打开 <http://localhost:5173/zbot_mjlab_exolimb_grasp/design.html>。
+
+架构、指标边界和后续验收见 [docs/平台架构与验收.md](docs/平台架构与验收.md)。
+
+## 既有抓取任务与早期构型对比
+
+早期页面可以切换六模块构型。基准构型的五个连接朝向都是 0，关节轴仍是 `0 0 1`，与 `assets/zbot_6/ZBOT6.xml` 一致。`python scripts/evaluate_config.py` 和 `python scripts/evaluate_batch.py` 仍可复现那次 32 条合法朝向的采样对比，结果在 `web/public/config_metrics.json` 与 `web/public/config_batch.csv`。那不是本平台的优化器。
+
+本仓库因此还有两部分旧工作：
 
 1. **本地 MJLab 训练**。肩部固定的六模块 Z-Bot 手臂学习接触托盘上的橙色工具。训练在本机运行，不在浏览器里进行。
 2. **网页运动学演示**。用 Three.js 显示同一条机械臂、托盘和工具，可拖动关节、播放从伸直到名义姿态的接近过程。页面不计算接触力，也不运行仿真器。

@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>模块化可重构臂设计平台</title>
+    <link rel="stylesheet" href="./src/platform/style.css" />
+  </head>
+  <body>
+    <header class="top">
+      <div>
+        <p class="eyebrow">串联构型综合 · 参数优化</p>
+        <h1>模块化可重构臂设计平台</h1>
+      </div>
+      <p class="top-note">ZBot R3 是第一套实物模块。概念连杆用来扩展模块库，不是第二套已测量硬件。抓取训练仍在 <a href="./index.html">原来的演示</a>。</p>
+    </header>
+    <div class="workspace">
+      <aside class="column" id="setup">
+        <section>
+          <h2>1 模块库</h2>
+          <div id="library"></div>
+        </section>
+        <section>
+          <h2>2 装配</h2>
+          <div class="modes" id="modes">
+            <label><input type="radio" name="mode" value="physical" checked /> 实物装配</label>
+            <label><input type="radio" name="mode" value="mixed" /> 概念混合</label>
+          </div>
+          <p class="help" id="mode-help">只使用 ZBot R3。模块数量、次序和连接方位可以搜索，尺寸保持实物值。</p>
+          <div class="grid-3">
+            <label>当前数量<input id="count-now" type="number" min="3" max="8" value="4" /></label>
+            <label>搜索最少<input id="count-min" type="number" min="3" max="8" value="3" /></label>
+            <label>搜索最多<input id="count-max" type="number" min="3" max="8" value="6" /></label>
+          </div>
+          <div class="run-row">
+            <label class="lock">锁定当前数量<input id="count-lock" type="checkbox" /></label>
+            <button id="lock6" type="button" class="secondary">固定 6 个驱动关节</button>
+          </div>
+          <div id="chain"></div>
+          <p class="warn" id="assembly-warn" hidden></p>
+        </section>
+        <section>
+          <h2>3 任务与假设</h2>
+          <div class="grid-3">
+            <label>任务中心 x<input id="cx" type="number" step="0.01" value="0" /></label>
+            <label>y<input id="cy" type="number" step="0.01" value="0.05" /></label>
+            <label>z<input id="cz" type="number" step="0.01" value="0.72" /></label>
+            <label>半尺寸 x<input id="hx" type="number" step="0.01" value="0.22" min="0.02" /></label>
+            <label>y<input id="hy" type="number" step="0.01" value="0.22" min="0.02" /></label>
+            <label>z<input id="hz" type="number" step="0.01" value="0.22" min="0.02" /></label>
+          </div>
+          <div class="grid-2">
+            <label>载荷 kg<input id="payload" type="number" min="0" max="20" step="0.1" value="0.4" /></label>
+            <label>力矩上限 N·m<input id="effort" type="number" min="0.1" max="200" step="0.5" value="20" /></label>
+            <label>速度假设 rad/s<input id="velocity" type="number" min="0.1" max="20" step="0.1" value="1.5" /></label>
+            <label>概念长度范围 m
+              <span class="pair"><input id="len-min" type="number" min="0.06" max="0.16" step="0.01" value="0.06" /><input id="len-max" type="number" min="0.06" max="0.16" step="0.01" value="0.16" /></span>
+            </label>
+          </div>
+          <div class="grid-3">
+            <label>格点每轴<input id="grid" type="number" min="1" max="4" value="2" /></label>
+            <label>位置容差 m<input id="tolerance" type="number" min="0.005" max="0.2" step="0.005" value="0.05" /></label>
+            <label>IK 起点<input id="ik-starts" type="number" min="1" max="8" value="3" /></label>
+            <label>IK 迭代<input id="ik-iters" type="number" min="1" max="20" value="8" /></label>
+            <label>落盒诊断样本<input id="samples" type="number" min="0" max="400" step="16" value="0" /></label>
+          </div>
+          <p class="help">当前任务盒是默认示例，不是用户给定工况，也不是通用最优。主指标是固定格点里找到可行解的比例，分母是格点数。未解出不是不可达。6 个驱动关节只覆盖位置任务，不保证姿态也可控。落盒诊断不是覆盖率。力矩默认 20 N·m。速度没有实测值。</p>
+        </section>
+        <section>
+          <h2>4 搜索</h2>
+          <div class="checks" id="objectives">
+            <label><input type="checkbox" value="coverage" checked /> 任务格点可行比例</label>
+            <label><input type="checkbox" value="manipulability" checked /> 可行解上的可操作度</label>
+            <label><input type="checkbox" value="mass" checked /> 质量</label>
+            <label><input type="checkbox" value="velocity" /> 可行解上的速度能力</label>
+          </div>
+          <div class="grid-2">
+            <label>种群<input id="pop" type="number" min="4" max="24" step="2" value="8" /></label>
+            <label>代数<input id="gen" type="number" min="1" max="20" value="4" /></label>
+          </div>
+          <label>随机种子<input id="seed" type="number" value="1" /></label>
+          <p class="help">在线计算在本页的 Web Worker 里完成。格点、IK 起点和迭代是预算，漏检不等于不可达。更高预算用本页的复核，或 Python 命令行。</p>
+        </section>
+      </aside>
+      <div id="viewport"></div>
+      <aside class="column" id="results">
+        <section>
+          <div class="run-row">
+            <button id="run" type="button">开始搜索</button>
+            <button id="cancel" type="button" class="secondary" disabled>取消</button>
+            <button id="reeval" type="button" class="secondary" disabled>更高预算复核</button>
+          </div>
+          <p id="progress" class="help">还没有运行。改装配或任务后再搜索，结果会跟着变。</p>
+          <canvas id="pareto" width="320" height="180"></canvas>
+          <div id="candidates"></div>
+        </section>
+        <section>
+          <h2>当前方案</h2>
+          <p id="detail" class="help">拖动关节只改变眼前这一个姿态。采样指标来自搜索时的蒙特卡洛，不会被一次拖动改写。</p>
+          <div id="joints"></div>
+          <div class="run-row">
+            <button id="export-json" type="button" class="secondary">导出 JSON</button>
+            <button id="export-csv" type="button" class="secondary">导出 CSV</button>
+            <button id="export-mjcf" type="button" class="secondary">导出 MJCF</button>
+          </div>
+          <label class="file">导入 JSON<input id="import-json" type="file" accept="application/json" /></label>
+        </section>
+        <details>
+          <summary>假设与未支持项</summary>
+          <p class="help">任务格点可行比例的分母是固定格点。灰色点表示这个预算没找到可行解，不是证明不可达。末端落盒比例是另一项关节采样诊断。胶囊自碰撞和质点静力矩是近似。零位碰撞不否决设计。不提供网格精确碰撞、完整动力学和加速度能力。平台只生成串联链。</p>
+        </details>
+      </aside>
+    </div>
+    <script type="module" src="./src/platform/main.js"></script>
+  </body>
+</html>

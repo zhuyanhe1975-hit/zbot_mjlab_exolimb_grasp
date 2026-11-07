@@ -1,0 +1,1283 @@
+{
+  "platform_version": "0.1.0",
+  "mode": "mixed",
+  "objectives": [
+    {
+      "id": "coverage",
+      "label": "任务格点可行比例",
+      "sense": "max"
+    },
+    {
+      "id": "manipulability",
+      "label": "任务可行解上的平移可操作度",
+      "sense": "max"
+    },
+    {
+      "id": "mass",
+      "label": "质量",
+      "sense": "min"
+    }
+  ],
+  "seed": 1,
+  "population": 12,
+  "generations": 4,
+  "sample_count": 0,
+  "evaluations": 60,
+  "elapsed_s": 4.547084122999877,
+  "progress": [
+    {
+      "generation": 1,
+      "evaluations": 24,
+      "feasible": 12
+    },
+    {
+      "generation": 2,
+      "evaluations": 36,
+      "feasible": 12
+    },
+    {
+      "generation": 3,
+      "evaluations": 48,
+      "feasible": 12
+    },
+    {
+      "generation": 4,
+      "evaluations": 60,
+      "feasible": 12
+    }
+  ],
+  "baseline": {
+    "design": {
+      "topology": "serial",
+      "base_position_m": [
+        0.0,
+        0.0,
+        0.4
+      ],
+      "modules": [
+        {
+          "id": "zbot_r3",
+          "label": "ZBot R3 关节模块",
+          "kind": "physical",
+          "in_family": "zbot_flange",
+          "out_family": "zbot_flange",
+          "parameters": {},
+          "twist_to_next_rad": 0.0
+        },
+        {
+          "id": "zbot_r3",
+          "label": "ZBot R3 关节模块",
+          "kind": "physical",
+          "in_family": "zbot_flange",
+          "out_family": "zbot_flange",
+          "parameters": {},
+          "twist_to_next_rad": 0.0
+        },
+        {
+          "id": "zbot_r3",
+          "label": "ZBot R3 关节模块",
+          "kind": "physical",
+          "in_family": "zbot_flange",
+          "out_family": "zbot_flange",
+          "parameters": {},
+          "twist_to_next_rad": 0.0
+        },
+        {
+          "id": "zbot_r3",
+          "label": "ZBot R3 关节模块",
+          "kind": "physical",
+          "in_family": "zbot_flange",
+          "out_family": "zbot_flange",
+          "parameters": {},
+          "twist_to_next_rad": 0.0
+        },
+        {
+          "id": "zbot_r3",
+          "label": "ZBot R3 关节模块",
+          "kind": "physical",
+          "in_family": "zbot_flange",
+          "out_family": "zbot_flange",
+          "parameters": {},
+          "twist_to_next_rad": 0.0
+        },
+        {
+          "id": "zbot_r3",
+          "label": "ZBot R3 关节模块",
+          "kind": "physical",
+          "in_family": "zbot_flange",
+          "out_family": "zbot_flange",
+          "parameters": {},
+          "twist_to_next_rad": null
+        }
+      ]
+    },
+    "metrics": {
+      "mass_kg": 4.2785400000000005,
+      "task_feasible_fraction": 0.75,
+      "task_target_count": 8,
+      "task_targets_reached": 6,
+      "grid_divisions": 2,
+      "position_tolerance_m": 0.05,
+      "ik_starts": 3,
+      "ik_iterations": 8,
+      "task_coverage_definition": "固定任务格点中，在位置容差、关节限位、胶囊自碰撞和静力矩约束下找到可行解的比例。分母是格点数。未解出只表示该预算下没找到，不是严格不可达，也不是工作空间体积。",
+      "pose_hit_rate": null,
+      "pose_hit_se": null,
+      "pose_hit_definition": "随机关节样本里末端落入任务盒的比例，含碰撞和超力矩姿态。不是任务覆盖率。",
+      "sample_count": 0,
+      "task_manipulability_median": 0.01204010737224773,
+      "task_manipulability_valid": true,
+      "task_velocity_median": 0.3699702801311239,
+      "task_velocity_valid": true,
+      "task_metric_domain": "只统计该预算下找到的可行任务解。没有可行解时指标无效，优化里用惩罚，不用 NaN。",
+      "posture_manipulability_median": null,
+      "posture_velocity_median": null,
+      "posture_metric_definition": "全体关节样本的中位数，包含任务区外和不可行姿态，不是任务性能。",
+      "collision_rate": null,
+      "torque_fail_rate": null,
+      "q0_collision": false,
+      "q0_torque_ok": true,
+      "q0_peak_torque_nm": 0.00019244566906833805,
+      "q0_is_design_veto": false,
+      "q0_note": "零位碰撞或超力矩只作诊断。可重构装配的零位不必是工作姿态，不能据此判定整机不可用。",
+      "violation": 0.0,
+      "feasible": true,
+      "example_q": [
+        -0.7070167914123641,
+        -1.3026756644907087,
+        1.3876985168745244,
+        -1.2012618548402076,
+        0.6694317936073868,
+        0.0
+      ],
+      "ee_straight": [
+        0.000212137307765557,
+        0.0,
+        1.0047879867217482
+      ],
+      "unsupported": [
+        "网格精确碰撞",
+        "完整逆动力学与加速度能力",
+        "转动可操作度（不与平移指标混单位）",
+        "树形或闭环拓扑"
+      ],
+      "approximations": [
+        "自碰撞用胶囊，半径是网格外接尺寸的近似，不是 STL 精确碰撞",
+        "静力矩把连杆质量集中在质心，只平衡重力与末端载荷，不含惯性力",
+        "速度能力是伪逆下界，关节速度上限由用户给定，R3 没有实测速度",
+        "任务格点可行比例取决于格点分辨率、位置容差和 IK 起点/迭代预算，漏检不等于不可达",
+        "末端落盒比例若计算，其二项标准误差只描述关节采样，不能挪用来当任务空间覆盖的误差"
+      ]
+    },
+    "note": "六模块 ZBot R3、连接方位全 0。用同一次任务设置评价，不参与被搜索个体的随机样本。"
+  },
+  "feasible_pareto": [
+    {
+      "design": {
+        "topology": "serial",
+        "base_position_m": [
+          0.0,
+          0.0,
+          0.4
+        ],
+        "modules": [
+          {
+            "id": "concept_axial",
+            "label": "轴向概念连杆",
+            "kind": "conceptual",
+            "in_family": "zbot_flange",
+            "out_family": "zbot_flange",
+            "parameters": {
+              "length_m": 0.08432154643063271
+            },
+            "twist_to_next_rad": 1.5707963267948966
+          },
+          {
+            "id": "zbot_r3",
+            "label": "ZBot R3 关节模块",
+            "kind": "physical",
+            "in_family": "zbot_flange",
+            "out_family": "zbot_flange",
+            "parameters": {},
+            "twist_to_next_rad": 1.5707963267948966
+          },
+          {
+            "id": "zbot_r3",
+            "label": "ZBot R3 关节模块",
+            "kind": "physical",
+            "in_family": "zbot_flange",
+            "out_family": "zbot_flange",
+            "parameters": {},
+            "twist_to_next_rad": 1.5707963267948966
+          },
+          {
+            "id": "concept_axial",
+            "label": "轴向概念连杆",
+            "kind": "conceptual",
+            "in_family": "zbot_flange",
+            "out_family": "zbot_flange",
+            "parameters": {
+              "length_m": 0.08578031189967365
+            },
+            "twist_to_next_rad": 0.0
+          },
+          {
+            "id": "concept_axial",
+            "label": "轴向概念连杆",
+            "kind": "conceptual",
+            "in_family": "zbot_flange",
+            "out_family": "zbot_flange",
+            "parameters": {
+              "length_m": 0.13631285325440534
+            },
+            "twist_to_next_rad": null
+          }
+        ]
+      },
+      "objectives_minimized": [
+        -0.5,
+        -0.00983659371128641,
+        2.6518388463388467
+      ],
+      "violation": 0.0,
+      "metrics": {
+        "mass_kg": 2.6518388463388467,
+        "task_feasible_fraction": 0.5,
+        "task_target_count": 8,
+        "task_targets_reached": 4,
+        "grid_divisions": 2,
+        "position_tolerance_m": 0.05,
+        "ik_starts": 3,
+        "ik_iterations": 8,
+        "task_coverage_definition": "固定任务格点中，在位置容差、关节限位、胶囊自碰撞和静力矩约束下找到可行解的比例。分母是格点数。未解出只表示该预算下没找到，不是严格不可达，也不是工作空间体积。",
+        "pose_hit_rate": null,
+        "pose_hit_se": null,
+        "pose_hit_definition": "随机关节样本里末端落入任务盒的比例，含碰撞和超力矩姿态。不是任务覆盖率。",
+        "sample_count": 0,
+        "task_manipulability_median": 0.00983659371128641,
+        "task_manipulability_valid": true,
+        "task_velocity_median": 0.21608560419147646,
+        "task_velocity_valid": true,
+        "task_metric_domain": "只统计该预算下找到的可行任务解。没有可行解时指标无效，优化里用惩罚，不用 NaN。",
+        "posture_manipulability_median": null,
+        "posture_velocity_median": null,
+        "posture_metric_definition": "全体关节样本的中位数，包含任务区外和不可行姿态，不是任务性能。",
+        "collision_rate": null,
+        "torque_fail_rate": null,
+        "q0_collision": false,
+        "q0_torque_ok": true,
+        "q0_peak_torque_nm": 3.353902708749585,
+        "q0_is_design_veto": false,
+        "q0_note": "零位碰撞或超力矩只作诊断。可重构装配的零位不必是工作姿态，不能据此判定整机不可用。",
+        "violation": 0.0,
+        "feasible": true,
+        "example_q": [
+          -0.3369892008379665,
+          -0.18729995212109957,
+          0.008972773558118555,
+          -0.15120466076391095,
+          -0.09280402087022349
+        ],
+        "ee_straight": [
+          -0.13734897208323193,
+          -0.2199983959786015,
+          0.39958390758335166
+        ],
+        "unsupported": [
+          "网格精确碰撞",
+          "完整逆动力学与加速度能力",
+          "转动可操作度（不与平移指标混单位）",
+          "树形或闭环拓扑"
+        ],
+        "approximations": [
+          "自碰撞用胶囊，半径是网格外接尺寸的近似，不是 STL 精确碰撞",
+          "静力矩把连杆质量集中在质心，只平衡重力与末端载荷，不含惯性力",
+          "速度能力是伪逆下界，关节速度上限由用户给定，R3 没有实测速度",
+          "任务格点可行比例取决于格点分辨率、位置容差和 IK 起点/迭代预算，漏检不等于不可达",
+          "末端落盒比例若计算，其二项标准误差只描述关节采样，不能挪用来当任务空间覆盖的误差"
+        ]
+      }
+    },
+    {
+      "design": {
+        "topology": "serial",
+        "base_position_m": [
+          0.0,
+          0.0,
+          0.4
+        ],
+        "modules": [
+          {
+            "id": "zbot_r3",
+            "label": "ZBot R3 关节模块",
+            "kind": "physical",
+            "in_family": "zbot_flange",
+            "out_family": "zbot_flange",
+            "parameters": {},
+            "twist_to_next_rad": 0.0
+          },
+          {
+            "id": "concept_axial",
+            "label": "轴向概念连杆",
+            "kind": "conceptual",
+            "in_family": "zbot_flange",
+            "out_family": "zbot_flange",
+            "parameters": {
+              "length_m": 0.07383748700346929
+            },
+            "twist_to_next_rad": 0.0
+          },
+          {
+            "id": "concept_axial",
+            "label": "轴向概念连杆",
+            "kind": "conceptual",
+            "in_family": "zbot_flange",
+            "out_family": "zbot_flange",
+            "parameters": {
+              "length_m": 0.15722867231818055
+            },
+            "twist_to_next_rad": 1.5707963267948966
+          },
+          {
+            "id": "concept_axial",
+            "label": "轴向概念连杆",
+            "kind": "conceptual",
+            "in_family": "zbot_flange",
+            "out_family": "zbot_flange",
+            "parameters": {
+              "length_m": 0.10530869384219292
+            },
+            "twist_to_next_rad": null
+          }
+        ]
+      },
+      "objectives_minimized": [
+        -0.5,
+        -0.0034133180028770604,
+        2.058589412655371
+      ],
+      "violation": 0.0,
+      "metrics": {
+        "mass_kg": 2.058589412655371,
+        "task_feasible_fraction": 0.5,
+        "task_target_count": 8,
+        "task_targets_reached": 4,
+        "grid_divisions": 2,
+        "position_tolerance_m": 0.05,
+        "ik_starts": 3,
+        "ik_iterations": 8,
+        "task_coverage_definition": "固定任务格点中，在位置容差、关节限位、胶囊自碰撞和静力矩约束下找到可行解的比例。分母是格点数。未解出只表示该预算下没找到，不是严格不可达，也不是工作空间体积。",
+        "pose_hit_rate": null,
+        "pose_hit_se": null,
+        "pose_hit_definition": "随机关节样本里末端落入任务盒的比例，含碰撞和超力矩姿态。不是任务覆盖率。",
+        "sample_count": 0,
+        "task_manipulability_median": 0.0034133180028770604,
+        "task_manipulability_valid": true,
+        "task_velocity_median": 0.12337623763250383,
+        "task_velocity_valid": true,
+        "task_metric_domain": "只统计该预算下找到的可行任务解。没有可行解时指标无效，优化里用惩罚，不用 NaN。",
+        "posture_manipulability_median": null,
+        "posture_velocity_median": null,
+        "posture_metric_definition": "全体关节样本的中位数，包含任务区外和不可行姿态，不是任务性能。",
+        "collision_rate": null,
+        "torque_fail_rate": null,
+        "q0_collision": false,
+        "q0_torque_ok": true,
+        "q0_peak_torque_nm": 0.6308155646689957,
+        "q0_is_design_veto": false,
+        "q0_note": "零位碰撞或超力矩只作诊断。可重构装配的零位不必是工作姿态，不能据此判定整机不可用。",
+        "violation": 0.0,
+        "feasible": true,
+        "example_q": [
+          -0.1295254908033598,
+          0.2632203922483076,
+          0.633479319882793,
+          -0.2430561434679788
+        ],
+        "ee_straight": [
+          -0.3363748458783053,
+          0.0,
+          0.5099999973437269
+        ],
+        "unsupported": [
+          "网格精确碰撞",
+          "完整逆动力学与加速度能力",
+          "转动可操作度（不与平移指标混单位）",
+          "树形或闭环拓扑"
+        ],
+        "approximations": [
+          "自碰撞用胶囊，半径是网格外接尺寸的近似，不是 STL 精确碰撞",
+          "静力矩把连杆质量集中在质心，只平衡重力与末端载荷，不含惯性力",
+          "速度能力是伪逆下界，关节速度上限由用户给定，R3 没有实测速度",
+          "任务格点可行比例取决于格点分辨率、位置容差和 IK 起点/迭代预算，漏检不等于不可达",
+          "末端落盒比例若计算，其二项标准误差只描述关节采样，不能挪用来当任务空间覆盖的误差"
+        ]
+      }
+    },
+    {
+      "design": {
+        "topology": "serial",
+        "base_position_m": [
+          0.0,
+          0.0,
+          0.4
+        ],
+        "modules": [
+          {
+            "id": "concept_axial",
+            "label": "轴向概念连杆",
+            "kind": "conceptual",
+            "in_family": "zbot_flange",
+            "out_family": "zbot_flange",
+            "parameters": {
+              "length_m": 0.11597557375086433
+            },
+            "twist_to_next_rad": 0.0
+          },
+          {
+            "id": "concept_axial",
+            "label": "轴向概念连杆",
+            "kind": "conceptual",
+            "in_family": "zbot_flange",
+            "out_family": "zbot_flange",
+            "parameters": {
+              "length_m": 0.08572876361512571
+            },
+            "twist_to_next_rad": 1.5707963267948966
+          },
+          {
+            "id": "concept_axial",
+            "label": "轴向概念连杆",
+            "kind": "conceptual",
+            "in_family": "zbot_flange",
+            "out_family": "zbot_flange",
+            "parameters": {
+              "length_m": 0.0810472196962216
+            },
+            "twist_to_next_rad": 1.5707963267948966
+          },
+          {
+            "id": "concept_axial",
+            "label": "轴向概念连杆",
+            "kind": "conceptual",
+            "in_family": "zbot_flange",
+            "out_family": "zbot_flange",
+            "parameters": {
+              "length_m": 0.08725060487513656
+            },
+            "twist_to_next_rad": null
+          }
+        ]
+      },
+      "objectives_minimized": [
+        -0.5,
+        -0.0025967324308063798,
+        1.4800086477493926
+      ],
+      "violation": 0.0,
+      "metrics": {
+        "mass_kg": 1.4800086477493926,
+        "task_feasible_fraction": 0.5,
+        "task_target_count": 8,
+        "task_targets_reached": 4,
+        "grid_divisions": 2,
+        "position_tolerance_m": 0.05,
+        "ik_starts": 3,
+        "ik_iterations": 8,
+        "task_coverage_definition": "固定任务格点中，在位置容差、关节限位、胶囊自碰撞和静力矩约束下找到可行解的比例。分母是格点数。未解出只表示该预算下没找到，不是严格不可达，也不是工作空间体积。",
+        "pose_hit_rate": null,
+        "pose_hit_se": null,
+        "pose_hit_definition": "随机关节样本里末端落入任务盒的比例，含碰撞和超力矩姿态。不是任务覆盖率。",
+        "sample_count": 0,
+        "task_manipulability_median": 0.0025967324308063798,
+        "task_manipulability_valid": true,
+        "task_velocity_median": 0.13600876015526084,
+        "task_velocity_valid": true,
+        "task_metric_domain": "只统计该预算下找到的可行任务解。没有可行解时指标无效，优化里用惩罚，不用 NaN。",
+        "posture_manipulability_median": null,
+        "posture_velocity_median": null,
+        "posture_metric_definition": "全体关节样本的中位数，包含任务区外和不可行姿态，不是任务性能。",
+        "collision_rate": null,
+        "torque_fail_rate": null,
+        "q0_collision": false,
+        "q0_torque_ok": true,
+        "q0_peak_torque_nm": 1.2161206387799706,
+        "q0_is_design_veto": false,
+        "q0_note": "零位碰撞或超力矩只作诊断。可重构装配的零位不必是工作姿态，不能据此判定整机不可用。",
+        "violation": 0.0,
+        "feasible": true,
+        "example_q": [
+          -1.736744460020036,
+          -0.6915619433052769,
+          0.8271124239777857,
+          1.087618642811989
+        ],
+        "ee_straight": [
+          0.37000216193734814,
+          0.0,
+          0.4
+        ],
+        "unsupported": [
+          "网格精确碰撞",
+          "完整逆动力学与加速度能力",
+          "转动可操作度（不与平移指标混单位）",
+          "树形或闭环拓扑"
+        ],
+        "approximations": [
+          "自碰撞用胶囊，半径是网格外接尺寸的近似，不是 STL 精确碰撞",
+          "静力矩把连杆质量集中在质心，只平衡重力与末端载荷，不含惯性力",
+          "速度能力是伪逆下界，关节速度上限由用户给定，R3 没有实测速度",
+          "任务格点可行比例取决于格点分辨率、位置容差和 IK 起点/迭代预算，漏检不等于不可达",
+          "末端落盒比例若计算，其二项标准误差只描述关节采样，不能挪用来当任务空间覆盖的误差"
+        ]
+      }
+    },
+    {
+      "design": {
+        "topology": "serial",
+        "base_position_m": [
+          0.0,
+          0.0,
+          0.4
+        ],
+        "modules": [
+          {
+            "id": "concept_axial",
+            "label": "轴向概念连杆",
+            "kind": "conceptual",
+            "in_family": "zbot_flange",
+            "out_family": "zbot_flange",
+            "parameters": {
+              "length_m": 0.08443741479942081
+            },
+            "twist_to_next_rad": 1.5707963267948966
+          },
+          {
+            "id": "zbot_r3",
+            "label": "ZBot R3 关节模块",
+            "kind": "physical",
+            "in_family": "zbot_flange",
+            "out_family": "zbot_flange",
+            "parameters": {},
+            "twist_to_next_rad": 0.0
+          },
+          {
+            "id": "concept_axial",
+            "label": "轴向概念连杆",
+            "kind": "conceptual",
+            "in_family": "zbot_flange",
+            "out_family": "zbot_flange",
+            "parameters": {
+              "length_m": 0.15405530430703404
+            },
+            "twist_to_next_rad": 0.0
+          },
+          {
+            "id": "concept_axial",
+            "label": "轴向概念连杆",
+            "kind": "conceptual",
+            "in_family": "zbot_flange",
+            "out_family": "zbot_flange",
+            "parameters": {
+              "length_m": 0.09934511224170002
+            },
+            "twist_to_next_rad": 1.5707963267948966
+          },
+          {
+            "id": "concept_axial",
+            "label": "轴向概念连杆",
+            "kind": "conceptual",
+            "in_family": "zbot_flange",
+            "out_family": "zbot_flange",
+            "parameters": {
+              "length_m": 0.1482985180698234
+            },
+            "twist_to_next_rad": null
+          }
+        ]
+      },
+      "objectives_minimized": [
+        -0.5,
+        -0.011808186233631706,
+        2.657635397671913
+      ],
+      "violation": 0.0,
+      "metrics": {
+        "mass_kg": 2.657635397671913,
+        "task_feasible_fraction": 0.5,
+        "task_target_count": 8,
+        "task_targets_reached": 4,
+        "grid_divisions": 2,
+        "position_tolerance_m": 0.05,
+        "ik_starts": 3,
+        "ik_iterations": 8,
+        "task_coverage_definition": "固定任务格点中，在位置容差、关节限位、胶囊自碰撞和静力矩约束下找到可行解的比例。分母是格点数。未解出只表示该预算下没找到，不是严格不可达，也不是工作空间体积。",
+        "pose_hit_rate": null,
+        "pose_hit_se": null,
+        "pose_hit_definition": "随机关节样本里末端落入任务盒的比例，含碰撞和超力矩姿态。不是任务覆盖率。",
+        "sample_count": 0,
+        "task_manipulability_median": 0.011808186233631706,
+        "task_manipulability_valid": true,
+        "task_velocity_median": 0.1803537965906678,
+        "task_velocity_valid": true,
+        "task_metric_domain": "只统计该预算下找到的可行任务解。没有可行解时指标无效，优化里用惩罚，不用 NaN。",
+        "posture_manipulability_median": null,
+        "posture_velocity_median": null,
+        "posture_metric_definition": "全体关节样本的中位数，包含任务区外和不可行姿态，不是任务性能。",
+        "collision_rate": null,
+        "torque_fail_rate": null,
+        "q0_collision": false,
+        "q0_torque_ok": true,
+        "q0_peak_torque_nm": 4.7421897282454,
+        "q0_is_design_veto": false,
+        "q0_note": "零位碰撞或超力矩只作诊断。可重构装配的零位不必是工作姿态，不能据此判定整机不可用。",
+        "violation": 0.0,
+        "feasible": true,
+        "example_q": [
+          0.36392498959682607,
+          -0.09686790870174194,
+          -0.12049425505065432,
+          -0.07428357951897872,
+          -0.2896736708313277
+        ],
+        "ee_straight": [
+          -0.3172615125361381,
+          -0.10999999734410773,
+          0.3999999999996192
+        ],
+        "unsupported": [
+          "网格精确碰撞",
+          "完整逆动力学与加速度能力",
+          "转动可操作度（不与平移指标混单位）",
+          "树形或闭环拓扑"
+        ],
+        "approximations": [
+          "自碰撞用胶囊，半径是网格外接尺寸的近似，不是 STL 精确碰撞",
+          "静力矩把连杆质量集中在质心，只平衡重力与末端载荷，不含惯性力",
+          "速度能力是伪逆下界，关节速度上限由用户给定，R3 没有实测速度",
+          "任务格点可行比例取决于格点分辨率、位置容差和 IK 起点/迭代预算，漏检不等于不可达",
+          "末端落盒比例若计算，其二项标准误差只描述关节采样，不能挪用来当任务空间覆盖的误差"
+        ]
+      }
+    },
+    {
+      "design": {
+        "topology": "serial",
+        "base_position_m": [
+          0.0,
+          0.0,
+          0.4
+        ],
+        "modules": [
+          {
+            "id": "concept_axial",
+            "label": "轴向概念连杆",
+            "kind": "conceptual",
+            "in_family": "zbot_flange",
+            "out_family": "zbot_flange",
+            "parameters": {
+              "length_m": 0.08432154643063271
+            },
+            "twist_to_next_rad": 0.0
+          },
+          {
+            "id": "concept_axial",
+            "label": "轴向概念连杆",
+            "kind": "conceptual",
+            "in_family": "zbot_flange",
+            "out_family": "zbot_flange",
+            "parameters": {
+              "length_m": 0.08570499338278656
+            },
+            "twist_to_next_rad": 1.5707963267948966
+          },
+          {
+            "id": "zbot_r3",
+            "label": "ZBot R3 关节模块",
+            "kind": "physical",
+            "in_family": "zbot_flange",
+            "out_family": "zbot_flange",
+            "parameters": {},
+            "twist_to_next_rad": 1.5707963267948966
+          },
+          {
+            "id": "concept_axial",
+            "label": "轴向概念连杆",
+            "kind": "conceptual",
+            "in_family": "zbot_flange",
+            "out_family": "zbot_flange",
+            "parameters": {
+              "length_m": 0.08578031189967365
+            },
+            "twist_to_next_rad": 0.0
+          },
+          {
+            "id": "concept_axial",
+            "label": "轴向概念连杆",
+            "kind": "conceptual",
+            "in_family": "zbot_flange",
+            "out_family": "zbot_flange",
+            "parameters": {
+              "length_m": 0.13631285325440534
+            },
+            "twist_to_next_rad": null
+          }
+        ]
+      },
+      "objectives_minimized": [
+        -0.5,
+        -0.008344587861685038,
+        2.2815688198699933
+      ],
+      "violation": 0.0,
+      "metrics": {
+        "mass_kg": 2.2815688198699933,
+        "task_feasible_fraction": 0.5,
+        "task_target_count": 8,
+        "task_targets_reached": 4,
+        "grid_divisions": 2,
+        "position_tolerance_m": 0.05,
+        "ik_starts": 3,
+        "ik_iterations": 8,
+        "task_coverage_definition": "固定任务格点中，在位置容差、关节限位、胶囊自碰撞和静力矩约束下找到可行解的比例。分母是格点数。未解出只表示该预算下没找到，不是严格不可达，也不是工作空间体积。",
+        "pose_hit_rate": null,
+        "pose_hit_se": null,
+        "pose_hit_definition": "随机关节样本里末端落入任务盒的比例，含碰撞和超力矩姿态。不是任务覆盖率。",
+        "sample_count": 0,
+        "task_manipulability_median": 0.008344587861685038,
+        "task_manipulability_valid": true,
+        "task_velocity_median": 0.21559089442245194,
+        "task_velocity_valid": true,
+        "task_metric_domain": "只统计该预算下找到的可行任务解。没有可行解时指标无效，优化里用惩罚，不用 NaN。",
+        "posture_manipulability_median": null,
+        "posture_velocity_median": null,
+        "posture_metric_definition": "全体关节样本的中位数，包含任务区外和不可行姿态，不是任务性能。",
+        "collision_rate": null,
+        "torque_fail_rate": null,
+        "q0_collision": false,
+        "q0_torque_ok": true,
+        "q0_peak_torque_nm": 0.5250951201477249,
+        "q0_is_design_veto": false,
+        "q0_note": "零位碰撞或超力矩只作诊断。可重构装配的零位不必是工作姿态，不能据此判定整机不可用。",
+        "violation": 0.0,
+        "feasible": true,
+        "example_q": [
+          -1.2303227153341927,
+          0.10644164043363474,
+          -1.8546993759757349,
+          -0.05330999563737382,
+          0.23001052742089995
+        ],
+        "ee_straight": [
+          0.17002326845111387,
+          -0.1091466764943994,
+          0.17790847417557484
+        ],
+        "unsupported": [
+          "网格精确碰撞",
+          "完整逆动力学与加速度能力",
+          "转动可操作度（不与平移指标混单位）",
+          "树形或闭环拓扑"
+        ],
+        "approximations": [
+          "自碰撞用胶囊，半径是网格外接尺寸的近似，不是 STL 精确碰撞",
+          "静力矩把连杆质量集中在质心，只平衡重力与末端载荷，不含惯性力",
+          "速度能力是伪逆下界，关节速度上限由用户给定，R3 没有实测速度",
+          "任务格点可行比例取决于格点分辨率、位置容差和 IK 起点/迭代预算，漏检不等于不可达",
+          "末端落盒比例若计算，其二项标准误差只描述关节采样，不能挪用来当任务空间覆盖的误差"
+        ]
+      }
+    }
+  ],
+  "infeasible_in_population": 0,
+  "assumptions": [
+    "串联链。不生成树或闭环。",
+    "ZBot R3 的连杆尺寸、质量和 ±6.28 rad 行程来自既有 XML，实物模式不缩放。",
+    "轴向概念连杆的线密度 4 kg/m、胶囊半径 0.025 m 是假设，不是第二套硬件。",
+    "关节速度上限 1.5 rad/s 是假设，仓库里没有 R3 实测速度。",
+    "力矩上限默认 20 N·m，来自该项目位置伺服的力矩上限；界面改过则视为用户覆盖。",
+    "自碰撞是非相邻胶囊的近似。静力矩是质点重力模型。",
+    "任务指标用每轴 2 份格点、容差 0.05 m、3 个 IK 起点、8 次迭代。未解出不是严格不可达。末端落盒比例如果计算，只是关节采样诊断。",
+    "零位碰撞不否决设计。可操作度和速度能力只在可行任务解上取中位数，没有可行解就用惩罚。",
+    "demo_flange 与 zbot_flange 没有装配规则，混合链会被拒绝。"
+  ],
+  "independent_review": {
+    "note": "用更高格点分辨率和更多 IK 预算复评，样本与搜索相互独立。未解出的格点不是严格不可达。",
+    "grid_divisions": 3,
+    "ik_starts": 5,
+    "ik_iterations": 12,
+    "position_tolerance_m": 0.05,
+    "rows": [
+      {
+        "label": "baseline",
+        "design": {
+          "topology": "serial",
+          "base_position_m": [
+            0.0,
+            0.0,
+            0.4
+          ],
+          "modules": [
+            {
+              "id": "zbot_r3",
+              "label": "ZBot R3 关节模块",
+              "kind": "physical",
+              "in_family": "zbot_flange",
+              "out_family": "zbot_flange",
+              "parameters": {},
+              "twist_to_next_rad": 0.0
+            },
+            {
+              "id": "zbot_r3",
+              "label": "ZBot R3 关节模块",
+              "kind": "physical",
+              "in_family": "zbot_flange",
+              "out_family": "zbot_flange",
+              "parameters": {},
+              "twist_to_next_rad": 0.0
+            },
+            {
+              "id": "zbot_r3",
+              "label": "ZBot R3 关节模块",
+              "kind": "physical",
+              "in_family": "zbot_flange",
+              "out_family": "zbot_flange",
+              "parameters": {},
+              "twist_to_next_rad": 0.0
+            },
+            {
+              "id": "zbot_r3",
+              "label": "ZBot R3 关节模块",
+              "kind": "physical",
+              "in_family": "zbot_flange",
+              "out_family": "zbot_flange",
+              "parameters": {},
+              "twist_to_next_rad": 0.0
+            },
+            {
+              "id": "zbot_r3",
+              "label": "ZBot R3 关节模块",
+              "kind": "physical",
+              "in_family": "zbot_flange",
+              "out_family": "zbot_flange",
+              "parameters": {},
+              "twist_to_next_rad": 0.0
+            },
+            {
+              "id": "zbot_r3",
+              "label": "ZBot R3 关节模块",
+              "kind": "physical",
+              "in_family": "zbot_flange",
+              "out_family": "zbot_flange",
+              "parameters": {},
+              "twist_to_next_rad": null
+            }
+          ]
+        },
+        "metrics": {
+          "mass_kg": 4.2785400000000005,
+          "task_feasible_fraction": 0.8888888888888888,
+          "task_target_count": 27,
+          "task_targets_reached": 24,
+          "grid_divisions": 3,
+          "position_tolerance_m": 0.05,
+          "ik_starts": 5,
+          "ik_iterations": 12,
+          "task_coverage_definition": "固定任务格点中，在位置容差、关节限位、胶囊自碰撞和静力矩约束下找到可行解的比例。分母是格点数。未解出只表示该预算下没找到，不是严格不可达，也不是工作空间体积。",
+          "pose_hit_rate": null,
+          "pose_hit_se": null,
+          "pose_hit_definition": "随机关节样本里末端落入任务盒的比例，含碰撞和超力矩姿态。不是任务覆盖率。",
+          "sample_count": 0,
+          "task_manipulability_median": 0.00975555929236338,
+          "task_manipulability_valid": true,
+          "task_velocity_median": 0.32087386239362525,
+          "task_velocity_valid": true,
+          "task_metric_domain": "只统计该预算下找到的可行任务解。没有可行解时指标无效，优化里用惩罚，不用 NaN。",
+          "posture_manipulability_median": null,
+          "posture_velocity_median": null,
+          "posture_metric_definition": "全体关节样本的中位数，包含任务区外和不可行姿态，不是任务性能。",
+          "collision_rate": null,
+          "torque_fail_rate": null,
+          "q0_collision": false,
+          "q0_torque_ok": true,
+          "q0_peak_torque_nm": 0.00019244566906833805,
+          "q0_is_design_veto": false,
+          "q0_note": "零位碰撞或超力矩只作诊断。可重构装配的零位不必是工作姿态，不能据此判定整机不可用。",
+          "violation": 0.0,
+          "feasible": true,
+          "example_q": [
+            -0.7070167914123641,
+            -1.3026756644907087,
+            1.3876985168745244,
+            -1.2012618548402076,
+            0.6694317936073868,
+            0.0
+          ],
+          "ee_straight": [
+            0.000212137307765557,
+            0.0,
+            1.0047879867217482
+          ],
+          "unsupported": [
+            "网格精确碰撞",
+            "完整逆动力学与加速度能力",
+            "转动可操作度（不与平移指标混单位）",
+            "树形或闭环拓扑"
+          ],
+          "approximations": [
+            "自碰撞用胶囊，半径是网格外接尺寸的近似，不是 STL 精确碰撞",
+            "静力矩把连杆质量集中在质心，只平衡重力与末端载荷，不含惯性力",
+            "速度能力是伪逆下界，关节速度上限由用户给定，R3 没有实测速度",
+            "任务格点可行比例取决于格点分辨率、位置容差和 IK 起点/迭代预算，漏检不等于不可达",
+            "末端落盒比例若计算，其二项标准误差只描述关节采样，不能挪用来当任务空间覆盖的误差"
+          ]
+        }
+      },
+      {
+        "label": "pareto-1",
+        "design": {
+          "topology": "serial",
+          "base_position_m": [
+            0.0,
+            0.0,
+            0.4
+          ],
+          "modules": [
+            {
+              "id": "concept_axial",
+              "label": "轴向概念连杆",
+              "kind": "conceptual",
+              "in_family": "zbot_flange",
+              "out_family": "zbot_flange",
+              "parameters": {
+                "length_m": 0.08432154643063271
+              },
+              "twist_to_next_rad": 1.5707963267948966
+            },
+            {
+              "id": "zbot_r3",
+              "label": "ZBot R3 关节模块",
+              "kind": "physical",
+              "in_family": "zbot_flange",
+              "out_family": "zbot_flange",
+              "parameters": {},
+              "twist_to_next_rad": 1.5707963267948966
+            },
+            {
+              "id": "zbot_r3",
+              "label": "ZBot R3 关节模块",
+              "kind": "physical",
+              "in_family": "zbot_flange",
+              "out_family": "zbot_flange",
+              "parameters": {},
+              "twist_to_next_rad": 1.5707963267948966
+            },
+            {
+              "id": "concept_axial",
+              "label": "轴向概念连杆",
+              "kind": "conceptual",
+              "in_family": "zbot_flange",
+              "out_family": "zbot_flange",
+              "parameters": {
+                "length_m": 0.08578031189967365
+              },
+              "twist_to_next_rad": 0.0
+            },
+            {
+              "id": "concept_axial",
+              "label": "轴向概念连杆",
+              "kind": "conceptual",
+              "in_family": "zbot_flange",
+              "out_family": "zbot_flange",
+              "parameters": {
+                "length_m": 0.13631285325440534
+              },
+              "twist_to_next_rad": null
+            }
+          ]
+        },
+        "metrics": {
+          "mass_kg": 2.6518388463388467,
+          "task_feasible_fraction": 0.5555555555555556,
+          "task_target_count": 27,
+          "task_targets_reached": 15,
+          "grid_divisions": 3,
+          "position_tolerance_m": 0.05,
+          "ik_starts": 5,
+          "ik_iterations": 12,
+          "task_coverage_definition": "固定任务格点中，在位置容差、关节限位、胶囊自碰撞和静力矩约束下找到可行解的比例。分母是格点数。未解出只表示该预算下没找到，不是严格不可达，也不是工作空间体积。",
+          "pose_hit_rate": null,
+          "pose_hit_se": null,
+          "pose_hit_definition": "随机关节样本里末端落入任务盒的比例，含碰撞和超力矩姿态。不是任务覆盖率。",
+          "sample_count": 0,
+          "task_manipulability_median": 0.00499468242709777,
+          "task_manipulability_valid": true,
+          "task_velocity_median": 0.1959234615729809,
+          "task_velocity_valid": true,
+          "task_metric_domain": "只统计该预算下找到的可行任务解。没有可行解时指标无效，优化里用惩罚，不用 NaN。",
+          "posture_manipulability_median": null,
+          "posture_velocity_median": null,
+          "posture_metric_definition": "全体关节样本的中位数，包含任务区外和不可行姿态，不是任务性能。",
+          "collision_rate": null,
+          "torque_fail_rate": null,
+          "q0_collision": false,
+          "q0_torque_ok": true,
+          "q0_peak_torque_nm": 3.353902708749585,
+          "q0_is_design_veto": false,
+          "q0_note": "零位碰撞或超力矩只作诊断。可重构装配的零位不必是工作姿态，不能据此判定整机不可用。",
+          "violation": 0.0,
+          "feasible": true,
+          "example_q": [
+            -0.3369892008379665,
+            -0.18729995212109957,
+            0.008972773558118555,
+            -0.15120466076391095,
+            -0.09280402087022349
+          ],
+          "ee_straight": [
+            -0.13734897208323193,
+            -0.2199983959786015,
+            0.39958390758335166
+          ],
+          "unsupported": [
+            "网格精确碰撞",
+            "完整逆动力学与加速度能力",
+            "转动可操作度（不与平移指标混单位）",
+            "树形或闭环拓扑"
+          ],
+          "approximations": [
+            "自碰撞用胶囊，半径是网格外接尺寸的近似，不是 STL 精确碰撞",
+            "静力矩把连杆质量集中在质心，只平衡重力与末端载荷，不含惯性力",
+            "速度能力是伪逆下界，关节速度上限由用户给定，R3 没有实测速度",
+            "任务格点可行比例取决于格点分辨率、位置容差和 IK 起点/迭代预算，漏检不等于不可达",
+            "末端落盒比例若计算，其二项标准误差只描述关节采样，不能挪用来当任务空间覆盖的误差"
+          ]
+        }
+      },
+      {
+        "label": "pareto-2",
+        "design": {
+          "topology": "serial",
+          "base_position_m": [
+            0.0,
+            0.0,
+            0.4
+          ],
+          "modules": [
+            {
+              "id": "zbot_r3",
+              "label": "ZBot R3 关节模块",
+              "kind": "physical",
+              "in_family": "zbot_flange",
+              "out_family": "zbot_flange",
+              "parameters": {},
+              "twist_to_next_rad": 0.0
+            },
+            {
+              "id": "concept_axial",
+              "label": "轴向概念连杆",
+              "kind": "conceptual",
+              "in_family": "zbot_flange",
+              "out_family": "zbot_flange",
+              "parameters": {
+                "length_m": 0.07383748700346929
+              },
+              "twist_to_next_rad": 0.0
+            },
+            {
+              "id": "concept_axial",
+              "label": "轴向概念连杆",
+              "kind": "conceptual",
+              "in_family": "zbot_flange",
+              "out_family": "zbot_flange",
+              "parameters": {
+                "length_m": 0.15722867231818055
+              },
+              "twist_to_next_rad": 1.5707963267948966
+            },
+            {
+              "id": "concept_axial",
+              "label": "轴向概念连杆",
+              "kind": "conceptual",
+              "in_family": "zbot_flange",
+              "out_family": "zbot_flange",
+              "parameters": {
+                "length_m": 0.10530869384219292
+              },
+              "twist_to_next_rad": null
+            }
+          ]
+        },
+        "metrics": {
+          "mass_kg": 2.058589412655371,
+          "task_feasible_fraction": 0.5925925925925926,
+          "task_target_count": 27,
+          "task_targets_reached": 16,
+          "grid_divisions": 3,
+          "position_tolerance_m": 0.05,
+          "ik_starts": 5,
+          "ik_iterations": 12,
+          "task_coverage_definition": "固定任务格点中，在位置容差、关节限位、胶囊自碰撞和静力矩约束下找到可行解的比例。分母是格点数。未解出只表示该预算下没找到，不是严格不可达，也不是工作空间体积。",
+          "pose_hit_rate": null,
+          "pose_hit_se": null,
+          "pose_hit_definition": "随机关节样本里末端落入任务盒的比例，含碰撞和超力矩姿态。不是任务覆盖率。",
+          "sample_count": 0,
+          "task_manipulability_median": 0.0033508643100628897,
+          "task_manipulability_valid": true,
+          "task_velocity_median": 0.12315563595999032,
+          "task_velocity_valid": true,
+          "task_metric_domain": "只统计该预算下找到的可行任务解。没有可行解时指标无效，优化里用惩罚，不用 NaN。",
+          "posture_manipulability_median": null,
+          "posture_velocity_median": null,
+          "posture_metric_definition": "全体关节样本的中位数，包含任务区外和不可行姿态，不是任务性能。",
+          "collision_rate": null,
+          "torque_fail_rate": null,
+          "q0_collision": false,
+          "q0_torque_ok": true,
+          "q0_peak_torque_nm": 0.6308155646689957,
+          "q0_is_design_veto": false,
+          "q0_note": "零位碰撞或超力矩只作诊断。可重构装配的零位不必是工作姿态，不能据此判定整机不可用。",
+          "violation": 0.0,
+          "feasible": true,
+          "example_q": [
+            -0.1295254908033598,
+            0.2632203922483076,
+            0.633479319882793,
+            -0.2430561434679788
+          ],
+          "ee_straight": [
+            -0.3363748458783053,
+            0.0,
+            0.5099999973437269
+          ],
+          "unsupported": [
+            "网格精确碰撞",
+            "完整逆动力学与加速度能力",
+            "转动可操作度（不与平移指标混单位）",
+            "树形或闭环拓扑"
+          ],
+          "approximations": [
+            "自碰撞用胶囊，半径是网格外接尺寸的近似，不是 STL 精确碰撞",
+            "静力矩把连杆质量集中在质心，只平衡重力与末端载荷，不含惯性力",
+            "速度能力是伪逆下界，关节速度上限由用户给定，R3 没有实测速度",
+            "任务格点可行比例取决于格点分辨率、位置容差和 IK 起点/迭代预算，漏检不等于不可达",
+            "末端落盒比例若计算，其二项标准误差只描述关节采样，不能挪用来当任务空间覆盖的误差"
+          ]
+        }
+      },
+      {
+        "label": "pareto-3",
+        "design": {
+          "topology": "serial",
+          "base_position_m": [
+            0.0,
+            0.0,
+            0.4
+          ],
+          "modules": [
+            {
+              "id": "concept_axial",
+              "label": "轴向概念连杆",
+              "kind": "conceptual",
+              "in_family": "zbot_flange",
+              "out_family": "zbot_flange",
+              "parameters": {
+                "length_m": 0.11597557375086433
+              },
+              "twist_to_next_rad": 0.0
+            },
+            {
+              "id": "concept_axial",
+              "label": "轴向概念连杆",
+              "kind": "conceptual",
+              "in_family": "zbot_flange",
+              "out_family": "zbot_flange",
+              "parameters": {
+                "length_m": 0.08572876361512571
+              },
+              "twist_to_next_rad": 1.5707963267948966
+            },
+            {
+              "id": "concept_axial",
+              "label": "轴向概念连杆",
+              "kind": "conceptual",
+              "in_family": "zbot_flange",
+              "out_family": "zbot_flange",
+              "parameters": {
+                "length_m": 0.0810472196962216
+              },
+              "twist_to_next_rad": 1.5707963267948966
+            },
+            {
+              "id": "concept_axial",
+              "label": "轴向概念连杆",
+              "kind": "conceptual",
+              "in_family": "zbot_flange",
+              "out_family": "zbot_flange",
+              "parameters": {
+                "length_m": 0.08725060487513656
+              },
+              "twist_to_next_rad": null
+            }
+          ]
+        },
+        "metrics": {
+          "mass_kg": 1.4800086477493926,
+          "task_feasible_fraction": 0.3333333333333333,
+          "task_target_count": 27,
+          "task_targets_reached": 9,
+          "grid_divisions": 3,
+          "position_tolerance_m": 0.05,
+          "ik_starts": 5,
+          "ik_iterations": 12,
+          "task_coverage_definition": "固定任务格点中，在位置容差、关节限位、胶囊自碰撞和静力矩约束下找到可行解的比例。分母是格点数。未解出只表示该预算下没找到，不是严格不可达，也不是工作空间体积。",
+          "pose_hit_rate": null,
+          "pose_hit_se": null,
+          "pose_hit_definition": "随机关节样本里末端落入任务盒的比例，含碰撞和超力矩姿态。不是任务覆盖率。",
+          "sample_count": 0,
+          "task_manipulability_median": 0.0022206754710507367,
+          "task_manipulability_valid": true,
+          "task_velocity_median": 0.1224379470948713,
+          "task_velocity_valid": true,
+          "task_metric_domain": "只统计该预算下找到的可行任务解。没有可行解时指标无效，优化里用惩罚，不用 NaN。",
+          "posture_manipulability_median": null,
+          "posture_velocity_median": null,
+          "posture_metric_definition": "全体关节样本的中位数，包含任务区外和不可行姿态，不是任务性能。",
+          "collision_rate": null,
+          "torque_fail_rate": null,
+          "q0_collision": false,
+          "q0_torque_ok": true,
+          "q0_peak_torque_nm": 1.2161206387799706,
+          "q0_is_design_veto": false,
+          "q0_note": "零位碰撞或超力矩只作诊断。可重构装配的零位不必是工作姿态，不能据此判定整机不可用。",
+          "violation": 0.0,
+          "feasible": true,
+          "example_q": [
+            -1.736744460020036,
+            -0.6915619433052769,
+            0.8271124239777857,
+            1.087618642811989
+          ],
+          "ee_straight": [
+            0.37000216193734814,
+            0.0,
+            0.4
+          ],
+          "unsupported": [
+            "网格精确碰撞",
+            "完整逆动力学与加速度能力",
+            "转动可操作度（不与平移指标混单位）",
+            "树形或闭环拓扑"
+          ],
+          "approximations": [
+            "自碰撞用胶囊，半径是网格外接尺寸的近似，不是 STL 精确碰撞",
+            "静力矩把连杆质量集中在质心，只平衡重力与末端载荷，不含惯性力",
+            "速度能力是伪逆下界，关节速度上限由用户给定，R3 没有实测速度",
+            "任务格点可行比例取决于格点分辨率、位置容差和 IK 起点/迭代预算，漏检不等于不可达",
+            "末端落盒比例若计算，其二项标准误差只描述关节采样，不能挪用来当任务空间覆盖的误差"
+          ]
+        }
+      }
+    ]
+  }
+}
