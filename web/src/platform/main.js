@@ -327,10 +327,15 @@ function describe(metrics) {
       ? "平移雅可比秩 无效"
       : `平移雅可比秩不足的可行解 ${(metrics.position_rank_deficient_fraction * 100).toFixed(0)}%（只看位置 3 行，不是姿态 6 维）`,
     `驱动关节 ${metrics.driven_joint_count ?? "—"}，ZBot 被动 a 连杆 ${metrics.passive_body_count ?? "—"}`,
+    metrics.structurally_degenerate
+      ? "随机一般位形的六维几何雅可比结构退化，不能当作完整位姿 6DOF。"
+      : (metrics.task_pose_spatial_rank_deficient_fraction == null
+        ? ""
+        : `可行任务解上六维秩不足 ${(metrics.task_pose_spatial_rank_deficient_fraction * 100).toFixed(0)}%（特征长度 0.1 m，只作诊断，不是分数）。`),
     `末端落盒比例 ${hit}`,
     metrics.q0_collision ? "零位有胶囊相交，仅作诊断，不否决这条设计。" : "零位没有非相邻胶囊相交。这也只是诊断。",
     `零位峰值静力矩 ${metrics.q0_peak_torque_nm.toFixed(3)} N·m。`,
-  ].join("\n");
+  ].filter(Boolean).join("\n");
 }
 
 function drawPareto() {
