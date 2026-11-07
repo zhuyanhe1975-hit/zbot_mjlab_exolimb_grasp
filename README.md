@@ -17,13 +17,14 @@ python scripts/design_optimize.py --mode mixed --count-min 3 --count-max 5 --pop
 
 `--mode physical` 只搜索 ZBot R3 的数量和连接方位，不缩放实物尺寸。`--mode mixed` 允许插入轴向概念连杆，并优化它的长度。任务主指标是固定格点里找到可行解的比例，不是随机关节样本掉进盒子的比例。网页里的搜索在 Web Worker 中完成；两边用同一套目标函数，IK 没有随机数所以格点结果可以对齐，搜索个体的随机数流仍然不同。
 
-固定 6 个驱动关节的枚举和复核：
+固定 6 个驱动关节时，先枚举实物连接，再用更严的容差和两套任务点复核：
 
 ```bash
 python scripts/design_6dof.py --out experiments/dof6_search.json
+python scripts/design_6dof_refine.py --out experiments/dof6_refine.json
 ```
 
-实物只枚举六个 ZBot R3 模块的 32 种 0/π/2 连接。概念方案单独写出，其质量是假设，不是现有 ZBot 的减重。默认任务盒没有用户给定的工况来源。
+六个 ZBot 模块的 32 种 0/π/2 连接在随机一般位形上六维几何雅可比都不结构退化。概念轴向连杆若相邻连接为 0，关节轴保持平行，六维秩结构退化，重新制造补不上这个缺失。默认任务盒没有用户给定的工况来源。在 1 cm、125 个端点格点和另一套单元中心点上，没有实物方案同时稳住更高的可行比例，并保住可操作度和速度。这不是说全 0 对任何任务都最优。
 
 本地打开设计页：
 

@@ -1,0 +1,58 @@
+<mujoco model="modular_arm">
+  <compiler angle="radian" />
+  <worldbody>
+    <body name="m0_a" pos="0 0 0.4" quat="1 0 0 0">
+      <inertial pos="-0.0022495 -2.9534e-05 0.042888" mass="0.54171" />
+      <body name="m0_b" pos="-0.00021213 0 0.054788" quat="0.92387918 0 0.38268428 0">
+        <joint name="joint1" type="hinge" axis="0 0 1" range="-6.28 6.28" />
+        <inertial pos="-0.02292 -0.00016188 0.03226" mass="0.17138" />
+        <body name="m1_mount" pos="-0.038890846 0 0.03919071" quat="-0.65431611 -0.27059865 0.26808661 0.65328123">
+          <body name="m1_a">
+            <inertial pos="-0.0022495 -2.9534e-05 0.042888" mass="0.54171" />
+            <body name="m1_b" pos="-0.00021213 0 0.054788" quat="0.92387918 0 0.38268428 0">
+              <joint name="joint2" type="hinge" axis="0 0 1" range="-6.28 6.28" />
+              <inertial pos="-0.02292 -0.00016188 0.03226" mass="0.17138" />
+              <body name="m2_mount" pos="-0.038890846 0 0.03919071" quat="0 -0.38268428 0 0.92387918">
+                <body name="m2_a">
+                  <inertial pos="-0.0022495 -2.9534e-05 0.042888" mass="0.54171" />
+                  <body name="m2_b" pos="-0.00021213 0 0.054788" quat="0.92387918 0 0.38268428 0">
+                    <joint name="joint3" type="hinge" axis="0 0 1" range="-6.28 6.28" />
+                    <inertial pos="-0.02292 -0.00016188 0.03226" mass="0.17138" />
+                    <body name="m3_mount" pos="-0.038890846 0 0.03919071" quat="0 -0.38268428 0 0.92387918">
+                      <body name="m3_a">
+                        <inertial pos="-0.0022495 -2.9534e-05 0.042888" mass="0.54171" />
+                        <body name="m3_b" pos="-0.00021213 0 0.054788" quat="0.92387918 0 0.38268428 0">
+                          <joint name="joint4" type="hinge" axis="0 0 1" range="-6.28 6.28" />
+                          <inertial pos="-0.02292 -0.00016188 0.03226" mass="0.17138" />
+                          <body name="m4_mount" pos="-0.038890846 0 0.03919071" quat="0 -0.38268428 0 0.92387918">
+                            <body name="m4_a">
+                              <inertial pos="-0.0022495 -2.9534e-05 0.042888" mass="0.54171" />
+                              <body name="m4_b" pos="-0.00021213 0 0.054788" quat="0.92387918 0 0.38268428 0">
+                                <joint name="joint5" type="hinge" axis="0 0 1" range="-6.28 6.28" />
+                                <inertial pos="-0.02292 -0.00016188 0.03226" mass="0.17138" />
+                                <body name="m5_mount" pos="-0.038890846 0 0.03919071" quat="0 -0.38268428 0 0.92387918">
+                                  <body name="m5_a">
+                                    <inertial pos="-0.0022495 -2.9534e-05 0.042888" mass="0.54171" />
+                                    <body name="m5_b" pos="-0.00021213 0 0.054788" quat="0.92387918 0 0.38268428 0">
+                                      <joint name="joint6" type="hinge" axis="0 0 1" range="-6.28 6.28" />
+                                      <inertial pos="-0.02292 -0.00016188 0.03226" mass="0.17138" />
+                                      <site name="ee" pos="0 0 0" />
+                                    </body>
+                                  </body>
+                                </body>
+                              </body>
+                            </body>
+                          </body>
+                        </body>
+                      </body>
+                    </body>
+                  </body>
+                </body>
+              </body>
+            </body>
+          </body>
+        </body>
+      </body>
+    </body>
+  </worldbody>
+</mujoco>

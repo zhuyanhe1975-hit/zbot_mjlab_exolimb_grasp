@@ -16,10 +16,13 @@ from zbot_exolimb_grasp.constants import NOMINAL_JOINT_POS, STRAIGHT_JOINT_POS, 
 from zbot_exolimb_grasp.platform.exporting import assert_mjcf_matches, export_mjcf
 from zbot_exolimb_grasp.platform.model import (
     actuation_report,
+    angular_jacobian_finite_difference,
     assembly_errors,
     baseline_design,
     evaluate_design,
     forward_chain,
+    generic_rank_report,
+    geometric_jacobian,
     task_targets,
     zbot_chain,
 )
@@ -44,6 +47,25 @@ class BaselineTests(unittest.TestCase):
 
     def test_mass_matches_six_module_arm(self) -> None:
         self.assertAlmostEqual(forward_chain(baseline_design(), np.zeros((1, 6)))["mass_kg"], TOTAL_MASS, places=5)
+
+    def test_angular_jacobian_matches_finite_difference(self) -> None:
+        pose = np.array([0.3, -0.7, 1.1, -0.4, 0.8, -0.2])
+        analytic = geometric_jacobian(forward_chain(baseline_design(), pose))[0, 3:, :]
+        numeric = angular_jacobian_finite_difference(baseline_design(), pose)
+        self.assertLess(np.max(np.abs(analytic - numeric)), 1e-6)
+
+    def test_parallel_concept_axes_are_structurally_degenerate(self) -> None:
+        design = Design(
+            tuple("concept_axial" for _ in range(6)),
+            tuple(0.0 for _ in range(5)),
+            tuple({"length_m": 0.12} for _ in range(6)),
+        )
+        report = generic_rank_report(design, samples=8, seed=1)
+        self.assertTrue(report["structurally_degenerate"])
+        zbot = generic_rank_report(baseline_design(), samples=8, seed=1)
+        self.assertFalse(zbot["structurally_degenerate"])
+        lengths = [row["rank_deficient_fraction"] for row in zbot["by_length"]]
+        self.assertTrue(all(value == 0.0 for value in lengths))
 
     def test_jacobian_finite_difference(self) -> None:
         design = zbot_chain(4, (0.0, math_pi() / 2, 0.0))

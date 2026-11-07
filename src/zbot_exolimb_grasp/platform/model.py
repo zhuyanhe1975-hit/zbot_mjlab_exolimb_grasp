@@ -28,7 +28,7 @@ from .library import (
     mate_rule,
     module_spec,
 )
-from .math3d import Z_AXIS, axis_angle_x, hinge_z, mul, rotate
+from .math3d import Z_AXIS, axis_angle_x, hinge_z, mul, quat_matrix, rotate, so3_vee
 from .schema import COUNT_MAX, COUNT_MIN, JOINT_LIMIT, Design, TaskSpec
 
 UNSUPPORTED = (
@@ -189,6 +189,7 @@ def forward_chain(design: Design, q: np.ndarray) -> dict[str, object]:
                 quat = mul(swung, zbot_attachment(twist))
             else:
                 ee = origin
+                ee_quat = swung
         elif module_id in {"concept_axial", "demo_unreleased"}:
             length = float(design.parameters[index]["length_m"])
             origin = pos.copy()
@@ -210,6 +211,7 @@ def forward_chain(design: Design, q: np.ndarray) -> dict[str, object]:
                 quat = mul(post, axis_angle_x(twist))
             else:
                 ee = tip
+                ee_quat = post
         else:
             raise ValueError(f"没有运动学实现：{module_id}")
     jacobian = np.empty((samples, 3, count), dtype=np.float64)
@@ -217,6 +219,7 @@ def forward_chain(design: Design, q: np.ndarray) -> dict[str, object]:
         jacobian[:, :, index] = np.cross(axes[index], ee - origins[index])
     return {
         "ee": ee,
+        "ee_quat": ee_quat,
         "jacobian": jacobian,
         "origins": origins,
         "axes": axes,
@@ -268,6 +271,88 @@ def collision_mask(chain: dict[str, object]) -> np.ndarray:
             limit = float(capsules[i]["r"]) + float(capsules[j]["r"])
             hit |= dist < limit - 1e-6
     return hit
+
+
+def geometric_jacobian(chain: dict[str, object]) -> np.ndarray:
+    """6×n 几何雅可比。前 3 行是 m，后 3 行是 rad，不能直接相乘当 Yoshikawa 分数。"""
+    linear = chain["jacobian"]
+    angular = np.stack(chain["axes"], axis=-1)
+    return np.concatenate([linear, angular], axis=-2)
+
+
+def normalized_singular_values(jacobian6: np.ndarray, characteristic_length_m: float) -> np.ndarray:
+    """用特征长度把平移行缩成无量纲，只用于秩和最小奇异值，不作为优化分数。"""
+    scale = np.array([1.0 / characteristic_length_m] * 3 + [1.0] * 3, dtype=np.float64)
+    scaled = jacobian6 * scale[:, None]
+    return np.linalg.svd(scaled, compute_uv=False)
+
+
+def rank_at_length(singular_values: np.ndarray, relative_threshold: float = 1e-4) -> int:
+    peak = float(singular_values[0]) if singular_values.size else 0.0
+    if peak <= 0.0:
+        return 0
+    return int(np.sum(singular_values > relative_threshold * peak))
+
+
+def angular_jacobian_finite_difference(design: Design, q: np.ndarray, step: float = 1e-6) -> np.ndarray:
+    """世界系角速度列。R(q+δ) R(q)^T 的 vee / δ。"""
+    pose = np.asarray(q, dtype=np.float64).reshape(-1)
+    base = forward_chain(design, pose)
+    rotation = quat_matrix(base["ee_quat"][0])
+    numeric = np.zeros((3, pose.size), dtype=np.float64)
+    for index in range(pose.size):
+        bumped = pose.copy()
+        bumped[index] += step
+        nxt = quat_matrix(forward_chain(design, bumped)["ee_quat"][0])
+        numeric[:, index] = so3_vee(nxt @ rotation.T) / step
+    return numeric
+
+
+def generic_rank_report(
+    design: Design,
+    *,
+    samples: int = 24,
+    seed: int = 0,
+    lengths_m: tuple[float, ...] = (0.05, 0.1, 0.25, 0.5),
+    relative_threshold: float = 1e-4,
+) -> dict[str, object]:
+    """随机一般位形上的 6×6 秩。多数样本不满秩才记为结构退化。"""
+    count = len(design.module_ids)
+    poses = np.random.default_rng(seed).uniform(-JOINT_LIMIT, JOINT_LIMIT, size=(samples, count))
+    chain = forward_chain(design, poses)
+    full = geometric_jacobian(chain)
+    by_length = []
+    deficient = None
+    for length in lengths_m:
+        ranks = []
+        minima = []
+        for index in range(samples):
+            values = normalized_singular_values(full[index], length)
+            ranks.append(rank_at_length(values, relative_threshold))
+            minima.append(float(values[-1]))
+        fraction = float(np.mean(np.asarray(ranks) < count))
+        record = {
+            "characteristic_length_m": length,
+            "relative_threshold": relative_threshold,
+            "median_min_singular_value": float(np.median(minima)),
+            "rank_deficient_fraction": fraction,
+        }
+        by_length.append(record)
+        if abs(length - 0.1) < 1e-12:
+            deficient = fraction
+    structurally_degenerate = deficient is not None and deficient > 0.9
+    return {
+        "driven_joint_count": count,
+        "samples": samples,
+        "seed": seed,
+        "structurally_degenerate": structurally_degenerate,
+        "by_length": by_length,
+        "note": (
+            "秩用特征长度归一化后的奇异值，阈值是最大奇异值的 1e-4。"
+            "这不是混单位的 6 行可操作度分数。"
+            "结构退化表示随机位形里绝大多数不满秩，换制造不能凭空补上缺失的瞬时运动。"
+        ),
+    }
 
 
 def translational_manipulability(jacobian: np.ndarray) -> np.ndarray:
@@ -372,14 +457,21 @@ def evaluate_design(
     q: np.ndarray | None = None,
     *,
     include_cloud: bool = False,
+    targets: np.ndarray | None = None,
+    target_set: str = "linspace_endpoints",
 ) -> dict[str, object]:
     count = len(design.module_ids)
-    targets = task_targets(task)
+    if targets is None:
+        targets = task_targets(task)
+    else:
+        targets = np.asarray(targets, dtype=np.float64)
+        target_set = "custom" if target_set == "linspace_endpoints" else target_set
     reached_flags: list[bool] = []
     task_manips: list[float] = []
     task_speeds: list[float] = []
     torque_margins: list[float] = []
     rank_deficient = 0
+    spatial_deficient = 0
     example: list[float] | None = None
     for target in targets:
         pose, jacobian = solve_target(design, target, task)
@@ -397,6 +489,9 @@ def evaluate_design(
         torque_margins.append(float(task.effort_limit_nm) - peak)
         if manip < 1e-8:
             rank_deficient += 1
+        spatial = normalized_singular_values(geometric_jacobian(solved)[0], 0.1)
+        if rank_at_length(spatial) < count:
+            spatial_deficient += 1
     reached_count = int(sum(reached_flags))
     fraction = reached_count / float(targets.shape[0])
     manip_valid = bool(task_manips)
@@ -432,6 +527,7 @@ def evaluate_design(
         "task_target_count": int(targets.shape[0]),
         "task_targets_reached": reached_count,
         "grid_divisions": int(task.grid_divisions),
+        "target_set": target_set,
         "position_tolerance_m": float(task.position_tolerance_m),
         "ik_starts": int(task.ik_starts),
         "ik_iterations": int(task.ik_iterations),
@@ -449,7 +545,13 @@ def evaluate_design(
         "task_velocity_valid": speed_valid,
         "task_torque_margin_median_nm": _median(torque_margins) if torque_margins else None,
         "position_rank_deficient_fraction": (rank_deficient / reached_count) if reached_count else None,
-        "position_rank_note": "这是平移雅可比 3 行的秩是否不足 3。不是姿态 6 维的秩，6 个关节也不表示任意姿态可控。",
+        "position_rank_note": "这是平移雅可比 3 行的秩是否不足 3。不是姿态 6 维的秩。",
+        "task_pose_spatial_rank_deficient_fraction": (spatial_deficient / reached_count) if reached_count else None,
+        "spatial_rank_definition": (
+            "6 行几何雅可比用特征长度 0.1 m 把平移行除开后做 SVD，"
+            "最小奇异值低于最大奇异值的 1e-4 视为不满秩。"
+            "只在已经找到的可行任务解上统计。随机一般位形另见 structurally_degenerate。"
+        ),
         "task_metric_domain": "只统计该预算下找到的可行任务解。没有可行解时指标无效，优化里用惩罚，不用 NaN。",
         **actuation_report(design),
         "posture_manipulability_median": posture_manip,
@@ -464,6 +566,7 @@ def evaluate_design(
         "q0_note": "零位碰撞或超力矩只作诊断。可重构装配的零位不必是工作姿态，不能据此判定整机不可用。",
         "violation": 0.0,
         "feasible": True,
+        "structurally_degenerate": False,
         "example_q": example if example is not None else [0.0] * count,
         "ee_straight": straight["ee"][0].tolist(),
         "unsupported": list(UNSUPPORTED),
@@ -475,6 +578,13 @@ def evaluate_design(
             "末端落盒比例若计算，其二项标准误差只描述关节采样，不能挪用来当任务空间覆盖的误差",
         ],
     }
+    if task.reject_structural_degeneracy:
+        rank = generic_rank_report(design, samples=8, seed=task.seed)
+        result["structurally_degenerate"] = bool(rank["structurally_degenerate"])
+        result["generic_rank"] = rank
+        if rank["structurally_degenerate"]:
+            result["violation"] = 1.0
+            result["feasible"] = False
     if include_cloud:
         result["cloud"] = [
             {"p": target.tolist(), "reached": reached}

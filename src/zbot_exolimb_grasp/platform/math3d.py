@@ -53,6 +53,26 @@ def axis_angle(axis: np.ndarray, angle: float) -> np.ndarray:
     return np.array([np.cos(half), axis[0] * sine, axis[1] * sine, axis[2] * sine], dtype=np.float64)
 
 
+def quat_matrix(q: np.ndarray) -> np.ndarray:
+    """单个四元数 wxyz 转 3×3 旋转矩阵。"""
+    w, x, y, z = [float(value) for value in q]
+    return np.array(
+        [
+            [1 - 2 * (y * y + z * z), 2 * (x * y - z * w), 2 * (x * z + y * w)],
+            [2 * (x * y + z * w), 1 - 2 * (x * x + z * z), 2 * (y * z - x * w)],
+            [2 * (x * z - y * w), 2 * (y * z + x * w), 1 - 2 * (x * x + y * y)],
+        ],
+        dtype=np.float64,
+    )
+
+
+def so3_vee(rotation: np.ndarray) -> np.ndarray:
+    return np.array(
+        [rotation[2, 1] - rotation[1, 2], rotation[0, 2] - rotation[2, 0], rotation[1, 0] - rotation[0, 1]],
+        dtype=np.float64,
+    ) * 0.5
+
+
 def axis_angle_x(angle: float) -> np.ndarray:
     half = float(angle) * 0.5
     return np.array([np.cos(half), np.sin(half), 0.0, 0.0], dtype=np.float64)

@@ -100,6 +100,7 @@ class TaskSpec:
     ik_starts: int = 3
     ik_iterations: int = 8
     ik_damping: float = 0.08
+    reject_structural_degeneracy: bool = False
 
     def __post_init__(self) -> None:
         self.center_m = tuple(float(v) for v in self.center_m)  # type: ignore[assignment]

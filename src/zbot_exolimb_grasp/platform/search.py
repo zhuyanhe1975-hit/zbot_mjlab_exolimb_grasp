@@ -477,6 +477,7 @@ def spec_from_dict(payload: dict[str, object]) -> SearchSpec:
         ik_starts=int(task_payload.get("ik_starts", 3)),
         ik_iterations=int(task_payload.get("ik_iterations", 8)),
         ik_damping=float(task_payload.get("ik_damping", 0.08)),
+        reject_structural_degeneracy=bool(task_payload.get("reject_structural_degeneracy", False)),
     )
     lock = payload.get("count_lock")
     return SearchSpec(
