@@ -44,6 +44,41 @@ if (Math.abs(ik.task_feasible_fraction - golden.baseline_ik.task_feasible_fracti
   throw new Error(`格点可行比例 ${ik.task_feasible_fraction}`);
 }
 
+for (const count of [7, 8]) {
+  const arm = {
+    module_ids: Array(count).fill("zbot_r3"),
+    twists_rad: Array(count - 1).fill(0),
+    parameters: Array.from({ length: count }, () => ({})),
+    base_position_m: [0, 0, 0.4],
+  };
+  const pose = Array.from({ length: count }, (_, index) => -1.2 + (2.3 * index) / (count - 1));
+  const straight = forwardDesign(arm, Array(count).fill(0));
+  const chain = forwardDesign(arm, pose);
+  if (chain.jacobian.length !== count) throw new Error(`${count} 模块雅可比被截成 ${chain.jacobian.length}`);
+  if (chain.axes.length !== count) throw new Error(`${count} 模块关节轴被截成 ${chain.axes.length}`);
+  near(straight.ee, golden[`zbot_${count}`].straight_ee, 1e-8, `${count} 模块伸直`);
+  near(chain.ee, golden[`zbot_${count}`].ee, 1e-8, `${count} 模块末端`);
+  const task = {
+    center_m: straight.ee,
+    half_m: [0, 0, 0],
+    payload_kg: 0.4,
+    effort_limit_nm: 20,
+    velocity_limit_rad_s: 1.5,
+    sample_count: 0,
+    seed: 1,
+    grid_divisions: 1,
+    position_tolerance_m: 0.01,
+    ik_starts: 1,
+    ik_iterations: 2,
+    ik_damping: 0.08,
+    joint_sample_limit: 6.28,
+  };
+  const solved = evaluateDesign(arm, task, null);
+  if (solved.driven_joint_count !== count) throw new Error(`驱动数 ${solved.driven_joint_count}`);
+  if (solved.example_q.length !== count) throw new Error(`IK 解被截成 ${solved.example_q.length}`);
+  if (solved.task_targets_reached !== 1) throw new Error(`${count} 模块没有解回自身末端`);
+}
+
 const spec = {
   mode: "mixed",
   count_min: 3,

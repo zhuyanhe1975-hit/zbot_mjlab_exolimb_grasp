@@ -316,7 +316,7 @@ def generic_rank_report(
     lengths_m: tuple[float, ...] = (0.05, 0.1, 0.25, 0.5),
     relative_threshold: float = 1e-4,
 ) -> dict[str, object]:
-    """随机一般位形上的 6×6 秩。多数样本不满秩才记为结构退化。"""
+    """随机一般位形上的 6×n 秩。满秩上限是 min(6, n)。多数样本不满秩才记为结构退化。"""
     count = len(design.module_ids)
     poses = np.random.default_rng(seed).uniform(-JOINT_LIMIT, JOINT_LIMIT, size=(samples, count))
     chain = forward_chain(design, poses)
@@ -330,7 +330,7 @@ def generic_rank_report(
             values = normalized_singular_values(full[index], length)
             ranks.append(rank_at_length(values, relative_threshold))
             minima.append(float(values[-1]))
-        fraction = float(np.mean(np.asarray(ranks) < count))
+        fraction = float(np.mean(np.asarray(ranks) < min(6, count)))
         record = {
             "characteristic_length_m": length,
             "relative_threshold": relative_threshold,
@@ -349,19 +349,51 @@ def generic_rank_report(
         "by_length": by_length,
         "note": (
             "秩用特征长度归一化后的奇异值，阈值是最大奇异值的 1e-4。"
-            "这不是混单位的 6 行可操作度分数。"
+            "6×n 矩阵的满秩上限是 min(6, n)，不能拿关节数当满秩。"
+            "这不是混单位的 6 行可操作度分数，也不是六维任务可达。"
             "结构退化表示随机位形里绝大多数不满秩，换制造不能凭空补上缺失的瞬时运动。"
         ),
     }
 
 
+def velocity_lp_axis_min(jacobian: np.ndarray, speed_limit: float) -> float:
+    """六个坐标轴方向上、|qdot| 不超过上限时的最大速度，再取最小。
+
+    这是速度多面体在坐标轴上的支撑，比伪逆更接近限速最优，但仍不是多面体的内切球半径。
+    """
+    from scipy.optimize import linprog
+
+    width = jacobian.shape[1]
+    worst = float("inf")
+    for sign in (1.0, -1.0):
+        for axis in range(3):
+            direction = np.zeros(3)
+            direction[axis] = sign
+            cost = np.zeros(width + 1)
+            cost[-1] = -1.0
+            equalities = np.zeros((3, width + 1))
+            equalities[:, :width] = jacobian
+            equalities[:, -1] = -direction
+            bounds = [(-speed_limit, speed_limit)] * width + [(0.0, None)]
+            solved = linprog(cost, A_eq=equalities, b_eq=np.zeros(3), bounds=bounds, method="highs")
+            if not solved.success:
+                return 0.0
+            worst = min(worst, float(solved.x[-1]))
+    return 0.0 if not np.isfinite(worst) else worst
+
+
 def translational_manipulability(jacobian: np.ndarray) -> np.ndarray:
+    """sqrt(det(Jv Jv^T))。冗余关节会改变这个尺度，不能单独当成速度。"""
     singular = np.linalg.svd(jacobian, compute_uv=False)
     return np.prod(singular, axis=-1)
 
 
 def velocity_capability(jacobian: np.ndarray, speed_limit: float) -> np.ndarray:
-    """伪逆把单位任务速度缩放到关节速度上限内。这是下界，不是速度多面体半径。"""
+    """伪逆把单位任务速度缩放到关节速度上限内。
+
+    对 7、8 关节这种位置任务冗余臂，这不是关节限速下的最大速度，只是保守下界。
+    最终候选另用坐标轴方向的线性规划速度，见 velocity_lp_axis_min。
+    """
     samples = jacobian.shape[0]
     capability = np.empty(samples, dtype=np.float64)
     directions = np.eye(3)
@@ -469,6 +501,7 @@ def evaluate_design(
     reached_flags: list[bool] = []
     task_manips: list[float] = []
     task_speeds: list[float] = []
+    task_speeds_lp: list[float] = []
     torque_margins: list[float] = []
     rank_deficient = 0
     spatial_deficient = 0
@@ -484,13 +517,15 @@ def evaluate_design(
         manip = float(translational_manipulability(jacobian.reshape(1, 3, count))[0])
         task_manips.append(manip)
         task_speeds.append(float(velocity_capability(jacobian.reshape(1, 3, count), task.velocity_limit_rad_s)[0]))
+        if task.compute_velocity_lp:
+            task_speeds_lp.append(velocity_lp_axis_min(jacobian.reshape(3, count), task.velocity_limit_rad_s))
         solved = forward_chain(design, pose.reshape(1, -1))
         peak = float(np.max(np.abs(static_torques(solved, task.payload_kg, task.gravity_m_s2)[0])))
         torque_margins.append(float(task.effort_limit_nm) - peak)
         if manip < 1e-8:
             rank_deficient += 1
         spatial = normalized_singular_values(geometric_jacobian(solved)[0], 0.1)
-        if rank_at_length(spatial) < count:
+        if rank_at_length(spatial) < min(6, count):
             spatial_deficient += 1
     reached_count = int(sum(reached_flags))
     fraction = reached_count / float(targets.shape[0])
@@ -543,6 +578,12 @@ def evaluate_design(
         "task_manipulability_valid": manip_valid,
         "task_velocity_median": _median(task_speeds) if speed_valid else None,
         "task_velocity_valid": speed_valid,
+        "task_velocity_is_pseudoinverse_lower_bound": True,
+        "task_velocity_lp_median_m_s": _median(task_speeds_lp) if task_speeds_lp else None,
+        "task_velocity_lp_definition": (
+            "六个坐标轴正负方向上，关节速度盒约束线性规划的最大速度，再取最小。"
+            "只在复核候选上计算。它仍不是整个速度多面体的内切球。"
+        ),
         "task_torque_margin_median_nm": _median(torque_margins) if torque_margins else None,
         "position_rank_deficient_fraction": (rank_deficient / reached_count) if reached_count else None,
         "position_rank_note": "这是平移雅可比 3 行的秩是否不足 3。不是姿态 6 维的秩。",
@@ -617,9 +658,10 @@ def actuation_report(design: Design) -> dict[str, object]:
         "passive_body_count": passive,
         "actuation_note": (
             "每个已注册模块有 1 个驱动转动关节，所以驱动数等于模块数。"
+            "7 或 8 个模块就是 7 或 8 个驱动关节，对三维位置任务是冗余臂，不是恰好 6 驱动。"
             "ZBot 的 a 连杆没有自己的关节，计为被动结构件。"
             "概念轴向连杆随自身关节运动，不计被动件。"
-            "6 个驱动关节只说明位置任务的雅可比最多 3 行；本轮不保证姿态 6 维可控。"
+            "位置任务只用平移 3 行。六维几何雅可比满秩上限是 min(6, 驱动数)，秩诊断不是姿态任务可达。"
         ),
     }
 

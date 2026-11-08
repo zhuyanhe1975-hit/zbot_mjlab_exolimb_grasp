@@ -101,6 +101,8 @@ class TaskSpec:
     ik_iterations: int = 8
     ik_damping: float = 0.08
     reject_structural_degeneracy: bool = False
+    # 仅最终候选打开。冗余臂的伪逆速度是保守下界，线性规划给出坐标轴方向的限速速度。
+    compute_velocity_lp: bool = False
 
     def __post_init__(self) -> None:
         self.center_m = tuple(float(v) for v in self.center_m)  # type: ignore[assignment]

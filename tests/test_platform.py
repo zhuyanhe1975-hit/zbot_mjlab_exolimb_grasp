@@ -222,6 +222,75 @@ class SixDofTests(unittest.TestCase):
         self.assertEqual(len(seen), 32)
         self.assertIn((0.0, 0.0, 0.0, 0.0, 0.0), seen)
 
+    def test_seven_and_eight_match_finite_difference_and_mjcf(self) -> None:
+        from zbot_exolimb_grasp.platform.exporting import assert_mjcf_matches
+        from zbot_exolimb_grasp.platform.model import angular_jacobian_finite_difference, geometric_jacobian
+
+        for count, interfaces in ((7, 64), (8, 128)):
+            design = zbot_chain(count)
+            self.assertEqual(actuation_report(design)["driven_joint_count"], count)
+            self.assertEqual(len(design.twists_rad), count - 1)
+            pose = np.linspace(-1.2, 1.1, count)
+            chain = forward_chain(design, pose)
+            numeric_linear = np.zeros((3, count))
+            step = 1e-6
+            for index in range(count):
+                bumped = pose.copy()
+                bumped[index] += step
+                numeric_linear[:, index] = (forward_chain(design, bumped)["ee"][0] - chain["ee"][0]) / step
+            self.assertLess(np.max(np.abs(chain["jacobian"][0] - numeric_linear)), 1e-5)
+            angular = geometric_jacobian(chain)[0, 3:, :]
+            self.assertLess(np.max(np.abs(angular - angular_jacobian_finite_difference(design, pose))), 1e-6)
+            assert_mjcf_matches(design, samples=2, seed=count)
+            illegal = zbot_chain(count, tuple([0.2] + [0.0] * (count - 2)))
+            self.assertTrue(any("方位" in item for item in assembly_errors(illegal)))
+            self.assertEqual(interfaces, 1 << (count - 1))
+            xml = export_mjcf(design)
+            self.assertEqual(xml.count("<joint "), count)
+            distal = forward_chain(design, pose)["jacobian"][0][:, -1]
+            self.assertLess(float(np.linalg.norm(distal)), 1e-8)
+            self.assertGreater(float(np.linalg.norm(forward_chain(design, pose)["jacobian"][0][:, -2])), 1e-3)
+            self.assertEqual(xml.count("-6.28 6.28"), count)
+
+    def test_redundant_rank_uses_six_not_joint_count(self) -> None:
+        design = zbot_chain(7)
+        report = generic_rank_report(design, samples=8, seed=1)
+        self.assertFalse(report["structurally_degenerate"])
+        at_tenth = next(row for row in report["by_length"] if row["characteristic_length_m"] == 0.1)
+        self.assertLess(at_tenth["rank_deficient_fraction"], 0.5)
+        straight = forward_chain(design, np.zeros(7))["ee"][0]
+        blocked = evaluate_design(
+            design,
+            TaskSpec(ik_starts=2, ik_iterations=6, position_tolerance_m=0.01, sample_count=0, joint_sample_limit=1e-6),
+            targets=(straight + np.array([0.3, 0.0, 0.0])).reshape(1, 3),
+            target_set="custom",
+        )
+        self.assertEqual(blocked["task_targets_reached"], 0)
+        self.assertEqual(len(blocked["example_q"]), 7)
+        near = evaluate_design(
+            design,
+            TaskSpec(ik_starts=1, ik_iterations=2, position_tolerance_m=0.01, sample_count=0, joint_sample_limit=0.2),
+            targets=straight.reshape(1, 3),
+            target_set="custom",
+        )
+        self.assertEqual(near["task_targets_reached"], 1)
+        self.assertTrue(all(abs(value) <= 0.2 + 1e-8 for value in near["example_q"]))
+
+    def test_axis_lp_can_exceed_pseudoinverse_lower_bound(self) -> None:
+        from zbot_exolimb_grasp.platform.model import velocity_capability, velocity_lp_axis_min
+
+        jacobian = np.array(
+            [
+                [1.0, 0.0, 0.0, 0.5],
+                [0.0, 1.0, 0.0, 0.5],
+                [0.0, 0.0, 1.0, 0.5],
+            ]
+        )
+        pseudo = float(velocity_capability(jacobian.reshape(1, 3, 4), 1.0)[0])
+        linear = velocity_lp_axis_min(jacobian, 1.0)
+        self.assertGreater(linear, pseudo + 0.1)
+        self.assertAlmostEqual(linear, 1.5, places=5)
+
 
 class MetricTests(unittest.TestCase):
     def test_same_task_grid_for_different_module_counts(self) -> None:

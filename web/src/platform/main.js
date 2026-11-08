@@ -318,8 +318,11 @@ function describe(metrics) {
     `任务格点可行 ${metrics.task_targets_reached}/${metrics.task_target_count} = ${(metrics.task_feasible_fraction * 100).toFixed(1)}%`,
     `格点每轴 ${metrics.grid_divisions}，容差 ${metrics.position_tolerance_m} m，IK 起点 ${metrics.ik_starts}，迭代 ${metrics.ik_iterations}`,
     "未解出的格点只表示这个预算没找到，不是严格不可达。",
-    `可行解上的平移可操作度 ${manip}`,
-    `可行解上的速度能力 ${speed}（速度上限是假设）`,
+    `可行解上的平移可操作度 ${manip}（sqrt(det(Jv Jv^T))，更多关节会改变尺度）`,
+    `可行解上的伪逆速度 ${speed}（冗余臂的保守下界，不是限速最优；速度上限是假设）`,
+    metrics.task_velocity_lp_median_m_s == null
+      ? "坐标轴线性规划速度 未计算"
+      : `坐标轴线性规划速度 ${metrics.task_velocity_lp_median_m_s.toFixed(3)} m/s（六个轴方向的最小值，不是速度多面体内切球）`,
     metrics.task_torque_margin_median_nm == null
       ? "静载裕度 无效"
       : `可行解静载裕度中位数 ${metrics.task_torque_margin_median_nm.toFixed(2)} N·m`,
@@ -327,6 +330,7 @@ function describe(metrics) {
       ? "平移雅可比秩 无效"
       : `平移雅可比秩不足的可行解 ${(metrics.position_rank_deficient_fraction * 100).toFixed(0)}%（只看位置 3 行，不是姿态 6 维）`,
     `驱动关节 ${metrics.driven_joint_count ?? "—"}，ZBot 被动 a 连杆 ${metrics.passive_body_count ?? "—"}`,
+    (metrics.driven_joint_count ?? 0) > 6 ? "驱动数大于 6，这是位置任务的冗余臂，浏览器没有把它截成 6 个关节。" : "",
     metrics.structurally_degenerate
       ? "随机一般位形的六维几何雅可比结构退化，不能当作完整位姿 6DOF。"
       : (metrics.task_pose_spatial_rank_deficient_fraction == null
@@ -407,7 +411,15 @@ function selectCandidate(index) {
   state.q = (row.metrics.example_q ?? Array(state.count).fill(0)).slice();
   refresh();
   showCloud(row.metrics);
-  detailEl.textContent = `${modules.join(" · ")}\n${describe(row.metrics)}`;
+  const bits = row.bits ?? (row.design.modules ?? []).slice(0, -1).map((item) => (item.twist_to_next_rad > 0.1 ? "1" : "0")).join("");
+  const centers = row.centers
+    ? `\n单元中心点 ${row.centers.task_targets_reached}/${row.centers.task_target_count}，伪逆速度 ${row.centers.task_velocity_median?.toFixed?.(3) ?? "—"} m/s，线性规划速度 ${row.centers.task_velocity_lp_median_m_s?.toFixed?.(3) ?? "—"} m/s。`
+    : "";
+  const base = state.result?.baseline?.metrics;
+  const versus = base
+    ? `\n相对 6 模块全 0 基准：可行比例 ${(row.metrics.task_feasible_fraction * 100).toFixed(1)}% 对 ${(base.task_feasible_fraction * 100).toFixed(1)}%，质量 ${row.metrics.mass_kg.toFixed(3)} kg 对 ${base.mass_kg.toFixed(3)} kg。`
+    : "";
+  detailEl.textContent = `${row.role ? `${row.role} · ` : ""}${modules.length} 个模块 · 接口 ${bits || "—"}\n${modules.join(" · ")}\n${describe(row.metrics)}${centers}${versus}`;
 }
 
 function renderResult() {
@@ -421,8 +433,11 @@ function renderResult() {
     button.type = "button";
     button.className = "candidate";
     const modules = row.design.module_ids ?? row.design.modules.map((item) => item.id);
+    const driven = row.metrics.driven_joint_count ?? modules.length;
+    const bits = row.bits ?? "—";
     const manip = row.metrics.task_manipulability_valid ? row.metrics.task_manipulability_median.toFixed(4) : "无效";
-    button.innerHTML = `<strong>${modules.map((id) => LIBRARY[id]?.label ?? id).join(" / ")}</strong><span>格点可行 ${(row.metrics.task_feasible_fraction * 100).toFixed(0)}% · 质量 ${row.metrics.mass_kg.toFixed(2)} kg · 可操作度 ${manip}</span>`;
+    const lp = row.metrics.task_velocity_lp_median_m_s == null ? "未算" : `${row.metrics.task_velocity_lp_median_m_s.toFixed(3)} m/s`;
+    button.innerHTML = `<strong>${driven} 驱动 · 接口 ${bits} · ${row.role ?? "候选"}</strong><span>格点可行 ${(row.metrics.task_feasible_fraction * 100).toFixed(0)}% · 质量 ${row.metrics.mass_kg.toFixed(2)} kg · 可操作度 ${manip} · 轴速度 ${lp}</span>`;
     button.addEventListener("click", () => selectCandidate(index));
     candidatesEl.append(button);
   });
@@ -482,12 +497,36 @@ function frame() {
 }
 requestAnimationFrame(frame);
 
-document.querySelector("#lock6").addEventListener("click", () => {
-  state.count = 6;
-  document.querySelector("#count-min").value = "6";
-  document.querySelector("#count-max").value = "6";
+function lockCount(count) {
+  state.count = count;
+  document.querySelector("#count-min").value = String(count);
+  document.querySelector("#count-max").value = String(count);
   document.querySelector("#count-lock").checked = true;
   refresh();
+}
+document.querySelector("#lock6").addEventListener("click", () => lockCount(6));
+document.querySelector("#lock7").addEventListener("click", () => lockCount(7));
+document.querySelector("#lock8").addEventListener("click", () => lockCount(8));
+document.querySelector("#load-batch").addEventListener("click", async () => {
+  progressEl.textContent = "正在读取首批 6/7/8 复核。";
+  const response = await fetch(`${import.meta.env.BASE_URL}longterm_batch1.json`);
+  if (!response.ok) {
+    progressEl.textContent = "还没有首批结果文件。先运行 python scripts/design_678_batch1.py。";
+    return;
+  }
+  const payload = normalizeImported(await response.json());
+  state.result = payload;
+  const goals = payload.goals ?? {};
+  const coverage = goals.coverage_priority;
+  const speed = goals.speed_priority;
+  const light = goals.light_priority;
+  progressEl.textContent = [
+    payload.note,
+    coverage ? `覆盖优先：${coverage.count} 模块 ${coverage.bits}。${coverage.why}` : "",
+    speed ? `速度优先：${speed.count} 模块 ${speed.bits}。${speed.why}` : "",
+    light ? `轻量优先：${light.count} 模块 ${light.bits}。${light.why}` : "",
+  ].filter(Boolean).join(" ");
+  renderResult();
 });
 document.querySelector("#count-now").addEventListener("change", () => {
   state.count = Math.min(8, Math.max(3, num("#count-now")));

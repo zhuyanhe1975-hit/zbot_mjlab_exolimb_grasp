@@ -1,0 +1,297 @@
+{
+  "checkpoint_version": 1,
+  "cache_version": "batch1-screen-v1",
+  "cache_path": "experiments/cache/longterm_batch1_screen.json",
+  "batch_id": "batch1_physical_6_7_8",
+  "status": "batch1_complete",
+  "model": {
+    "module": "zbot_r3",
+    "kind": "physical",
+    "size_locked": true,
+    "interface_angles_rad": [
+      0.0,
+      1.5707963267948966
+    ],
+    "driven_joints_per_module": 1,
+    "passive_bodies_per_module": 1,
+    "legal_sequence_counts": {
+      "6": 32,
+      "7": 64,
+      "8": 128
+    },
+    "note": "7 和 8 模块是 7、8 个驱动关节。跟踪点是 foot_1 关节原点，末关节平移雅可比为 0，所以能移动该点的关节数分别是 5、6、7。末位接口几乎不移动这个点。足底 site 有偏移，本批没有把任务点改到足底。"
+  },
+  "task": {
+    "origin": "默认示例任务，不是用户给定工况，也不是通用最优。",
+    "center_m": [
+      0.0,
+      0.05,
+      0.72
+    ],
+    "half_m": [
+      0.22,
+      0.22,
+      0.22
+    ],
+    "payload_kg": 0.4,
+    "effort_limit_nm": 20.0,
+    "velocity_limit_rad_s": 1.5,
+    "velocity_limit_is_assumption": true
+  },
+  "budgets": {
+    "screen": {
+      "grid_divisions": 3,
+      "position_tolerance_m": 0.02,
+      "ik_starts": 3,
+      "ik_iterations": 10,
+      "seed": 11
+    },
+    "review": {
+      "grid_divisions": 5,
+      "position_tolerance_m": 0.01,
+      "ik_starts": 8,
+      "ik_iterations": 50,
+      "seed": 11,
+      "compute_velocity_lp": true
+    },
+    "review_also": "125 个单元中心点，同一 1 cm、8 起点、50 迭代"
+  },
+  "completed_batches": [
+    "batch1_physical_6_7_8"
+  ],
+  "elapsed_s": 211.0528149999991,
+  "screen_rows": 224,
+  "screen_summary": {
+    "6": {
+      "sequences": 32,
+      "best_bits": "10000",
+      "best_reached": 22,
+      "best_fraction": 0.8148148148148148,
+      "mass_kg": 4.2785400000000005
+    },
+    "7": {
+      "sequences": 64,
+      "best_bits": "000000",
+      "best_reached": 26,
+      "best_fraction": 0.9629629629629629,
+      "mass_kg": 4.991630000000001
+    },
+    "8": {
+      "sequences": 128,
+      "best_bits": "0000000",
+      "best_reached": 26,
+      "best_fraction": 0.9629629629629629,
+      "mass_kg": 5.704720000000001
+    }
+  },
+  "recommendations_by_goal": {
+    "coverage_priority": {
+      "count": 6,
+      "bits": "00000",
+      "reliable_improvement_on_both_point_sets": false,
+      "highest_worse_set_count": 6,
+      "highest_worse_set_bits": "00000",
+      "endpoint_gain": 0.0,
+      "cell_center_gain": 0.0,
+      "why": "可靠改进必须在端点和单元中心两套 125 点上都至少高 0.03。只在一套上变多，记成点集取舍，不叫覆盖优胜。末位接口 90° 与全 0 的 foot_1 原点几乎重合，不单独推荐。"
+    },
+    "speed_priority": {
+      "count": 8,
+      "bits": "0000000",
+      "reliable_improvement": true,
+      "best_reviewed_count": 8,
+      "best_reviewed_bits": "0000000",
+      "endpoint_lp_m_s": 0.8471697884762698,
+      "baseline_lp_m_s": 0.413801372642927,
+      "why": "速度用坐标轴线性规划，不用伪逆。更长的臂在同样 1.5 rad/s 关节限速下末端线速度更高，这是力臂尺度，不是软件把冗余臂算得更快。平移可操作度同样偏向更多关节。"
+    },
+    "light_priority": {
+      "count": 6,
+      "bits": "00000",
+      "mass_kg": 4.2785400000000005,
+      "why": "实物 ZBot 不缩放，质量只随模块数增加。轻量优先是 6 模块全 0。"
+    },
+    "point_set_tradeoff": [
+      {
+        "count": 6,
+        "bits": "00000",
+        "endpoint_reached": 110,
+        "centers_reached": 125,
+        "velocity_lp_m_s": 0.413801372642927,
+        "mass_kg": 4.2785400000000005
+      },
+      {
+        "count": 7,
+        "bits": "000000",
+        "endpoint_reached": 121,
+        "centers_reached": 124,
+        "velocity_lp_m_s": 0.6137525680293971,
+        "mass_kg": 4.991630000000001
+      },
+      {
+        "count": 8,
+        "bits": "0000000",
+        "endpoint_reached": 121,
+        "centers_reached": 122,
+        "velocity_lp_m_s": 0.8471697884762698,
+        "mass_kg": 5.704720000000001
+      }
+    ],
+    "unique_optimum": false,
+    "distal_joint_note": "跟踪点是 foot_1 关节原点。末关节的平移雅可比为 0，末位接口方位几乎不改变这个点。7 模块有 6 个能移动该点的关节，8 模块有 7 个。足底 site 相对关节有偏移，本批没有改成足底点。"
+  },
+  "baseline_6": {
+    "count": 6,
+    "bits": "00000",
+    "endpoint_125": {
+      "driven_joint_count": 6,
+      "passive_body_count": 6,
+      "mass_kg": 4.2785400000000005,
+      "task_feasible_fraction": 0.88,
+      "task_targets_reached": 110,
+      "task_target_count": 125,
+      "position_tolerance_m": 0.01,
+      "grid_divisions": 5,
+      "ik_starts": 8,
+      "ik_iterations": 50,
+      "task_manipulability_median": 0.012410165285290226,
+      "task_manipulability_valid": true,
+      "task_velocity_median": 0.359894712427383,
+      "task_velocity_valid": true,
+      "task_velocity_lp_median_m_s": 0.413801372642927,
+      "task_torque_margin_median_nm": 16.5785203275133,
+      "position_rank_deficient_fraction": 0.0,
+      "task_pose_spatial_rank_deficient_fraction": 0.0,
+      "q0_collision": false,
+      "q0_peak_torque_nm": 0.00019244566906833805,
+      "example_q": [
+        -0.6256402100675552,
+        -1.316626695828266,
+        1.3316377438027152,
+        -1.1103260417474823,
+        0.6026720827030552,
+        0.0
+      ]
+    },
+    "cell_centers_125": {
+      "driven_joint_count": 6,
+      "passive_body_count": 6,
+      "mass_kg": 4.2785400000000005,
+      "task_feasible_fraction": 1.0,
+      "task_targets_reached": 125,
+      "task_target_count": 125,
+      "position_tolerance_m": 0.01,
+      "grid_divisions": 5,
+      "ik_starts": 8,
+      "ik_iterations": 50,
+      "task_manipulability_median": 0.013082846488399675,
+      "task_manipulability_valid": true,
+      "task_velocity_median": 0.3522838433448854,
+      "task_velocity_valid": true,
+      "task_velocity_lp_median_m_s": 0.4135875563606315,
+      "task_torque_margin_median_nm": 17.03078044995724,
+      "position_rank_deficient_fraction": 0.0,
+      "task_pose_spatial_rank_deficient_fraction": 0.0,
+      "q0_collision": false,
+      "q0_peak_torque_nm": 0.00019244566906833805
+    }
+  },
+  "reviewed": [
+    {
+      "count": 6,
+      "bits": "00000",
+      "role": "all_zero",
+      "endpoint_reached": 110,
+      "centers_reached": 125,
+      "manipulability": 0.012410165285290226,
+      "velocity_pseudoinverse": 0.359894712427383,
+      "velocity_lp": 0.413801372642927,
+      "mass_kg": 4.2785400000000005,
+      "spatial_rank_deficient_on_task_solutions": 0.0,
+      "generic_rank_degenerate": false
+    },
+    {
+      "count": 6,
+      "bits": "11000",
+      "role": "screen_coverage_tie",
+      "endpoint_reached": 112,
+      "centers_reached": 120,
+      "manipulability": 0.009626792470812277,
+      "velocity_pseudoinverse": 0.27190086523596235,
+      "velocity_lp": 0.3286339594576835,
+      "mass_kg": 4.2785400000000005,
+      "spatial_rank_deficient_on_task_solutions": 0.0,
+      "generic_rank_degenerate": false
+    },
+    {
+      "count": 7,
+      "bits": "000000",
+      "role": "all_zero",
+      "endpoint_reached": 121,
+      "centers_reached": 124,
+      "manipulability": 0.02977761139681143,
+      "velocity_pseudoinverse": 0.48972656396631853,
+      "velocity_lp": 0.6137525680293971,
+      "mass_kg": 4.991630000000001,
+      "spatial_rank_deficient_on_task_solutions": 0.0,
+      "generic_rank_degenerate": false
+    },
+    {
+      "count": 7,
+      "bits": "000001",
+      "role": "last_interface_same_point",
+      "endpoint_reached": 121,
+      "centers_reached": 124,
+      "manipulability": 0.029776701995844312,
+      "velocity_pseudoinverse": 0.48969905048307794,
+      "velocity_lp": 0.6137095360566591,
+      "mass_kg": 4.991630000000001,
+      "spatial_rank_deficient_on_task_solutions": 0.0,
+      "generic_rank_degenerate": false
+    },
+    {
+      "count": 8,
+      "bits": "0000000",
+      "role": "all_zero",
+      "endpoint_reached": 121,
+      "centers_reached": 122,
+      "manipulability": 0.050114271569964584,
+      "velocity_pseudoinverse": 0.6249291440793442,
+      "velocity_lp": 0.8471697884762698,
+      "mass_kg": 5.704720000000001,
+      "spatial_rank_deficient_on_task_solutions": 0.0,
+      "generic_rank_degenerate": false
+    },
+    {
+      "count": 8,
+      "bits": "0000001",
+      "role": "last_interface_same_point",
+      "endpoint_reached": 121,
+      "centers_reached": 122,
+      "manipulability": 0.050094683222107306,
+      "velocity_pseudoinverse": 0.6249643992453654,
+      "velocity_lp": 0.8471531214613494,
+      "mass_kg": 5.704720000000001,
+      "spatial_rank_deficient_on_task_solutions": 0.0,
+      "generic_rank_degenerate": false
+    }
+  ],
+  "unverified_assumptions": [
+    "任务盒不是用户工况。",
+    "关节速度 1.5 rad/s 无 R3 实测。",
+    "胶囊碰撞和质点静力矩是近似。",
+    "未解出的格点不是不可达证明。",
+    "概念模块长度和质量尚未进入本批，留给下一批。",
+    "六维秩只诊断瞬时运动，不是六维任务全通过。"
+  ],
+  "stop_criteria": [
+    "两套独立 125 点、1 cm 容差下，候选的可行比例都不比 6 模块全 0 基准高 0.03，且线性规划速度也不更高，则不为该目标宣称改进。",
+    "若连续两批在覆盖优先和速度优先上都没有过这个门槛，就停在 6 模块全 0 作为该默认任务的实物参考，不再加长枚举。"
+  ],
+  "next_batch": {
+    "intent": "在已排除结构退化的概念模块上，做固定 6、7 或 8 驱动关节的长度与 0/π/2 连接联合优化，并与本批实物复核用同一 1 cm、125 点预算比较。",
+    "not_started": true,
+    "must_separate_from_hardware": true,
+    "mass_assumption": "概念连杆继续标明 4 kg/m，不能写成 ZBot 实测减重。"
+  }
+}
