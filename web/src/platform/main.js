@@ -83,6 +83,7 @@ function specFromState() {
       ik_iterations: num("#ik-iters"),
       ik_damping: 0.08,
       joint_sample_limit: 6.28,
+      tool_point: document.querySelector("#tool-point").value,
     },
   };
 }
@@ -267,10 +268,27 @@ function mountArm() {
   drawTask();
 }
 
+let soleMarker = null;
 function poseArm() {
   pivots.forEach((joint, index) => {
     joint.rotation.z = state.q[index] ?? 0;
   });
+  if (soleMarker) {
+    scene.remove(soleMarker);
+    soleMarker = null;
+  }
+  if (document.querySelector("#tool-point").value !== "foot_1_sole") return;
+  const { design, errors } = currentDesign();
+  if (errors.length) return;
+  const chain = forwardDesign(design, state.q, "foot_1_sole");
+  if (chain.toolPointApplied !== "foot_1_sole") return;
+  soleMarker = new THREE.Mesh(
+    new THREE.SphereGeometry(0.016, 18, 12),
+    new THREE.MeshStandardMaterial({ color: 0xff3355, emissive: 0x551018 }),
+  );
+  soleMarker.position.set(chain.ee[0], chain.ee[1], chain.ee[2]);
+  soleMarker.name = "sole";
+  scene.add(soleMarker);
 }
 
 function drawTask() {
@@ -314,7 +332,14 @@ function describe(metrics) {
     ? "未计算"
     : `${(metrics.pose_hit_rate * 100).toFixed(1)}%（关节样本比例，标准误差 ±${((metrics.pose_hit_se || 0) * 100).toFixed(1)} 个百分点，不是任务覆盖）`;
   return [
-    `质量 ${metrics.mass_kg.toFixed(3)} kg`,
+    `任务点 ${metrics.tool_point_applied ?? metrics.tool_point ?? document.querySelector("#tool-point").value}`,
+    metrics.tool_site
+      ? `足底 ${metrics.tool_site.name} 在 ${metrics.tool_site.body}，局部位置 [${metrics.tool_site.pos_m.map((value) => value.toFixed(8)).join(", ")}] m，来自 ${metrics.tool_site.source_path}`
+      : "",
+    metrics.distal_linear_jacobian_norm == null
+      ? ""
+      : `零位末关节平移列范数 ${metrics.distal_linear_jacobian_norm.toExponential(3)}`,
+    `质量 ${metrics.mass_kg.toFixed(3)} kg${metrics.mass_is_assumption ? "（概念段按 4 kg/m 假设，不是实物减重）" : ""}`,
     `任务格点可行 ${metrics.task_targets_reached}/${metrics.task_target_count} = ${(metrics.task_feasible_fraction * 100).toFixed(1)}%`,
     `格点每轴 ${metrics.grid_divisions}，容差 ${metrics.position_tolerance_m} m，IK 起点 ${metrics.ik_starts}，迭代 ${metrics.ik_iterations}`,
     "未解出的格点只表示这个预算没找到，不是严格不可达。",
@@ -507,27 +532,30 @@ function lockCount(count) {
 document.querySelector("#lock6").addEventListener("click", () => lockCount(6));
 document.querySelector("#lock7").addEventListener("click", () => lockCount(7));
 document.querySelector("#lock8").addEventListener("click", () => lockCount(8));
-document.querySelector("#load-batch").addEventListener("click", async () => {
-  progressEl.textContent = "正在读取首批 6/7/8 复核。";
-  const response = await fetch(`${import.meta.env.BASE_URL}longterm_batch1.json`);
+document.querySelector("#tool-point").addEventListener("change", () => {
+  poseArm();
+});
+async function loadBatch(file, label) {
+  progressEl.textContent = `正在读取${label}。`;
+  const response = await fetch(`${import.meta.env.BASE_URL}${file}`);
   if (!response.ok) {
-    progressEl.textContent = "还没有首批结果文件。先运行 python scripts/design_678_batch1.py。";
+    progressEl.textContent = `还没有${label}文件。`;
     return;
   }
   const payload = normalizeImported(await response.json());
   state.result = payload;
+  if (payload.tool_point) document.querySelector("#tool-point").value = payload.tool_point;
   const goals = payload.goals ?? {};
-  const coverage = goals.coverage_priority;
-  const speed = goals.speed_priority;
-  const light = goals.light_priority;
   progressEl.textContent = [
     payload.note,
-    coverage ? `覆盖优先：${coverage.count} 模块 ${coverage.bits}。${coverage.why}` : "",
-    speed ? `速度优先：${speed.count} 模块 ${speed.bits}。${speed.why}` : "",
-    light ? `轻量优先：${light.count} 模块 ${light.bits}。${light.why}` : "",
+    goals.coverage_priority ? `覆盖：${goals.coverage_priority.count} 模块 ${goals.coverage_priority.bits ?? ""}。${goals.coverage_priority.why ?? ""}` : "",
+    goals.speed_priority ? `速度：${goals.speed_priority.count} 模块 ${goals.speed_priority.bits ?? ""}。${goals.speed_priority.why ?? ""}` : "",
+    goals.light_priority ? `轻量：${goals.light_priority.count} 模块 ${goals.light_priority.bits ?? ""}。${goals.light_priority.why ?? ""}` : "",
   ].filter(Boolean).join(" ");
   renderResult();
-});
+}
+document.querySelector("#load-batch").addEventListener("click", () => loadBatch("longterm_batch1.json", "首批复核"));
+document.querySelector("#load-batch2").addEventListener("click", () => loadBatch("longterm_batch2.json", "足底批次"));
 document.querySelector("#count-now").addEventListener("change", () => {
   state.count = Math.min(8, Math.max(3, num("#count-now")));
   document.querySelector("#count-now").value = String(state.count);

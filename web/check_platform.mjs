@@ -44,6 +44,29 @@ if (Math.abs(ik.task_feasible_fraction - golden.baseline_ik.task_feasible_fracti
   throw new Error(`格点可行比例 ${ik.task_feasible_fraction}`);
 }
 
+const sole = golden.foot_1_sole;
+if (sole.name !== "foot_1_sole") throw new Error(`足底名称 ${sole.name}`);
+for (const count of [6, 7, 8]) {
+  const expected = sole.arms[String(count)];
+  const arm = {
+    module_ids: Array(count).fill("zbot_r3"),
+    twists_rad: Array(count - 1).fill(0),
+    parameters: Array.from({ length: count }, () => ({})),
+    base_position_m: [0, 0, 0.4],
+  };
+  const chain = forwardDesign(arm, expected.pose, "foot_1_sole");
+  const origin = forwardDesign(arm, expected.pose, "foot_joint_origin");
+  if (chain.toolPointApplied !== "foot_1_sole") throw new Error("浏览器没有使用足底点");
+  if (chain.jacobian.length !== count) throw new Error(`足底雅可比列数 ${chain.jacobian.length}`);
+  near(chain.ee, expected.ee, 1e-8, `${count} 模块足底`);
+  near(origin.ee, expected.origin_ee, 1e-8, `${count} 模块关节原点`);
+  const distal = chain.jacobian[count - 1];
+  const distalNorm = Math.hypot(...distal);
+  if (Math.abs(distalNorm - expected.distal_column_norm) > 1e-6) throw new Error(`末关节平移列 ${distalNorm}`);
+  const originNorm = Math.hypot(...origin.jacobian[count - 1]);
+  if (originNorm > 1e-8) throw new Error("关节原点模式的末关节平移列不是 0");
+}
+
 for (const count of [7, 8]) {
   const arm = {
     module_ids: Array(count).fill("zbot_r3"),

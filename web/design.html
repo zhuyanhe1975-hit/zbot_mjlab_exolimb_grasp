@@ -66,7 +66,13 @@
             <label>IK 迭代<input id="ik-iters" type="number" min="1" max="20" value="8" /></label>
             <label>落盒诊断样本<input id="samples" type="number" min="0" max="400" step="16" value="0" /></label>
           </div>
-          <p class="help">当前任务盒是默认示例，不是用户给定工况，也不是通用最优。主指标是固定格点里找到可行解的比例，分母是格点数。未解出不是不可达。每个模块一个驱动关节：7 或 8 个模块就是 7 或 8 个驱动，对位置任务是冗余臂，不是恰好 6 驱动。平移可操作度会偏向更多关节。伪逆速度只是保守下界。六维秩只诊断，不是姿态任务全通过。力矩默认 20 N·m。速度没有实测值。</p>
+          <label>任务点
+            <select id="tool-point">
+              <option value="foot_joint_origin" selected>foot_1 关节原点（旧实验）</option>
+              <option value="foot_1_sole">foot_1_sole 足底（XML site）</option>
+            </select>
+          </label>
+          <p class="help">当前任务盒是默认示例，不是用户给定工况，也不是通用最优。关节原点是上一批的跟踪点，末关节不移动它。足底是 ZBOT6.xml 里 foot_1 上的 foot_1_sole，局部位置和姿态从模型读取。两种任务点分开比较，不互相覆盖。每个模块一个驱动关节。平移可操作度会偏向更多关节。伪逆速度只是保守下界，坐标轴线性规划也不是全方向最快。六维秩只诊断，不是姿态任务全通过。力矩默认 20 N·m。速度没有实测值。概念质量按 4 kg/m，不是硬件减重。</p>
         </section>
         <section>
           <h2>4 搜索</h2>
@@ -92,6 +98,7 @@
             <button id="cancel" type="button" class="secondary" disabled>取消</button>
             <button id="reeval" type="button" class="secondary" disabled>更高预算复核</button>
             <button id="load-batch" type="button" class="secondary">载入 6/7/8 首批复核</button>
+            <button id="load-batch2" type="button" class="secondary">载入足底批次 2</button>
           </div>
           <p id="progress" class="help">还没有运行。改装配或任务后再搜索，结果会跟着变。</p>
           <canvas id="pareto" width="320" height="180"></canvas>

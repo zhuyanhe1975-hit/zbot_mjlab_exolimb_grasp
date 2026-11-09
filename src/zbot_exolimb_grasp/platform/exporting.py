@@ -25,7 +25,7 @@ def _quat_attr(quat: np.ndarray) -> str:
     return _fmt(quat)
 
 
-def export_mjcf(design: Design) -> str:
+def export_mjcf(design: Design, *, tool_point: str = "foot_joint_origin") -> str:
     root = ET.Element("mujoco", model="modular_arm")
     ET.SubElement(root, "compiler", angle="radian")
     world = ET.SubElement(root, "worldbody")
@@ -62,7 +62,19 @@ def export_mjcf(design: Design) -> str:
             )
             ET.SubElement(joint_body, "inertial", pos=_fmt(COM_B), mass=f"{LINK_B_MASS:.8g}")
             if last:
-                ET.SubElement(joint_body, "site", name="ee", pos="0 0 0")
+                if tool_point == "foot_1_sole":
+                    from .model import sole_site
+
+                    site = sole_site()
+                    ET.SubElement(
+                        joint_body,
+                        "site",
+                        name="ee",
+                        pos=_fmt(site.pos_m),
+                        quat=_fmt(site.quat_wxyz),
+                    )
+                else:
+                    ET.SubElement(joint_body, "site", name="ee", pos="0 0 0")
                 parent = joint_body
             else:
                 child = ET.SubElement(
@@ -169,15 +181,15 @@ def mjcf_end_effector(xml: str, q: np.ndarray) -> np.ndarray:
     raise ValueError("MJCF 没有名为 ee 的 site")
 
 
-def assert_mjcf_matches(design: Design, samples: int = 5, seed: int = 0) -> None:
-    xml = export_mjcf(design)
+def assert_mjcf_matches(design: Design, samples: int = 5, seed: int = 0, *, tool_point: str = "foot_joint_origin") -> None:
+    xml = export_mjcf(design, tool_point=tool_point)
     rng = np.random.default_rng(seed)
     count = len(design.module_ids)
     poses = [np.zeros(count)]
     poses.extend(rng.uniform(-1.0, 1.0, size=(samples, count)))
     for pose in poses:
         exported = mjcf_end_effector(xml, pose)
-        model = forward_chain(design, pose.reshape(1, -1))["ee"][0]
+        model = forward_chain(design, pose.reshape(1, -1), tool_point=tool_point)["ee"][0]
         if not np.allclose(exported, model, atol=1e-6):
             raise AssertionError(f"MJCF 末端 {exported} 与内部模型 {model} 不一致")
 

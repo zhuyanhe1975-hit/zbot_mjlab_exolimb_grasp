@@ -68,6 +68,10 @@ def validate_search(spec: SearchSpec) -> list[str]:
         errors.append("关节速度上限须在 (0, 20] rad/s，且这是假设值")
     if spec.task.effort_limit_nm <= 0 or spec.task.effort_limit_nm > 200:
         errors.append("力矩上限须在 (0, 200] N·m")
+    if spec.task.tool_point not in {"foot_joint_origin", "foot_1_sole"}:
+        errors.append("任务点只能是 foot_joint_origin 或 foot_1_sole")
+    if spec.distal_module_id is not None and spec.distal_module_id not in spec.allowed_module_ids():
+        errors.append("固定的末模块不在当前模式允许的模块里")
     if any(value <= 0.01 for value in spec.task.half_m):
         errors.append("任务区半尺寸必须大于 0.01 m")
     if not spec.length_lower_m < spec.length_upper_m:
@@ -107,6 +111,8 @@ def _repair(genome: Genome, spec: SearchSpec) -> Genome:
         lengths[index] = _clip_length(spec, lengths[index])
         if index < COUNT_MAX - 1:
             twists[index] = 0.0 if twists[index] < math.pi / 4 else math.pi / 2
+    if spec.distal_module_id:
+        modules[count - 1] = spec.distal_module_id
     return Genome(count=count, module_ids=modules[:COUNT_MAX], twists=twists[: COUNT_MAX - 1], lengths=lengths[:COUNT_MAX])
 
 
@@ -457,7 +463,10 @@ def spec_to_dict(spec: SearchSpec) -> dict[str, object]:
             "ik_starts": task.ik_starts,
             "ik_iterations": task.ik_iterations,
             "ik_damping": task.ik_damping,
+            "tool_point": task.tool_point,
+            "reject_structural_degeneracy": task.reject_structural_degeneracy,
         },
+        "distal_module_id": spec.distal_module_id,
     }
 
 
@@ -478,6 +487,7 @@ def spec_from_dict(payload: dict[str, object]) -> SearchSpec:
         ik_iterations=int(task_payload.get("ik_iterations", 8)),
         ik_damping=float(task_payload.get("ik_damping", 0.08)),
         reject_structural_degeneracy=bool(task_payload.get("reject_structural_degeneracy", False)),
+        tool_point=str(task_payload.get("tool_point", "foot_joint_origin")),
     )
     lock = payload.get("count_lock")
     return SearchSpec(
@@ -492,4 +502,5 @@ def spec_from_dict(payload: dict[str, object]) -> SearchSpec:
         length_upper_m=float(payload.get("length_upper_m", 0.16)),
         seed=int(payload.get("seed", 1)),
         task=task,
+        distal_module_id=None if payload.get("distal_module_id") in {None, ""} else str(payload.get("distal_module_id")),
     )

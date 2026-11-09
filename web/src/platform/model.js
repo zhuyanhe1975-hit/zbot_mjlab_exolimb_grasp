@@ -15,6 +15,11 @@ const B_QUAT = [0, -0.382684281, 0, 0.923879181];
 const COM_A = [-0.0022495, -0.000029534, 0.042888];
 const COM_B = [-0.02292, -0.00016188, 0.03226];
 const Z = [0, 0, 1];
+// 与 assets/zbot_6/ZBOT6.xml 中 foot_1/foot_1_sole 的 pos、quat 一致。Python 从 XML 读取并回归这组字面量。
+export const SOLE_POS = [-0.03873181, 0.00014649, 0.03934993];
+export const SOLE_QUAT = [0.923879087, 0.000378796, -0.382684289, -0.000156903];
+export const TOOL_JOINT_ORIGIN = "foot_joint_origin";
+export const TOOL_SOLE = "foot_1_sole";
 
 export const LIBRARY = {
   zbot_r3: {
@@ -158,11 +163,12 @@ export function assemblyErrors(design) {
   return errors;
 }
 
-export function forwardDesign(design) {
+export function forwardDesign(design, q, toolPoint = TOOL_JOINT_ORIGIN) {
   const errors = assemblyErrors(design);
   if (errors.length) throw new Error(errors.join("；"));
-  const q = arguments[1];
+  if (toolPoint !== TOOL_JOINT_ORIGIN && toolPoint !== TOOL_SOLE) throw new Error(`未知任务点 ${toolPoint}`);
   const count = design.module_ids.length;
+  let applied = TOOL_JOINT_ORIGIN;
   let pos = design.base_position_m.slice();
   let quat = [1, 0, 0, 0];
   const origins = [];
@@ -193,7 +199,13 @@ export function forwardDesign(design) {
       if (hasChild) {
         pos = bEnd;
         quat = mulQuat(swung, zbotAttachment(twist));
-      } else ee = origin;
+      } else if (toolPoint === TOOL_SOLE) {
+        ee = add(origin, rotate(swung, SOLE_POS));
+        applied = TOOL_SOLE;
+      } else {
+        ee = origin;
+        applied = TOOL_JOINT_ORIGIN;
+      }
     } else {
       const length = design.parameters[index].length_m;
       const origin = pos.slice();
@@ -210,11 +222,14 @@ export function forwardDesign(design) {
       if (hasChild) {
         pos = tip;
         quat = mulQuat(post, axisAngleX(twist));
-      } else ee = tip;
+      } else {
+        ee = tip;
+        applied = toolPoint === TOOL_SOLE ? "concept_tip_no_sole" : "concept_tip";
+      }
     }
   }
   const jacobian = origins.map((origin, index) => cross(axes[index], sub(ee, origin)));
-  return { ee, jacobian, mass, origins, axes, bodies, capsules };
+  return { ee, jacobian, mass, origins, axes, bodies, capsules, toolPoint, toolPointApplied: applied };
 }
 
 function segmentDistance(p0, p1, q0, q1) {
@@ -384,6 +399,7 @@ function poseIsFeasible(chain, task) {
 }
 
 function solveTarget(design, target, task) {
+  const toolPoint = task.tool_point ?? TOOL_JOINT_ORIGIN;
   const count = design.module_ids.length;
   const limit = task.joint_sample_limit ?? 6.28;
   const tolerance = task.position_tolerance_m ?? 0.05;
@@ -391,7 +407,7 @@ function solveTarget(design, target, task) {
   for (const start of ikStarts(count, task.ik_starts ?? 3, limit)) {
     let pose = start.slice();
     for (let step = 0; step < (task.ik_iterations ?? 8); step += 1) {
-      const chain = forwardDesign(design, pose);
+      const chain = forwardDesign(design, pose, toolPoint);
       const error = sub(target, chain.ee);
       if (norm(error) <= tolerance && poseIsFeasible(chain, task)) return { pose, chain };
       const delta = dampedStep(jacobianMatrix(chain), error, damping);
@@ -432,7 +448,8 @@ export function evaluateDesign(design, task, samples = null, includeCloud = fals
     if (manip < 1e-8) rankDeficient += 1;
   });
   const reachedCount = reached.filter(Boolean).length;
-  const straight = forwardDesign(design, Array(count).fill(0));
+  const toolPoint = task.tool_point ?? TOOL_JOINT_ORIGIN;
+  const straight = forwardDesign(design, Array(count).fill(0), toolPoint);
   const torque0 = torques(straight, task.payload_kg);
   const peak0 = Math.max(...torque0.map((value) => Math.abs(value)));
   let poseHit = null;
@@ -449,7 +466,7 @@ export function evaluateDesign(design, task, samples = null, includeCloud = fals
     const manips = [];
     const speeds = [];
     samples.forEach((pose) => {
-      const chain = forwardDesign(design, pose);
+      const chain = forwardDesign(design, pose, toolPoint);
       const hit = collides(chain);
       const tau = torques(chain, task.payload_kg);
       const badTorque = tau.some((value) => Math.abs(value) > task.effort_limit_nm + 1e-9);
@@ -470,6 +487,9 @@ export function evaluateDesign(design, task, samples = null, includeCloud = fals
   }
   return {
     mass_kg: straight.mass,
+    tool_point: toolPoint,
+    tool_point_applied: straight.toolPointApplied,
+    distal_linear_jacobian_norm: Math.hypot(...(straight.jacobian.at(-1) ?? [0, 0, 0])),
     task_feasible_fraction: reachedCount / targets.length,
     task_target_count: targets.length,
     task_targets_reached: reachedCount,

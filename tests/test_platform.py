@@ -12,7 +12,7 @@ sys.path.insert(0, str(ROOT / "src"))
 import numpy as np
 
 from zbot_exolimb_grasp.config_gen import BASELINE, forward_kinematics
-from zbot_exolimb_grasp.constants import NOMINAL_JOINT_POS, STRAIGHT_JOINT_POS, TOTAL_MASS
+from zbot_exolimb_grasp.constants import NOMINAL_JOINT_POS, SOURCE_COMMIT, STRAIGHT_JOINT_POS, TOTAL_MASS
 from zbot_exolimb_grasp.platform.exporting import assert_mjcf_matches, export_mjcf
 from zbot_exolimb_grasp.platform.model import (
     actuation_report,
@@ -290,6 +290,101 @@ class SixDofTests(unittest.TestCase):
         linear = velocity_lp_axis_min(jacobian, 1.0)
         self.assertGreater(linear, pseudo + 0.1)
         self.assertAlmostEqual(linear, 1.5, places=5)
+
+    def test_sole_site_is_read_from_the_r3_xml(self) -> None:
+        import xml.etree.ElementTree as ET
+
+        from zbot_exolimb_grasp.platform.model import sole_site
+
+        site = sole_site()
+        raw = None
+        for body in ET.parse(ROOT / "assets" / "zbot_6" / "ZBOT6.xml").iter("body"):
+            if body.get("name") == "foot_1":
+                raw = next(child for child in list(body) if child.tag == "site")
+        self.assertIsNotNone(raw)
+        self.assertEqual(site.name, "foot_1_sole")
+        self.assertEqual(site.body, "foot_1")
+        self.assertEqual(site.source_commit, SOURCE_COMMIT)
+        self.assertEqual(raw.get("name"), site.name)
+        self.assertEqual(tuple(float(part) for part in raw.get("pos").split()), site.pos_m)
+        self.assertEqual(tuple(float(part) for part in raw.get("quat").split()), site.quat_wxyz)
+        script = (ROOT / "web" / "src" / "platform" / "model.js").read_text(encoding="utf-8")
+        for token in raw.get("pos").split() + raw.get("quat").split():
+            self.assertIn(token, script)
+
+    def test_sole_offset_matches_finite_difference_and_mjcf(self) -> None:
+        from zbot_exolimb_grasp.platform.model import sole_site
+
+        site = sole_site()
+        for count in (6, 7, 8):
+            design = zbot_chain(count)
+            pose = np.linspace(-1.1, 0.9, count)
+            legacy = forward_chain(design, pose)
+            sole = forward_chain(design, pose, tool_point="foot_1_sole")
+            self.assertEqual(legacy["tool_point_applied"], "foot_joint_origin")
+            self.assertEqual(sole["tool_point_applied"], "foot_1_sole")
+            self.assertLess(float(np.linalg.norm(legacy["jacobian"][0][:, -1])), 1e-8)
+            offset = sole["ee"][0] - legacy["ee"][0]
+            self.assertAlmostEqual(float(np.linalg.norm(offset)), float(np.linalg.norm(site.pos_m)), places=8)
+            expected = np.cross(sole["axes"][-1][0], offset)
+            self.assertLess(float(np.max(np.abs(sole["jacobian"][0][:, -1] - expected))), 1e-8)
+            self.assertGreater(float(np.linalg.norm(expected)), 1e-3)
+            numeric = np.zeros((3, count))
+            step = 1e-6
+            for index in range(count):
+                bumped = pose.copy()
+                bumped[index] += step
+                numeric[:, index] = (
+                    forward_chain(design, bumped, tool_point="foot_1_sole")["ee"][0] - sole["ee"][0]
+                ) / step
+            self.assertLess(float(np.max(np.abs(sole["jacobian"][0] - numeric))), 1e-5)
+            angular = geometric_jacobian(sole)[0, 3:, :]
+            self.assertLess(
+                float(np.max(np.abs(angular - angular_jacobian_finite_difference(design, pose, tool_point="foot_1_sole")))),
+                1e-6,
+            )
+            assert_mjcf_matches(design, samples=1, seed=count, tool_point="foot_1_sole")
+        legacy_metrics = evaluate_design(
+            zbot_chain(6),
+            TaskSpec(grid_divisions=1, ik_starts=1, ik_iterations=1, sample_count=0),
+        )
+        self.assertEqual(legacy_metrics["tool_point"], "foot_joint_origin")
+        self.assertLess(legacy_metrics["distal_linear_jacobian_norm"], 1e-8)
+        sole_metrics = evaluate_design(
+            zbot_chain(6),
+            TaskSpec(grid_divisions=1, ik_starts=1, ik_iterations=1, sample_count=0, tool_point="foot_1_sole"),
+        )
+        self.assertEqual(sole_metrics["tool_point_applied"], "foot_1_sole")
+        self.assertGreater(sole_metrics["distal_linear_jacobian_norm"], 1e-3)
+        concept_tip = forward_chain(
+            Design(("zbot_r3", "zbot_r3", "concept_axial"), (0.0, math_pi() / 2), ({}, {}, {"length_m": 0.1})),
+            np.zeros(3),
+            tool_point="foot_1_sole",
+        )
+        self.assertEqual(concept_tip["tool_point_applied"], "concept_tip_no_sole")
+
+    def test_sole_search_locks_the_distal_module(self) -> None:
+        from zbot_exolimb_grasp.platform.search import Genome, _repair
+
+        spec = SearchSpec(
+            mode="mixed",
+            count_min=6,
+            count_max=6,
+            count_lock=6,
+            population=4,
+            generations=1,
+            objectives=("coverage", "mass"),
+            seed=3,
+            distal_module_id="zbot_r3",
+            task=TaskSpec(grid_divisions=1, ik_starts=1, ik_iterations=2, sample_count=0, tool_point="foot_1_sole"),
+        )
+        repaired = _repair(Genome(6, ["concept_axial"] * 8, [0.0] * 7, [0.1] * 8), spec)
+        self.assertEqual(repaired.module_ids[5], "zbot_r3")
+        result = run_search(spec, zbot_chain(6))
+        self.assertEqual(result["baseline"]["metrics"]["tool_point_applied"], "foot_1_sole")
+        for row in result["feasible_pareto"]:
+            self.assertEqual(row["design"]["modules"][-1]["id"], "zbot_r3")
+            self.assertEqual(row["metrics"]["tool_point_applied"], "foot_1_sole")
 
 
 class MetricTests(unittest.TestCase):

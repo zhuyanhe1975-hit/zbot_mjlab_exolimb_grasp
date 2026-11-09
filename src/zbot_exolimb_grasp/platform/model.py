@@ -7,6 +7,9 @@ unsupported，不计入分数。
 from __future__ import annotations
 
 import math
+import xml.etree.ElementTree as ET
+from dataclasses import dataclass
+from pathlib import Path
 
 import numpy as np
 
@@ -17,7 +20,7 @@ from zbot_exolimb_grasp.config_gen import (
     B_TO_A_QUAT,
     CONNECTION_AXIS,
 )
-from zbot_exolimb_grasp.constants import LINK_A_MASS, LINK_B_MASS
+from zbot_exolimb_grasp.constants import LINK_A_MASS, LINK_B_MASS, SOURCE_COMMIT
 
 from .library import (
     CONCEPT_CAPSULE_RADIUS_M,
@@ -147,8 +150,61 @@ def _segment_distance(p0: np.ndarray, p1: np.ndarray, q0: np.ndarray, q1: np.nda
     return np.where(degenerate, np.linalg.norm(p0 - q0, axis=-1), dist)
 
 
-def forward_chain(design: Design, q: np.ndarray) -> dict[str, object]:
-    """批量正运动学。末端定义写在模块实现里，ZBot 末模块与 foot_1 原点一致。"""
+_ZBOT_XML = Path(__file__).resolve().parents[3] / "assets" / "zbot_6" / "ZBOT6.xml"
+TOOL_JOINT_ORIGIN = "foot_joint_origin"
+TOOL_SOLE = "foot_1_sole"
+
+
+@dataclass(frozen=True)
+class ToolSite:
+    name: str
+    body: str
+    pos_m: tuple[float, float, float]
+    quat_wxyz: tuple[float, float, float, float]
+    source_commit: str
+    source_path: str
+
+
+_SOLE_SITE: ToolSite | None = None
+
+
+def sole_site() -> ToolSite:
+    """从权威 ZBOT6.xml 读取 foot_1 上的足底 site。数值不在这里手写。"""
+    global _SOLE_SITE
+    if _SOLE_SITE is not None:
+        return _SOLE_SITE
+    if not _ZBOT_XML.is_file():
+        raise FileNotFoundError(f"找不到权威模型 {_ZBOT_XML}")
+    foot = None
+    for body in ET.parse(_ZBOT_XML).iter("body"):
+        if body.get("name") == "foot_1":
+            foot = body
+            break
+    if foot is None:
+        raise ValueError("ZBOT6.xml 没有 body foot_1")
+    sites = [site for site in list(foot) if site.tag == "site" and "sole" in (site.get("name") or "")]
+    if len(sites) != 1:
+        raise ValueError(f"foot_1 上的足底 site 数量是 {len(sites)}，无法确定工具点")
+    site = sites[0]
+    pos = tuple(float(part) for part in site.get("pos", "").split())
+    quat = tuple(float(part) for part in site.get("quat", "").split())
+    if len(pos) != 3 or len(quat) != 4:
+        raise ValueError(f"足底 site 变换不完整：pos={site.get('pos')} quat={site.get('quat')}")
+    _SOLE_SITE = ToolSite(
+        name=str(site.get("name")),
+        body="foot_1",
+        pos_m=(float(pos[0]), float(pos[1]), float(pos[2])),
+        quat_wxyz=(float(quat[0]), float(quat[1]), float(quat[2]), float(quat[3])),
+        source_commit=SOURCE_COMMIT,
+        source_path="assets/zbot_6/ZBOT6.xml",
+    )
+    return _SOLE_SITE
+
+
+def forward_chain(design: Design, q: np.ndarray, *, tool_point: str = TOOL_JOINT_ORIGIN) -> dict[str, object]:
+    """批量正运动学。默认末端仍是 foot_1 关节原点，足底模式另标。"""
+    if tool_point not in {TOOL_JOINT_ORIGIN, TOOL_SOLE}:
+        raise ValueError(f"未知任务点 {tool_point}")
     require_assembly(design)
     count = len(design.module_ids)
     joints = _as_batch(q, count)
@@ -190,6 +246,12 @@ def forward_chain(design: Design, q: np.ndarray) -> dict[str, object]:
             else:
                 ee = origin
                 ee_quat = swung
+                applied = TOOL_JOINT_ORIGIN
+                if tool_point == TOOL_SOLE:
+                    site = sole_site()
+                    ee = origin + rotate(swung, np.asarray(site.pos_m, dtype=np.float64))
+                    ee_quat = mul(swung, np.asarray(site.quat_wxyz, dtype=np.float64))
+                    applied = site.name
         elif module_id in {"concept_axial", "demo_unreleased"}:
             length = float(design.parameters[index]["length_m"])
             origin = pos.copy()
@@ -212,6 +274,7 @@ def forward_chain(design: Design, q: np.ndarray) -> dict[str, object]:
             else:
                 ee = tip
                 ee_quat = post
+                applied = "concept_tip" if tool_point == TOOL_JOINT_ORIGIN else "concept_tip_no_sole"
         else:
             raise ValueError(f"没有运动学实现：{module_id}")
     jacobian = np.empty((samples, 3, count), dtype=np.float64)
@@ -220,6 +283,8 @@ def forward_chain(design: Design, q: np.ndarray) -> dict[str, object]:
     return {
         "ee": ee,
         "ee_quat": ee_quat,
+        "tool_point": tool_point,
+        "tool_point_applied": applied,
         "jacobian": jacobian,
         "origins": origins,
         "axes": axes,
@@ -294,16 +359,22 @@ def rank_at_length(singular_values: np.ndarray, relative_threshold: float = 1e-4
     return int(np.sum(singular_values > relative_threshold * peak))
 
 
-def angular_jacobian_finite_difference(design: Design, q: np.ndarray, step: float = 1e-6) -> np.ndarray:
-    """世界系角速度列。R(q+δ) R(q)^T 的 vee / δ。"""
+def angular_jacobian_finite_difference(
+    design: Design,
+    q: np.ndarray,
+    step: float = 1e-6,
+    *,
+    tool_point: str = TOOL_JOINT_ORIGIN,
+) -> np.ndarray:
+    """世界系角速度列。R(q+δ) R(q)^T 的 vee / δ。足底 site 固定在足体上，角速度与关节体相同。"""
     pose = np.asarray(q, dtype=np.float64).reshape(-1)
-    base = forward_chain(design, pose)
+    base = forward_chain(design, pose, tool_point=tool_point)
     rotation = quat_matrix(base["ee_quat"][0])
     numeric = np.zeros((3, pose.size), dtype=np.float64)
     for index in range(pose.size):
         bumped = pose.copy()
         bumped[index] += step
-        nxt = quat_matrix(forward_chain(design, bumped)["ee_quat"][0])
+        nxt = quat_matrix(forward_chain(design, bumped, tool_point=tool_point)["ee_quat"][0])
         numeric[:, index] = so3_vee(nxt @ rotation.T) / step
     return numeric
 
@@ -315,11 +386,12 @@ def generic_rank_report(
     seed: int = 0,
     lengths_m: tuple[float, ...] = (0.05, 0.1, 0.25, 0.5),
     relative_threshold: float = 1e-4,
+    tool_point: str = TOOL_JOINT_ORIGIN,
 ) -> dict[str, object]:
     """随机一般位形上的 6×n 秩。满秩上限是 min(6, n)。多数样本不满秩才记为结构退化。"""
     count = len(design.module_ids)
     poses = np.random.default_rng(seed).uniform(-JOINT_LIMIT, JOINT_LIMIT, size=(samples, count))
-    chain = forward_chain(design, poses)
+    chain = forward_chain(design, poses, tool_point=tool_point)
     full = geometric_jacobian(chain)
     by_length = []
     deficient = None
@@ -470,7 +542,7 @@ def solve_target(design: Design, target: np.ndarray, task: TaskSpec) -> tuple[np
     for start in ik_start_poses(count, task.ik_starts, limit):
         pose = start.copy()
         for _ in range(int(task.ik_iterations)):
-            chain = forward_chain(design, pose.reshape(1, -1))
+            chain = forward_chain(design, pose.reshape(1, -1), tool_point=task.tool_point)
             error = target - chain["ee"][0]
             if float(np.linalg.norm(error)) <= float(task.position_tolerance_m) and _pose_is_feasible(chain, task):
                 return pose, chain["jacobian"][0]
@@ -519,7 +591,7 @@ def evaluate_design(
         task_speeds.append(float(velocity_capability(jacobian.reshape(1, 3, count), task.velocity_limit_rad_s)[0]))
         if task.compute_velocity_lp:
             task_speeds_lp.append(velocity_lp_axis_min(jacobian.reshape(3, count), task.velocity_limit_rad_s))
-        solved = forward_chain(design, pose.reshape(1, -1))
+        solved = forward_chain(design, pose.reshape(1, -1), tool_point=task.tool_point)
         peak = float(np.max(np.abs(static_torques(solved, task.payload_kg, task.gravity_m_s2)[0])))
         torque_margins.append(float(task.effort_limit_nm) - peak)
         if manip < 1e-8:
@@ -531,7 +603,7 @@ def evaluate_design(
     fraction = reached_count / float(targets.shape[0])
     manip_valid = bool(task_manips)
     speed_valid = bool(task_speeds)
-    straight = forward_chain(design, np.zeros((1, count)))
+    straight = forward_chain(design, np.zeros((1, count)), tool_point=task.tool_point)
     torque0 = static_torques(straight, task.payload_kg, task.gravity_m_s2)[0]
     torque0_peak = float(np.max(np.abs(torque0)))
     pose_hit_rate = None
@@ -545,7 +617,7 @@ def evaluate_design(
             rng = np.random.default_rng(task.seed)
             q = rng.uniform(-task.joint_sample_limit, task.joint_sample_limit, size=(task.sample_count, count))
         joints = _as_batch(q, count)
-        chain = forward_chain(design, joints)
+        chain = forward_chain(design, joints, tool_point=task.tool_point)
         torque = static_torques(chain, task.payload_kg, task.gravity_m_s2)
         collide = collision_mask(chain)
         torque_bad = np.any(np.abs(torque) > float(task.effort_limit_nm) + 1e-9, axis=1)
@@ -556,8 +628,22 @@ def evaluate_design(
         torque_fail_rate = float(np.mean(torque_bad))
         posture_manip = float(np.median(translational_manipulability(chain["jacobian"])))
         posture_speed = float(np.median(velocity_capability(chain["jacobian"], task.velocity_limit_rad_s)))
+    site = sole_site() if task.tool_point == TOOL_SOLE else None
     result: dict[str, object] = {
         "mass_kg": straight["mass_kg"],
+        "tool_point": task.tool_point,
+        "tool_point_applied": straight["tool_point_applied"],
+        "tool_site": None
+        if site is None
+        else {
+            "name": site.name,
+            "body": site.body,
+            "pos_m": list(site.pos_m),
+            "quat_wxyz": list(site.quat_wxyz),
+            "source_commit": site.source_commit,
+            "source_path": site.source_path,
+        },
+        "distal_linear_jacobian_norm": float(np.linalg.norm(straight["jacobian"][0][:, -1])),
         "task_feasible_fraction": fraction,
         "task_target_count": int(targets.shape[0]),
         "task_targets_reached": reached_count,
@@ -620,7 +706,7 @@ def evaluate_design(
         ],
     }
     if task.reject_structural_degeneracy:
-        rank = generic_rank_report(design, samples=8, seed=task.seed)
+        rank = generic_rank_report(design, samples=8, seed=task.seed, tool_point=task.tool_point)
         result["structurally_degenerate"] = bool(rank["structurally_degenerate"])
         result["generic_rank"] = rank
         if rank["structurally_degenerate"]:

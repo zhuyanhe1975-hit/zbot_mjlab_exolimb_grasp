@@ -103,6 +103,9 @@ class TaskSpec:
     reject_structural_degeneracy: bool = False
     # 仅最终候选打开。冗余臂的伪逆速度是保守下界，线性规划给出坐标轴方向的限速速度。
     compute_velocity_lp: bool = False
+    # foot_joint_origin 保持旧实验：ZBot 末端是 foot_1 关节原点。
+    # foot_1_sole 使用 ZBOT6.xml 里 foot_1 上的足底 site，不覆盖旧结果。
+    tool_point: str = "foot_joint_origin"
 
     def __post_init__(self) -> None:
         self.center_m = tuple(float(v) for v in self.center_m)  # type: ignore[assignment]
@@ -122,6 +125,8 @@ class SearchSpec:
     length_upper_m: float = 0.16
     seed: int = 1
     task: TaskSpec = field(default_factory=TaskSpec)
+    # 足底任务点只存在于 zbot_r3。设了之后，修复会把有效链的末模块固定成这个 id。
+    distal_module_id: str | None = None
 
     def allowed_module_ids(self) -> tuple[str, ...]:
         if self.mode == "physical":
