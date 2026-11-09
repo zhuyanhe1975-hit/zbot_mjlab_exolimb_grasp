@@ -556,6 +556,22 @@ async function loadBatch(file, label) {
 }
 document.querySelector("#load-batch").addEventListener("click", () => loadBatch("longterm_batch1.json", "首批复核"));
 document.querySelector("#load-batch2").addEventListener("click", () => loadBatch("longterm_batch2.json", "足底批次"));
+document.querySelector("#load-research").addEventListener("click", async () => {
+  const response = await fetch(`${import.meta.env.BASE_URL}research_backend.json`);
+  if (!response.ok) {
+    progressEl.textContent = "还没有科研后端结果。先在研究环境里运行 scripts/research_campaign.py。";
+    return;
+  }
+  const payload = await response.json();
+  const ik = payload.verification_ik ?? {};
+  progressEl.textContent = [
+    payload.note,
+    `125 点端点 ${ik.endpoint_reached}/${125}，单元中心 ${ik.center_reached}/${125}。批次 2 是 120 和 125。`,
+    payload.recommendation?.default_position,
+    payload.recommendation?.high_box,
+    payload.recommendation?.not_global,
+  ].filter(Boolean).join(" ");
+});
 document.querySelector("#load-batch3").addEventListener("click", async () => {
   const response = await fetch(`${import.meta.env.BASE_URL}longterm_batch3.json`);
   if (!response.ok) {

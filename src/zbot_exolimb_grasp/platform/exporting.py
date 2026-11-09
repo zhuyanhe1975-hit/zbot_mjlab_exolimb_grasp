@@ -44,7 +44,7 @@ def export_mjcf(design: Design, *, tool_point: str = "foot_joint_origin") -> str
             if pos is not None:
                 body.set("pos", _fmt(pos))
                 body.set("quat", _quat_attr(np.array(quat)))
-            ET.SubElement(body, "inertial", pos=_fmt(COM_A), mass=f"{LINK_A_MASS:.8g}")
+            ET.SubElement(body, "inertial", pos=_fmt(COM_A), mass=f"{LINK_A_MASS:.8g}", diaginertia="0.0001 0.0001 0.0001")
             joint_body = ET.SubElement(
                 body,
                 "body",
@@ -60,7 +60,7 @@ def export_mjcf(design: Design, *, tool_point: str = "foot_joint_origin") -> str
                 axis="0 0 1",
                 range=f"{-JOINT_LIMIT:.4g} {JOINT_LIMIT:.4g}",
             )
-            ET.SubElement(joint_body, "inertial", pos=_fmt(COM_B), mass=f"{LINK_B_MASS:.8g}")
+            ET.SubElement(joint_body, "inertial", pos=_fmt(COM_B), mass=f"{LINK_B_MASS:.8g}", diaginertia="0.0001 0.0001 0.0001")
             if last:
                 if tool_point == "foot_1_sole":
                     from .model import sole_site
@@ -100,7 +100,7 @@ def export_mjcf(design: Design, *, tool_point: str = "foot_joint_origin") -> str
                 axis="0 0 1",
                 range=f"{-JOINT_LIMIT:.4g} {JOINT_LIMIT:.4g}",
             )
-            ET.SubElement(body, "inertial", pos=_fmt((length * 0.5, 0.0, 0.0)), mass=f"{mass:.8g}")
+            ET.SubElement(body, "inertial", pos=_fmt((length * 0.5, 0.0, 0.0)), mass=f"{mass:.8g}", diaginertia="0.0001 0.0001 0.0001")
             if last:
                 ET.SubElement(body, "site", name="ee", pos=_fmt((length, 0.0, 0.0)))
                 parent = body

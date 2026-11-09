@@ -25,6 +25,8 @@ python scripts/design_6dof_refine.py --out experiments/dof6_refine.json
 python scripts/design_678_batch1.py
 python scripts/design_678_batch2.py
 python scripts/design_678_batch3.py
+# 可选科研后端，见 requirements-research.txt 和 docs/科研后端对照.md
+PYTHONPATH=src:third_party/generative-robot-design python scripts/research_campaign.py
 ```
 
 六个 ZBot 模块的 32 种 0/π/2 连接在随机一般位形上六维几何雅可比都不结构退化。概念轴向连杆若相邻连接为 0，关节轴保持平行，六维秩结构退化，重新制造补不上这个缺失。默认任务盒没有用户给定的工况来源。在 1 cm、125 个端点格点和另一套单元中心点上，没有实物方案同时稳住更高的可行比例，并保住可操作度和速度。这不是说全 0 对任何任务都最优。

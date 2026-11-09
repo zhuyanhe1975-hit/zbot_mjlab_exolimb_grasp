@@ -1,0 +1,9 @@
+# 可选科研后端。不要装进现有的 mjlab 环境。
+# torch 用 CPU 轮子：pip install -r requirements-research.txt --extra-index-url https://download.pytorch.org/whl/cpu
+numpy>=1.26.4,<2
+torch==2.5.1
+scipy>=1.11
+pymoo>=0.6.1
+pin==2.7.0
+hpp-fcl>=2.4,<3
+mujoco>=3.1
