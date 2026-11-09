@@ -1,11 +1,19 @@
 {
-  "checkpoint_version": 2,
-  "status": "batch2_complete",
+  "checkpoint_version": 3,
+  "status": "batch3_complete",
+  "longterm_status": "open",
+  "bounded_physical_selection_ready": true,
+  "suggest_close": false,
+  "suggest_close_scope": {
+    "default_box_position_only": true,
+    "note": "批次 2 的 suggest_close 只收束默认位置盒上的加长搜索。它不收束载荷、任务区和六维位姿，也不表示长期任务完成。"
+  },
   "completed_batches": [
     "batch1_physical_6_7_8",
-    "batch2_sole_and_concept"
+    "batch2_sole_and_concept",
+    "batch3_scenarios_and_pose"
   ],
-  "elapsed_s": 675.1380338549989,
+  "elapsed_s": 925.875159125997,
   "batch1": {
     "checkpoint_version": 1,
     "cache_version": "batch1-screen-v1",
@@ -903,128 +911,1331 @@
       "速度改进用轴线性规划，并且两套点的可行比例下降不超过 0.03。",
       "概念质量不写成硬件减重。",
       "30 次与 50 次迭代的端点可行数一致，才把 IK 预算当成稳定。"
-    ]
+    ],
+    "suggest_close_scope": "default_box_position_subtask_only"
   },
-  "recommendations_by_goal": {
-    "tool_point": "foot_1_sole",
-    "physical": {
-      "available": true,
-      "mass_is_assumption": false,
-      "coverage_priority": {
-        "label": "zbot6:00000",
+  "batch3": {
+    "batch_id": "batch3_scenarios_and_pose",
+    "status": "batch3_complete",
+    "elapsed_s": 250.73712527099815,
+    "not_a_measured_user_task": true,
+    "tool_point": {
+      "name": "foot_1_sole",
+      "body": "foot_1",
+      "pos_m": [
+        -0.03873181,
+        0.00014649,
+        0.03934993
+      ],
+      "quat_wxyz": [
+        0.923879087,
+        0.000378796,
+        -0.382684289,
+        -0.000156903
+      ],
+      "source_commit": "0c0b686c69f8f78e79bf9f875dead868f25e1cdc",
+      "source_path": "assets/zbot_6/ZBOT6.xml"
+    },
+    "scenarios": [
+      {
+        "id": "default_p0.4",
+        "center_m": [
+          0.0,
+          0.05,
+          0.72
+        ],
+        "half_m": [
+          0.22,
+          0.22,
+          0.22
+        ],
+        "payload_kg": 0.4,
+        "note": "与批次 2 相同的默认盒，本批只用 64 点预算做横向对照"
+      },
+      {
+        "id": "default_p1.5",
+        "center_m": [
+          0.0,
+          0.05,
+          0.72
+        ],
+        "half_m": [
+          0.22,
+          0.22,
+          0.22
+        ],
+        "payload_kg": 1.5,
+        "note": "默认盒，载荷高于 0.4 kg"
+      },
+      {
+        "id": "default_p4.0",
+        "center_m": [
+          0.0,
+          0.05,
+          0.72
+        ],
+        "half_m": [
+          0.22,
+          0.22,
+          0.22
+        ],
+        "payload_kg": 4.0,
+        "note": "默认盒，更重载荷，用来看力矩上限"
+      },
+      {
+        "id": "high_p0.4",
+        "center_m": [
+          0.0,
+          0.22,
+          0.98
+        ],
+        "half_m": [
+          0.1,
+          0.1,
+          0.08
+        ],
+        "payload_kg": 0.4,
+        "note": "更远更高的小盒"
+      },
+      {
+        "id": "near_p0.4",
+        "center_m": [
+          0.15,
+          0.12,
+          0.48
+        ],
+        "half_m": [
+          0.1,
+          0.1,
+          0.08
+        ],
+        "payload_kg": 0.4,
+        "note": "更近更低的小盒"
+      },
+      {
+        "id": "side_p0.4",
+        "center_m": [
+          0.24,
+          -0.05,
+          0.64
+        ],
+        "half_m": [
+          0.1,
+          0.1,
+          0.1
+        ],
+        "payload_kg": 0.4,
+        "note": "偏到一侧的小盒"
+      },
+      {
+        "id": "high_p1.5",
+        "center_m": [
+          0.0,
+          0.22,
+          0.98
+        ],
+        "half_m": [
+          0.1,
+          0.1,
+          0.08
+        ],
+        "payload_kg": 1.5,
+        "note": "高处小盒加重载荷"
+      }
+    ],
+    "shared_budget": {
+      "grid_divisions": 4,
+      "position_tolerance_m": 0.01,
+      "ik_starts": 6,
+      "ik_iterations": 30,
+      "seed": 11,
+      "tool_point": "foot_1_sole",
+      "compute_velocity_lp": true,
+      "compute_velocity_lp_fixed14": true
+    },
+    "candidates": [
+      {
         "count": 6,
         "bits": "00000",
-        "modules": [
-          "zbot_r3",
-          "zbot_r3",
-          "zbot_r3",
-          "zbot_r3",
-          "zbot_r3",
-          "zbot_r3"
-        ],
-        "reliable_improvement_on_both_point_sets": false,
-        "endpoint_gain": 0.0,
-        "cell_center_gain": 0.0,
-        "why": "可靠覆盖改进要在端点和单元中心两套 125 点上都至少高 0.03。只在一套上变多，记成点集取舍。"
+        "role": "all_zero"
       },
-      "speed_priority": {
-        "label": "zbot8:0000000",
+      {
+        "count": 6,
+        "bits": "10000",
+        "role": "screen_coverage_batch2"
+      },
+      {
+        "count": 7,
+        "bits": "000000",
+        "role": "all_zero"
+      },
+      {
         "count": 8,
         "bits": "0000000",
-        "modules": [
-          "zbot_r3",
-          "zbot_r3",
-          "zbot_r3",
-          "zbot_r3",
-          "zbot_r3",
-          "zbot_r3",
-          "zbot_r3",
-          "zbot_r3"
-        ],
-        "reliable_improvement": true,
-        "endpoint_lp_m_s": 0.9846001055598909,
-        "baseline_lp_m_s": 0.5226032189307401,
-        "why": "速度用六个坐标轴方向的线性规划最小值，不是全方向最快，也不是伪逆。更长的臂在 1.5 rad/s 假设下末端更快，这是力臂尺度。"
-      },
-      "light_priority": {
-        "label": "zbot6:00000",
-        "count": 6,
-        "bits": "00000",
-        "modules": [
-          "zbot_r3",
-          "zbot_r3",
-          "zbot_r3",
-          "zbot_r3",
-          "zbot_r3",
-          "zbot_r3"
-        ],
-        "mass_kg": 4.2785400000000005,
-        "mass_is_assumption": false,
-        "reliable_improvement": false,
-        "why": "实物尺寸锁定，质量只随模块数增加。更轻的概念链还要在两套点上比实物基准少的可行比例不超过 0.03，才进入轻量取舍。"
+        "role": "all_zero"
       }
-    },
-    "concept": {
-      "available": true,
-      "mass_is_assumption": true,
-      "coverage_priority": {
-        "label": "zbot6:00000",
+    ],
+    "center_followup_scenarios": [
+      "default_p0.4",
+      "default_p1.5",
+      "default_p4.0",
+      "high_p0.4",
+      "near_p0.4",
+      "high_p1.5"
+    ],
+    "table": [
+      {
+        "scenario": "default_p0.4",
         "count": 6,
         "bits": "00000",
-        "modules": [
-          "zbot_r3",
-          "zbot_r3",
-          "zbot_r3",
-          "zbot_r3",
-          "zbot_r3",
-          "zbot_r3"
-        ],
-        "reliable_improvement_on_both_point_sets": false,
-        "endpoint_gain": 0.016000000000000014,
-        "cell_center_gain": -0.016000000000000014,
-        "why": "可靠覆盖改进要在端点和单元中心两套 125 点上都至少高 0.03。只在一套上变多，记成点集取舍。"
+        "role": "all_zero",
+        "endpoint_reached": 61,
+        "endpoint_count": 64,
+        "centers_reached": 64,
+        "velocity_lp_axis": 0.49612634478040357,
+        "velocity_lp_fixed14": 0.4594999425972729,
+        "velocity_pseudoinverse": 0.4141706460501993,
+        "manipulability": 0.020017935110429052,
+        "torque_margin_nm": 16.68414017932673,
+        "q0_collision": false,
+        "mass_kg": 4.2785400000000005
       },
-      "speed_priority": {
-        "label": "zbot6:00000",
+      {
+        "scenario": "default_p0.4",
         "count": 6,
-        "bits": "00000",
-        "modules": [
-          "zbot_r3",
-          "zbot_r3",
-          "zbot_r3",
-          "zbot_r3",
-          "zbot_r3",
-          "zbot_r3"
-        ],
-        "reliable_improvement": false,
-        "endpoint_lp_m_s": 0.46099715292752413,
-        "baseline_lp_m_s": 0.5226032189307401,
-        "why": "速度用六个坐标轴方向的线性规划最小值，不是全方向最快，也不是伪逆。更长的臂在 1.5 rad/s 假设下末端更快，这是力臂尺度。"
+        "bits": "10000",
+        "role": "screen_coverage_batch2",
+        "endpoint_reached": 63,
+        "endpoint_count": 64,
+        "centers_reached": 63,
+        "velocity_lp_axis": 0.3998496306686628,
+        "velocity_lp_fixed14": 0.3824399420138784,
+        "velocity_pseudoinverse": 0.31230760273458164,
+        "manipulability": 0.014651795912352975,
+        "torque_margin_nm": 16.37353229259984,
+        "q0_collision": false,
+        "mass_kg": 4.2785400000000005
       },
-      "light_priority": {
-        "label": "zbot6:00000",
+      {
+        "scenario": "default_p0.4",
+        "count": 7,
+        "bits": "000000",
+        "role": "all_zero",
+        "endpoint_reached": 62,
+        "endpoint_count": 64,
+        "centers_reached": 63,
+        "velocity_lp_axis": 0.759565733142429,
+        "velocity_lp_fixed14": 0.6695915433656987,
+        "velocity_pseudoinverse": 0.5590104377688379,
+        "manipulability": 0.03992507306869512,
+        "torque_margin_nm": 15.674053354172802,
+        "q0_collision": false,
+        "mass_kg": 4.991630000000001
+      },
+      {
+        "scenario": "default_p0.4",
+        "count": 8,
+        "bits": "0000000",
+        "role": "all_zero",
+        "endpoint_reached": 62,
+        "endpoint_count": 64,
+        "centers_reached": 64,
+        "velocity_lp_axis": 0.9474069730897615,
+        "velocity_lp_fixed14": 0.8758232826530743,
+        "velocity_pseudoinverse": 0.6852467705197884,
+        "manipulability": 0.05942054367417304,
+        "torque_margin_nm": 14.808045243971307,
+        "q0_collision": false,
+        "mass_kg": 5.704720000000001
+      },
+      {
+        "scenario": "default_p1.5",
         "count": 6,
         "bits": "00000",
-        "modules": [
-          "zbot_r3",
-          "zbot_r3",
-          "zbot_r3",
-          "zbot_r3",
-          "zbot_r3",
-          "zbot_r3"
-        ],
-        "mass_kg": 4.2785400000000005,
-        "mass_is_assumption": false,
-        "reliable_improvement": false,
-        "why": "概念质量来自 4 kg/m 假设，不是 ZBot 实测减重。更轻的概念链还要在两套点上比实物基准少的可行比例不超过 0.03，才进入轻量取舍。"
+        "role": "all_zero",
+        "endpoint_reached": 61,
+        "endpoint_count": 64,
+        "centers_reached": 64,
+        "velocity_lp_axis": 0.49612634478040357,
+        "velocity_lp_fixed14": 0.4594999425972729,
+        "velocity_pseudoinverse": 0.4141706460501993,
+        "manipulability": 0.020017935110429052,
+        "torque_margin_nm": 14.550089464170128,
+        "q0_collision": false,
+        "mass_kg": 4.2785400000000005
+      },
+      {
+        "scenario": "default_p1.5",
+        "count": 6,
+        "bits": "10000",
+        "role": "screen_coverage_batch2",
+        "endpoint_reached": 63,
+        "endpoint_count": 64,
+        "centers_reached": 63,
+        "velocity_lp_axis": 0.3998496306686628,
+        "velocity_lp_fixed14": 0.3824399420138784,
+        "velocity_pseudoinverse": 0.31230760273458164,
+        "manipulability": 0.014651795912352975,
+        "torque_margin_nm": 14.383788922837411,
+        "q0_collision": false,
+        "mass_kg": 4.2785400000000005
+      },
+      {
+        "scenario": "default_p1.5",
+        "count": 7,
+        "bits": "000000",
+        "role": "all_zero",
+        "endpoint_reached": 62,
+        "endpoint_count": 64,
+        "centers_reached": 63,
+        "velocity_lp_axis": 0.759565733142429,
+        "velocity_lp_fixed14": 0.6695915433656987,
+        "velocity_pseudoinverse": 0.5590104377688379,
+        "manipulability": 0.03992507306869512,
+        "torque_margin_nm": 13.569579036673431,
+        "q0_collision": false,
+        "mass_kg": 4.991630000000001
+      },
+      {
+        "scenario": "default_p1.5",
+        "count": 8,
+        "bits": "0000000",
+        "role": "all_zero",
+        "endpoint_reached": 62,
+        "endpoint_count": 64,
+        "centers_reached": 64,
+        "velocity_lp_axis": 0.9474069730897615,
+        "velocity_lp_fixed14": 0.8758232826530743,
+        "velocity_pseudoinverse": 0.6852467705197884,
+        "manipulability": 0.05942054367417304,
+        "torque_margin_nm": 12.300959738454996,
+        "q0_collision": false,
+        "mass_kg": 5.704720000000001
+      },
+      {
+        "scenario": "default_p4.0",
+        "count": 6,
+        "bits": "00000",
+        "role": "all_zero",
+        "endpoint_reached": 61,
+        "endpoint_count": 64,
+        "centers_reached": 64,
+        "velocity_lp_axis": 0.49612634478040357,
+        "velocity_lp_fixed14": 0.4594999425972729,
+        "velocity_pseudoinverse": 0.4141706460501993,
+        "manipulability": 0.020017935110429052,
+        "torque_margin_nm": 9.510237609662177,
+        "q0_collision": false,
+        "mass_kg": 4.2785400000000005
+      },
+      {
+        "scenario": "default_p4.0",
+        "count": 6,
+        "bits": "10000",
+        "role": "screen_coverage_batch2",
+        "endpoint_reached": 63,
+        "endpoint_count": 64,
+        "centers_reached": 63,
+        "velocity_lp_axis": 0.3998496306686628,
+        "velocity_lp_fixed14": 0.3824399420138784,
+        "velocity_pseudoinverse": 0.31230760273458164,
+        "manipulability": 0.014651795912352975,
+        "torque_margin_nm": 10.278519521669708,
+        "q0_collision": false,
+        "mass_kg": 4.2785400000000005
+      },
+      {
+        "scenario": "default_p4.0",
+        "count": 7,
+        "bits": "000000",
+        "role": "all_zero",
+        "endpoint_reached": 62,
+        "endpoint_count": 64,
+        "centers_reached": 63,
+        "velocity_lp_axis": 0.759565733142429,
+        "velocity_lp_fixed14": 0.6695915433656987,
+        "velocity_pseudoinverse": 0.5590104377688379,
+        "manipulability": 0.03992507306869512,
+        "torque_margin_nm": 7.67846468546426,
+        "q0_collision": false,
+        "mass_kg": 4.991630000000001
+      },
+      {
+        "scenario": "default_p4.0",
+        "count": 8,
+        "bits": "0000000",
+        "role": "all_zero",
+        "endpoint_reached": 59,
+        "endpoint_count": 64,
+        "centers_reached": 63,
+        "velocity_lp_axis": 0.9527955192684783,
+        "velocity_lp_fixed14": 0.889522931406059,
+        "velocity_pseudoinverse": 0.6906912181032157,
+        "manipulability": 0.05949118330004316,
+        "torque_margin_nm": 6.068227834912685,
+        "q0_collision": false,
+        "mass_kg": 5.704720000000001
+      },
+      {
+        "scenario": "high_p0.4",
+        "count": 6,
+        "bits": "00000",
+        "role": "all_zero",
+        "endpoint_reached": 40,
+        "endpoint_count": 64,
+        "centers_reached": 45,
+        "velocity_lp_axis": 0.3578824577999379,
+        "velocity_lp_fixed14": 0.3043860420733795,
+        "velocity_pseudoinverse": 0.31019801299898664,
+        "manipulability": 0.017031929284712012,
+        "torque_margin_nm": 17.54348010229807,
+        "q0_collision": false,
+        "mass_kg": 4.2785400000000005
+      },
+      {
+        "scenario": "high_p0.4",
+        "count": 6,
+        "bits": "10000",
+        "role": "screen_coverage_batch2",
+        "endpoint_reached": 42,
+        "endpoint_count": 64,
+        "centers_reached": 48,
+        "velocity_lp_axis": 0.2899843929460171,
+        "velocity_lp_fixed14": 0.24514443692148552,
+        "velocity_pseudoinverse": 0.2428262082574837,
+        "manipulability": 0.017160711073181817,
+        "torque_margin_nm": 16.891920377819638,
+        "q0_collision": false,
+        "mass_kg": 4.2785400000000005
+      },
+      {
+        "scenario": "high_p0.4",
+        "count": 7,
+        "bits": "000000",
+        "role": "all_zero",
+        "endpoint_reached": 64,
+        "endpoint_count": 64,
+        "centers_reached": 64,
+        "velocity_lp_axis": 0.6889952034143925,
+        "velocity_lp_fixed14": 0.6224620238788883,
+        "velocity_pseudoinverse": 0.5276045881592397,
+        "manipulability": 0.05093925019782268,
+        "torque_margin_nm": 16.90870857819011,
+        "q0_collision": false,
+        "mass_kg": 4.991630000000001
+      },
+      {
+        "scenario": "high_p0.4",
+        "count": 8,
+        "bits": "0000000",
+        "role": "all_zero",
+        "endpoint_reached": 64,
+        "endpoint_count": 64,
+        "centers_reached": 64,
+        "velocity_lp_axis": 1.0685956607712577,
+        "velocity_lp_fixed14": 0.9459499843961171,
+        "velocity_pseudoinverse": 0.7549371900594939,
+        "manipulability": 0.10441963833230668,
+        "torque_margin_nm": 16.03283717562982,
+        "q0_collision": false,
+        "mass_kg": 5.704720000000001
+      },
+      {
+        "scenario": "near_p0.4",
+        "count": 6,
+        "bits": "00000",
+        "role": "all_zero",
+        "endpoint_reached": 49,
+        "endpoint_count": 64,
+        "centers_reached": 60,
+        "velocity_lp_axis": 0.4389872615403386,
+        "velocity_lp_fixed14": 0.41827474996468184,
+        "velocity_pseudoinverse": 0.34901719068964976,
+        "manipulability": 0.00931570285902246,
+        "torque_margin_nm": 16.431243025827083,
+        "q0_collision": false,
+        "mass_kg": 4.2785400000000005
+      },
+      {
+        "scenario": "near_p0.4",
+        "count": 6,
+        "bits": "10000",
+        "role": "screen_coverage_batch2",
+        "endpoint_reached": 57,
+        "endpoint_count": 64,
+        "centers_reached": 61,
+        "velocity_lp_axis": 0.4566044768507667,
+        "velocity_lp_fixed14": 0.439075480511749,
+        "velocity_pseudoinverse": 0.36886403335711376,
+        "manipulability": 0.011176808245431527,
+        "torque_margin_nm": 15.69688196385972,
+        "q0_collision": false,
+        "mass_kg": 4.2785400000000005
+      },
+      {
+        "scenario": "near_p0.4",
+        "count": 7,
+        "bits": "000000",
+        "role": "all_zero",
+        "endpoint_reached": 49,
+        "endpoint_count": 64,
+        "centers_reached": 52,
+        "velocity_lp_axis": 0.5301188114403429,
+        "velocity_lp_fixed14": 0.4632312711635171,
+        "velocity_pseudoinverse": 0.3740808493148432,
+        "manipulability": 0.016932267975626775,
+        "torque_margin_nm": 15.31952935402625,
+        "q0_collision": false,
+        "mass_kg": 4.991630000000001
+      },
+      {
+        "scenario": "near_p0.4",
+        "count": 8,
+        "bits": "0000000",
+        "role": "all_zero",
+        "endpoint_reached": 49,
+        "endpoint_count": 64,
+        "centers_reached": 56,
+        "velocity_lp_axis": 0.5861421238024829,
+        "velocity_lp_fixed14": 0.5477766005116845,
+        "velocity_pseudoinverse": 0.43945319695344026,
+        "manipulability": 0.03150710162153718,
+        "torque_margin_nm": 12.639471299172454,
+        "q0_collision": false,
+        "mass_kg": 5.704720000000001
+      },
+      {
+        "scenario": "side_p0.4",
+        "count": 6,
+        "bits": "00000",
+        "role": "all_zero",
+        "endpoint_reached": 64,
+        "endpoint_count": 64,
+        "centers_reached": null,
+        "velocity_lp_axis": 0.4222310967854551,
+        "velocity_lp_fixed14": 0.3826088516021272,
+        "velocity_pseudoinverse": 0.3233471008546098,
+        "manipulability": 0.010624963715083785,
+        "torque_margin_nm": 16.2431397546597,
+        "q0_collision": false,
+        "mass_kg": 4.2785400000000005
+      },
+      {
+        "scenario": "side_p0.4",
+        "count": 6,
+        "bits": "10000",
+        "role": "screen_coverage_batch2",
+        "endpoint_reached": 63,
+        "endpoint_count": 64,
+        "centers_reached": null,
+        "velocity_lp_axis": 0.40954562956336354,
+        "velocity_lp_fixed14": 0.3929826246998217,
+        "velocity_pseudoinverse": 0.3248702984790735,
+        "manipulability": 0.011645176674968004,
+        "torque_margin_nm": 16.34013625753775,
+        "q0_collision": false,
+        "mass_kg": 4.2785400000000005
+      },
+      {
+        "scenario": "side_p0.4",
+        "count": 7,
+        "bits": "000000",
+        "role": "all_zero",
+        "endpoint_reached": 56,
+        "endpoint_count": 64,
+        "centers_reached": null,
+        "velocity_lp_axis": 0.6061531624974751,
+        "velocity_lp_fixed14": 0.5539686869090774,
+        "velocity_pseudoinverse": 0.43551433602948414,
+        "manipulability": 0.019345383836344827,
+        "torque_margin_nm": 15.299603489979726,
+        "q0_collision": false,
+        "mass_kg": 4.991630000000001
+      },
+      {
+        "scenario": "side_p0.4",
+        "count": 8,
+        "bits": "0000000",
+        "role": "all_zero",
+        "endpoint_reached": 57,
+        "endpoint_count": 64,
+        "centers_reached": null,
+        "velocity_lp_axis": 0.8033015200271725,
+        "velocity_lp_fixed14": 0.7369197950678071,
+        "velocity_pseudoinverse": 0.577134148360202,
+        "manipulability": 0.032523684875602,
+        "torque_margin_nm": 14.837339531947835,
+        "q0_collision": false,
+        "mass_kg": 5.704720000000001
+      },
+      {
+        "scenario": "high_p1.5",
+        "count": 6,
+        "bits": "00000",
+        "role": "all_zero",
+        "endpoint_reached": 40,
+        "endpoint_count": 64,
+        "centers_reached": 45,
+        "velocity_lp_axis": 0.3578824577999379,
+        "velocity_lp_fixed14": 0.3043860420733795,
+        "velocity_pseudoinverse": 0.31019801299898664,
+        "manipulability": 0.017031929284712012,
+        "torque_margin_nm": 15.614913397436599,
+        "q0_collision": false,
+        "mass_kg": 4.2785400000000005
+      },
+      {
+        "scenario": "high_p1.5",
+        "count": 6,
+        "bits": "10000",
+        "role": "screen_coverage_batch2",
+        "endpoint_reached": 42,
+        "endpoint_count": 64,
+        "centers_reached": 48,
+        "velocity_lp_axis": 0.2899843929460171,
+        "velocity_lp_fixed14": 0.24514443692148552,
+        "velocity_pseudoinverse": 0.2428262082574837,
+        "manipulability": 0.017160711073181817,
+        "torque_margin_nm": 15.450755478639383,
+        "q0_collision": false,
+        "mass_kg": 4.2785400000000005
+      },
+      {
+        "scenario": "high_p1.5",
+        "count": 7,
+        "bits": "000000",
+        "role": "all_zero",
+        "endpoint_reached": 64,
+        "endpoint_count": 64,
+        "centers_reached": 64,
+        "velocity_lp_axis": 0.6889952034143925,
+        "velocity_lp_fixed14": 0.6224620238788883,
+        "velocity_pseudoinverse": 0.5276045881592397,
+        "manipulability": 0.05093925019782268,
+        "torque_margin_nm": 14.549687898381924,
+        "q0_collision": false,
+        "mass_kg": 4.991630000000001
+      },
+      {
+        "scenario": "high_p1.5",
+        "count": 8,
+        "bits": "0000000",
+        "role": "all_zero",
+        "endpoint_reached": 64,
+        "endpoint_count": 64,
+        "centers_reached": 64,
+        "velocity_lp_axis": 1.0685956607712577,
+        "velocity_lp_fixed14": 0.9459499843961171,
+        "velocity_pseudoinverse": 0.7549371900594939,
+        "manipulability": 0.10441963833230668,
+        "torque_margin_nm": 13.274092305261942,
+        "q0_collision": false,
+        "mass_kg": 5.704720000000001
       }
+    ],
+    "choices": [
+      {
+        "scenario": "default_p0.4",
+        "coverage": {
+          "count": 6,
+          "bits": "00000",
+          "endpoint_gain_vs_6_zero": 0.03125,
+          "center_gain_vs_6_zero": -0.015625
+        },
+        "speed_fixed14": {
+          "count": 8,
+          "bits": "0000000",
+          "ratio_vs_6_zero": 1.906035673699064,
+          "leader_count": 8,
+          "leader_bits": "0000000",
+          "leader_ratio_vs_6_zero": 1.906035673699064,
+          "leader_endpoint_drop_vs_6_zero": -0.015625
+        },
+        "light": {
+          "count": 6,
+          "bits": "00000",
+          "mass_kg": 4.2785400000000005
+        }
+      },
+      {
+        "scenario": "default_p1.5",
+        "coverage": {
+          "count": 6,
+          "bits": "00000",
+          "endpoint_gain_vs_6_zero": 0.03125,
+          "center_gain_vs_6_zero": -0.015625
+        },
+        "speed_fixed14": {
+          "count": 8,
+          "bits": "0000000",
+          "ratio_vs_6_zero": 1.906035673699064,
+          "leader_count": 8,
+          "leader_bits": "0000000",
+          "leader_ratio_vs_6_zero": 1.906035673699064,
+          "leader_endpoint_drop_vs_6_zero": -0.015625
+        },
+        "light": {
+          "count": 6,
+          "bits": "00000",
+          "mass_kg": 4.2785400000000005
+        }
+      },
+      {
+        "scenario": "default_p4.0",
+        "coverage": {
+          "count": 6,
+          "bits": "00000",
+          "endpoint_gain_vs_6_zero": 0.03125,
+          "center_gain_vs_6_zero": -0.015625
+        },
+        "speed_fixed14": {
+          "count": 6,
+          "bits": "00000",
+          "ratio_vs_6_zero": 1.0,
+          "leader_count": 8,
+          "leader_bits": "0000000",
+          "leader_ratio_vs_6_zero": 1.935849929334329,
+          "leader_endpoint_drop_vs_6_zero": 0.03125
+        },
+        "light": {
+          "count": 6,
+          "bits": "00000",
+          "mass_kg": 4.2785400000000005
+        }
+      },
+      {
+        "scenario": "high_p0.4",
+        "coverage": {
+          "count": 7,
+          "bits": "000000",
+          "endpoint_gain_vs_6_zero": 0.375,
+          "center_gain_vs_6_zero": 0.296875
+        },
+        "speed_fixed14": {
+          "count": 8,
+          "bits": "0000000",
+          "ratio_vs_6_zero": 3.1077311494068884,
+          "leader_count": 8,
+          "leader_bits": "0000000",
+          "leader_ratio_vs_6_zero": 3.1077311494068884,
+          "leader_endpoint_drop_vs_6_zero": -0.375
+        },
+        "light": {
+          "count": 6,
+          "bits": "00000",
+          "mass_kg": 4.2785400000000005
+        }
+      },
+      {
+        "scenario": "near_p0.4",
+        "coverage": {
+          "count": 6,
+          "bits": "00000",
+          "endpoint_gain_vs_6_zero": 0.125,
+          "center_gain_vs_6_zero": 0.015625
+        },
+        "speed_fixed14": {
+          "count": 6,
+          "bits": "00000",
+          "ratio_vs_6_zero": 1.0,
+          "leader_count": 6,
+          "leader_bits": "10000",
+          "leader_ratio_vs_6_zero": 1.0497298260266095,
+          "leader_endpoint_drop_vs_6_zero": -0.125
+        },
+        "light": {
+          "count": 6,
+          "bits": "00000",
+          "mass_kg": 4.2785400000000005
+        }
+      },
+      {
+        "scenario": "side_p0.4",
+        "coverage": {
+          "count": 6,
+          "bits": "00000",
+          "endpoint_gain_vs_6_zero": 0.0,
+          "center_gain_vs_6_zero": null
+        },
+        "speed_fixed14": {
+          "count": 6,
+          "bits": "00000",
+          "ratio_vs_6_zero": 1.0,
+          "leader_count": 6,
+          "leader_bits": "10000",
+          "leader_ratio_vs_6_zero": 1.0271132595449781,
+          "leader_endpoint_drop_vs_6_zero": 0.015625
+        },
+        "light": {
+          "count": 6,
+          "bits": "00000",
+          "mass_kg": 4.2785400000000005
+        }
+      },
+      {
+        "scenario": "high_p1.5",
+        "coverage": {
+          "count": 7,
+          "bits": "000000",
+          "endpoint_gain_vs_6_zero": 0.375,
+          "center_gain_vs_6_zero": 0.296875
+        },
+        "speed_fixed14": {
+          "count": 8,
+          "bits": "0000000",
+          "ratio_vs_6_zero": 3.1077311494068884,
+          "leader_count": 8,
+          "leader_bits": "0000000",
+          "leader_ratio_vs_6_zero": 3.1077311494068884,
+          "leader_endpoint_drop_vs_6_zero": -0.375
+        },
+        "light": {
+          "count": 6,
+          "bits": "00000",
+          "mass_kg": 4.2785400000000005
+        }
+      }
+    ],
+    "pose_regression": [
+      {
+        "count": 6,
+        "solved": true,
+        "position_error_m": 0.005530255551917781,
+        "rotation_error_rad": 0.03555024383894853,
+        "source": "该臂自身的一组已知关节角做正运动学，再从扰动起点求回"
+      },
+      {
+        "count": 7,
+        "solved": true,
+        "position_error_m": 0.0010115845730679107,
+        "rotation_error_rad": 0.005864915870707872,
+        "source": "该臂自身的一组已知关节角做正运动学，再从扰动起点求回"
+      },
+      {
+        "count": 8,
+        "solved": true,
+        "position_error_m": 0.0019838476069727307,
+        "rotation_error_rad": 0.02013190712555074,
+        "source": "该臂自身的一组已知关节角做正运动学，再从扰动起点求回"
+      }
+    ],
+    "pose_targets": {
+      "position_tolerance_m": 0.01,
+      "rotation_tolerance_rad": 0.08726646259971647,
+      "rotation_tolerance_deg": 5.0,
+      "relaxed_is_not_acceptance": true,
+      "orientation_source": "6 模块全 0、关节为 0 时 foot_1_sole 的世界姿态；另一组是该姿态再绕世界 +Z 转 90°。工具系就是 XML 里的 foot_1_sole。",
+      "position_source": "中心 (0, 0.05, 0.62) m、半尺寸 0.08 m 的立方体 8 个角，两种姿态，共 16 个目标。",
+      "reference_quat_wxyz": [
+        0.00028991869005620576,
+        4.336335585053419e-08,
+        0.00028991742651841965,
+        0.9999999162751376
+      ],
+      "yaw90_quat_wxyz": [
+        -0.706901718512398,
+        -0.0002049719157523502,
+        0.00020503324079830407,
+        0.7073117254558611
+      ],
+      "ik": {
+        "starts": 8,
+        "iterations": 40,
+        "characteristic_length_m": 0.1,
+        "seed_note": "起点由 ik_start_poses 确定，不用随机数"
+      },
+      "rows": [
+        {
+          "candidate": {
+            "count": 6,
+            "bits": "00000",
+            "role": "all_zero"
+          },
+          "strict": {
+            "tool_point": "foot_1_sole",
+            "position_tolerance_m": 0.01,
+            "rotation_tolerance_rad": 0.08726646259971647,
+            "target_count": 16,
+            "targets_reached": 9,
+            "feasible_fraction": 0.5625,
+            "targets": [
+              {
+                "id": "sole_zero-0",
+                "solved": false,
+                "position_error_m": 1.3877787807814457e-17,
+                "rotation_error_rad": 0.0
+              },
+              {
+                "id": "sole_zero-1",
+                "solved": true,
+                "position_error_m": 0.0012635825292119853,
+                "rotation_error_rad": 0.0074903347832439736
+              },
+              {
+                "id": "sole_zero-2",
+                "solved": true,
+                "position_error_m": 0.0005184069026358597,
+                "rotation_error_rad": 0.004577136422826225
+              },
+              {
+                "id": "sole_zero-3",
+                "solved": true,
+                "position_error_m": 0.0003644743271655011,
+                "rotation_error_rad": 0.004696871044763468
+              },
+              {
+                "id": "sole_zero-4",
+                "solved": false,
+                "position_error_m": 3.469446951953614e-18,
+                "rotation_error_rad": 0.0
+              },
+              {
+                "id": "sole_zero-5",
+                "solved": true,
+                "position_error_m": 0.004148633240571348,
+                "rotation_error_rad": 0.052778292052349
+              },
+              {
+                "id": "sole_zero-6",
+                "solved": true,
+                "position_error_m": 0.002143096187133105,
+                "rotation_error_rad": 0.009018593097742094
+              },
+              {
+                "id": "sole_zero-7",
+                "solved": false,
+                "position_error_m": 6.206335383118183e-17,
+                "rotation_error_rad": 0.0
+              },
+              {
+                "id": "sole_yaw90-8",
+                "solved": false,
+                "position_error_m": 2.5018537765542006e-17,
+                "rotation_error_rad": 0.0
+              },
+              {
+                "id": "sole_yaw90-9",
+                "solved": true,
+                "position_error_m": 0.002155782682868463,
+                "rotation_error_rad": 0.006738588878999878
+              },
+              {
+                "id": "sole_yaw90-10",
+                "solved": true,
+                "position_error_m": 0.0002910005475344797,
+                "rotation_error_rad": 0.0012867487115237823
+              },
+              {
+                "id": "sole_yaw90-11",
+                "solved": false,
+                "position_error_m": 5.003707553108401e-17,
+                "rotation_error_rad": 0.0
+              },
+              {
+                "id": "sole_yaw90-12",
+                "solved": false,
+                "position_error_m": 6.938893903907228e-18,
+                "rotation_error_rad": 0.0
+              },
+              {
+                "id": "sole_yaw90-13",
+                "solved": false,
+                "position_error_m": 6.947562107041945e-17,
+                "rotation_error_rad": 0.0
+              },
+              {
+                "id": "sole_yaw90-14",
+                "solved": true,
+                "position_error_m": 0.005828066309493224,
+                "rotation_error_rad": 0.05815578903594495
+              },
+              {
+                "id": "sole_yaw90-15",
+                "solved": true,
+                "position_error_m": 0.0019454376493462737,
+                "rotation_error_rad": 0.03040324303091011
+              }
+            ],
+            "definition": "位置误差和 SO(3) 旋转角分开判定。通过还要满足关节限位、胶囊无碰撞和静力矩。未解出只表示这个多起点预算没找到，不是不可达。六维秩不作为通过条件。"
+          },
+          "relaxed_diagnostic": {
+            "targets_reached": 9,
+            "feasible_fraction": 0.5625,
+            "position_tolerance_m": 0.02,
+            "rotation_tolerance_rad": 0.2617993877991494
+          }
+        },
+        {
+          "candidate": {
+            "count": 6,
+            "bits": "10000",
+            "role": "screen_coverage_batch2"
+          },
+          "strict": {
+            "tool_point": "foot_1_sole",
+            "position_tolerance_m": 0.01,
+            "rotation_tolerance_rad": 0.08726646259971647,
+            "target_count": 16,
+            "targets_reached": 8,
+            "feasible_fraction": 0.5,
+            "targets": [
+              {
+                "id": "sole_zero-0",
+                "solved": false,
+                "position_error_m": 4.3885418357208765e-17,
+                "rotation_error_rad": 0.0
+              },
+              {
+                "id": "sole_zero-1",
+                "solved": true,
+                "position_error_m": 0.0008624818844237543,
+                "rotation_error_rad": 0.0037687672903537637
+              },
+              {
+                "id": "sole_zero-2",
+                "solved": true,
+                "position_error_m": 0.003541745722184905,
+                "rotation_error_rad": 0.015477047421216462
+              },
+              {
+                "id": "sole_zero-3",
+                "solved": true,
+                "position_error_m": 0.004289820598024129,
+                "rotation_error_rad": 0.018207139964572808
+              },
+              {
+                "id": "sole_zero-4",
+                "solved": false,
+                "position_error_m": 3.469446951953614e-18,
+                "rotation_error_rad": 0.0
+              },
+              {
+                "id": "sole_zero-5",
+                "solved": false,
+                "position_error_m": 1.4146613917733376e-08,
+                "rotation_error_rad": 0.0
+              },
+              {
+                "id": "sole_zero-6",
+                "solved": true,
+                "position_error_m": 0.0011519400827242363,
+                "rotation_error_rad": 0.006708169337766269
+              },
+              {
+                "id": "sole_zero-7",
+                "solved": true,
+                "position_error_m": 0.0046223758526452345,
+                "rotation_error_rad": 0.07658511040314435
+              },
+              {
+                "id": "sole_yaw90-8",
+                "solved": false,
+                "position_error_m": 5.204170427930421e-17,
+                "rotation_error_rad": 0.0
+              },
+              {
+                "id": "sole_yaw90-9",
+                "solved": false,
+                "position_error_m": 1.138063217752167e-16,
+                "rotation_error_rad": 0.0
+              },
+              {
+                "id": "sole_yaw90-10",
+                "solved": true,
+                "position_error_m": 0.005397385037086149,
+                "rotation_error_rad": 0.07034587932034773
+              },
+              {
+                "id": "sole_yaw90-11",
+                "solved": false,
+                "position_error_m": 3.925231146709438e-17,
+                "rotation_error_rad": 0.0
+              },
+              {
+                "id": "sole_yaw90-12",
+                "solved": true,
+                "position_error_m": 0.0082999776499127,
+                "rotation_error_rad": 0.08512326808185947
+              },
+              {
+                "id": "sole_yaw90-13",
+                "solved": false,
+                "position_error_m": 0.02842244926597882,
+                "rotation_error_rad": 0.005433466750220268
+              },
+              {
+                "id": "sole_yaw90-14",
+                "solved": false,
+                "position_error_m": 1.249000902703301e-16,
+                "rotation_error_rad": 0.0
+              },
+              {
+                "id": "sole_yaw90-15",
+                "solved": true,
+                "position_error_m": 0.000569104305928843,
+                "rotation_error_rad": 0.002506956938193679
+              }
+            ],
+            "definition": "位置误差和 SO(3) 旋转角分开判定。通过还要满足关节限位、胶囊无碰撞和静力矩。未解出只表示这个多起点预算没找到，不是不可达。六维秩不作为通过条件。"
+          },
+          "relaxed_diagnostic": {
+            "targets_reached": 10,
+            "feasible_fraction": 0.625,
+            "position_tolerance_m": 0.02,
+            "rotation_tolerance_rad": 0.2617993877991494
+          }
+        },
+        {
+          "candidate": {
+            "count": 7,
+            "bits": "000000",
+            "role": "all_zero"
+          },
+          "strict": {
+            "tool_point": "foot_1_sole",
+            "position_tolerance_m": 0.01,
+            "rotation_tolerance_rad": 0.08726646259971647,
+            "target_count": 16,
+            "targets_reached": 12,
+            "feasible_fraction": 0.75,
+            "targets": [
+              {
+                "id": "sole_zero-0",
+                "solved": true,
+                "position_error_m": 0.000374673346252088,
+                "rotation_error_rad": 0.0007682480127071262
+              },
+              {
+                "id": "sole_zero-1",
+                "solved": true,
+                "position_error_m": 0.0006549004265071588,
+                "rotation_error_rad": 0.005087009673600178
+              },
+              {
+                "id": "sole_zero-2",
+                "solved": true,
+                "position_error_m": 0.005348138907008083,
+                "rotation_error_rad": 0.01529310676175147
+              },
+              {
+                "id": "sole_zero-3",
+                "solved": true,
+                "position_error_m": 0.001213398309755542,
+                "rotation_error_rad": 0.019243797452384078
+              },
+              {
+                "id": "sole_zero-4",
+                "solved": false,
+                "position_error_m": 2.797157557069881e-17,
+                "rotation_error_rad": 0.0
+              },
+              {
+                "id": "sole_zero-5",
+                "solved": true,
+                "position_error_m": 0.00461045090488799,
+                "rotation_error_rad": 0.018482116116781924
+              },
+              {
+                "id": "sole_zero-6",
+                "solved": false,
+                "position_error_m": 3.1031676915590914e-17,
+                "rotation_error_rad": 0.0
+              },
+              {
+                "id": "sole_zero-7",
+                "solved": false,
+                "position_error_m": 5.003707553108401e-17,
+                "rotation_error_rad": 0.0
+              },
+              {
+                "id": "sole_yaw90-8",
+                "solved": false,
+                "position_error_m": 1.4304896245381992e-17,
+                "rotation_error_rad": 0.0
+              },
+              {
+                "id": "sole_yaw90-9",
+                "solved": true,
+                "position_error_m": 0.0024225184378445378,
+                "rotation_error_rad": 0.01232811032569883
+              },
+              {
+                "id": "sole_yaw90-10",
+                "solved": true,
+                "position_error_m": 0.0006486581355326093,
+                "rotation_error_rad": 0.0017730130596130588
+              },
+              {
+                "id": "sole_yaw90-11",
+                "solved": true,
+                "position_error_m": 0.009891820051198505,
+                "rotation_error_rad": 0.0603714140614786
+              },
+              {
+                "id": "sole_yaw90-12",
+                "solved": true,
+                "position_error_m": 0.008942129579841033,
+                "rotation_error_rad": 0.06307465449278275
+              },
+              {
+                "id": "sole_yaw90-13",
+                "solved": true,
+                "position_error_m": 0.0005023486126888324,
+                "rotation_error_rad": 0.004699063281261111
+              },
+              {
+                "id": "sole_yaw90-14",
+                "solved": true,
+                "position_error_m": 0.0013390298960085985,
+                "rotation_error_rad": 0.021470045906530098
+              },
+              {
+                "id": "sole_yaw90-15",
+                "solved": true,
+                "position_error_m": 0.002284681858978997,
+                "rotation_error_rad": 0.00872382433923743
+              }
+            ],
+            "definition": "位置误差和 SO(3) 旋转角分开判定。通过还要满足关节限位、胶囊无碰撞和静力矩。未解出只表示这个多起点预算没找到，不是不可达。六维秩不作为通过条件。"
+          },
+          "relaxed_diagnostic": {
+            "targets_reached": 12,
+            "feasible_fraction": 0.75,
+            "position_tolerance_m": 0.02,
+            "rotation_tolerance_rad": 0.2617993877991494
+          }
+        },
+        {
+          "candidate": {
+            "count": 8,
+            "bits": "0000000",
+            "role": "all_zero"
+          },
+          "strict": {
+            "tool_point": "foot_1_sole",
+            "position_tolerance_m": 0.01,
+            "rotation_tolerance_rad": 0.08726646259971647,
+            "target_count": 16,
+            "targets_reached": 6,
+            "feasible_fraction": 0.375,
+            "targets": [
+              {
+                "id": "sole_zero-0",
+                "solved": false,
+                "position_error_m": 1.962615573354719e-17,
+                "rotation_error_rad": 0.0
+              },
+              {
+                "id": "sole_zero-1",
+                "solved": true,
+                "position_error_m": 0.007234465684936717,
+                "rotation_error_rad": 0.013893444280113893
+              },
+              {
+                "id": "sole_zero-2",
+                "solved": false,
+                "position_error_m": 2.7755575615628914e-17,
+                "rotation_error_rad": 0.0
+              },
+              {
+                "id": "sole_zero-3",
+                "solved": true,
+                "position_error_m": 0.0007551738277223407,
+                "rotation_error_rad": 0.004204896561592289
+              },
+              {
+                "id": "sole_zero-4",
+                "solved": false,
+                "position_error_m": 4.1777673608052095e-17,
+                "rotation_error_rad": 0.0
+              },
+              {
+                "id": "sole_zero-5",
+                "solved": false,
+                "position_error_m": 4.3885418357208765e-17,
+                "rotation_error_rad": 0.0
+              },
+              {
+                "id": "sole_zero-6",
+                "solved": false,
+                "position_error_m": 1.3877787807814457e-17,
+                "rotation_error_rad": 0.0
+              },
+              {
+                "id": "sole_zero-7",
+                "solved": true,
+                "position_error_m": 0.0020486874179095407,
+                "rotation_error_rad": 0.0059694630545270334
+              },
+              {
+                "id": "sole_yaw90-8",
+                "solved": false,
+                "position_error_m": 1.962615573354719e-17,
+                "rotation_error_rad": 0.0
+              },
+              {
+                "id": "sole_yaw90-9",
+                "solved": false,
+                "position_error_m": 4.163336342344337e-17,
+                "rotation_error_rad": 0.0
+              },
+              {
+                "id": "sole_yaw90-10",
+                "solved": true,
+                "position_error_m": 0.0013831535716760776,
+                "rotation_error_rad": 0.0028188730368521775
+              },
+              {
+                "id": "sole_yaw90-11",
+                "solved": false,
+                "position_error_m": 4.163336342344337e-17,
+                "rotation_error_rad": 0.0
+              },
+              {
+                "id": "sole_yaw90-12",
+                "solved": false,
+                "position_error_m": 2.5018537765542006e-17,
+                "rotation_error_rad": 0.0
+              },
+              {
+                "id": "sole_yaw90-13",
+                "solved": false,
+                "position_error_m": 2.7755575615628914e-17,
+                "rotation_error_rad": 0.0
+              },
+              {
+                "id": "sole_yaw90-14",
+                "solved": true,
+                "position_error_m": 0.007312823683370193,
+                "rotation_error_rad": 0.059949256500781985
+              },
+              {
+                "id": "sole_yaw90-15",
+                "solved": true,
+                "position_error_m": 0.009238957434588344,
+                "rotation_error_rad": 0.07632073689657908
+              }
+            ],
+            "definition": "位置误差和 SO(3) 旋转角分开判定。通过还要满足关节限位、胶囊无碰撞和静力矩。未解出只表示这个多起点预算没找到，不是不可达。六维秩不作为通过条件。"
+          },
+          "relaxed_diagnostic": {
+            "targets_reached": 6,
+            "feasible_fraction": 0.375,
+            "position_tolerance_m": 0.02,
+            "rotation_tolerance_rad": 0.2617993877991494
+          }
+        }
+      ]
     },
-    "unique_optimum": false,
-    "batch1_joint_origin_kept": true
+    "concept_search_limit": "批次 2 对每个驱动数只做了种群 16、4 代、约 80 次评价。本批没有扩大概念搜索。",
+    "velocity_names": {
+      "task_velocity_lp_median_m_s": "六个坐标轴方向的最小值",
+      "task_velocity_lp_fixed14_median_m_s": "六个坐标轴加八个体对角线，共 14 个预固定方向的最小值"
+    },
+    "solver_failed_on_pose_set": false
   },
   "next_batch": {
     "not_started": true,
-    "suggest_close": true,
-    "intent": "足底默认盒子上的条件化选型已经可以交付，建议父端暂停例行加长搜索。"
+    "intent": "已测示例场景上的 6/7/8 实物规则可以交付，但这不是全局最优，长期状态也不标完成。没有证据支持继续加概念长度预算。下一批只应在出现一个用户给出的工况时，用同一足底点和这四台代表重核那一个工况。"
   }
 }

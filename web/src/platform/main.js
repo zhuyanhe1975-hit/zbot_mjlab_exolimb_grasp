@@ -556,6 +556,23 @@ async function loadBatch(file, label) {
 }
 document.querySelector("#load-batch").addEventListener("click", () => loadBatch("longterm_batch1.json", "首批复核"));
 document.querySelector("#load-batch2").addEventListener("click", () => loadBatch("longterm_batch2.json", "足底批次"));
+document.querySelector("#load-batch3").addEventListener("click", async () => {
+  const response = await fetch(`${import.meta.env.BASE_URL}longterm_batch3.json`);
+  if (!response.ok) {
+    progressEl.textContent = "还没有批次 3 文件。";
+    return;
+  }
+  const payload = await response.json();
+  document.querySelector("#tool-point").value = "foot_1_sole";
+  const lines = (payload.choices ?? []).map((choice) => {
+    const cover = choice.coverage ?? {};
+    const speed = choice.speed_fixed14 ?? {};
+    return `${choice.scenario}：覆盖 ${cover.count ?? "—"} 模块 ${cover.bits ?? ""}，14 向速度 ${speed.count ?? "—"} 模块 ${speed.bits ?? ""}`;
+  });
+  const pose = (payload.pose_summary ?? []).map((row) => `${row.count} 模块 ${row.bits} 六维 ${row.strict_reached}/16`).join("；");
+  progressEl.textContent = [payload.note, ...lines, pose].filter(Boolean).join(" ");
+  poseArm();
+});
 document.querySelector("#count-now").addEventListener("change", () => {
   state.count = Math.min(8, Math.max(3, num("#count-now")));
   document.querySelector("#count-now").value = String(state.count);

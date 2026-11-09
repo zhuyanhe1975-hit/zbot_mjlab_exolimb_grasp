@@ -106,6 +106,8 @@ class TaskSpec:
     # foot_joint_origin 保持旧实验：ZBot 末端是 foot_1 关节原点。
     # foot_1_sole 使用 ZBOT6.xml 里 foot_1 上的足底 site，不覆盖旧结果。
     tool_point: str = "foot_joint_origin"
+    # 为真时，除六个坐标轴外再算八个预固定的体对角线方向。仍然不是全方向速度。
+    compute_velocity_lp_fixed14: bool = False
 
     def __post_init__(self) -> None:
         self.center_m = tuple(float(v) for v in self.center_m)  # type: ignore[assignment]

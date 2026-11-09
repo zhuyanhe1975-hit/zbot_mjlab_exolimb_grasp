@@ -290,6 +290,53 @@ class SixDofTests(unittest.TestCase):
         linear = velocity_lp_axis_min(jacobian, 1.0)
         self.assertGreater(linear, pseudo + 0.1)
         self.assertAlmostEqual(linear, 1.5, places=5)
+        from zbot_exolimb_grasp.platform.model import FIXED14_VELOCITY_DIRECTIONS, velocity_lp_direction_min
+
+        wider = velocity_lp_direction_min(jacobian, 1.0, FIXED14_VELOCITY_DIRECTIONS)
+        self.assertLessEqual(wider, linear + 1e-6)
+        self.assertEqual(len(FIXED14_VELOCITY_DIRECTIONS), 14)
+
+    def test_six_dimensional_ik_recovers_a_known_sole_pose(self) -> None:
+        from zbot_exolimb_grasp.platform.model import rotation_angle_rad, solve_pose
+
+        task = TaskSpec(
+            tool_point="foot_1_sole",
+            ik_starts=4,
+            ik_iterations=30,
+            ik_damping=0.08,
+            payload_kg=0.4,
+            effort_limit_nm=20.0,
+            sample_count=0,
+        )
+        for count in (6, 7, 8):
+            design = zbot_chain(count)
+            true_q = np.linspace(-0.8, 0.7, count)
+            chain = forward_chain(design, true_q, tool_point="foot_1_sole")
+            solved = solve_pose(
+                design,
+                chain["ee"][0],
+                chain["ee_quat"][0],
+                task,
+                position_tolerance_m=0.01,
+                rotation_tolerance_rad=math_pi() / 36.0,
+                extra_starts=[true_q + 0.15],
+            )
+            self.assertTrue(solved["solved"])
+            self.assertLess(solved["position_error_m"], 0.01)
+            self.assertLess(solved["rotation_error_rad"], math_pi() / 36.0)
+            again = forward_chain(design, solved["q"], tool_point="foot_1_sole")
+            self.assertLess(float(np.linalg.norm(again["ee"][0] - chain["ee"][0])), 0.01)
+            self.assertLess(rotation_angle_rad(again["ee_quat"][0], chain["ee_quat"][0]), math_pi() / 36.0)
+            self.assertEqual(solved["jacobian6"].shape, (6, count))
+        missed = solve_pose(
+            zbot_chain(6),
+            np.array([5.0, 5.0, 5.0]),
+            np.array([1.0, 0.0, 0.0, 0.0]),
+            TaskSpec(tool_point="foot_1_sole", ik_starts=2, ik_iterations=4, sample_count=0),
+            position_tolerance_m=0.01,
+            rotation_tolerance_rad=math_pi() / 36.0,
+        )
+        self.assertFalse(missed["solved"])
 
     def test_sole_site_is_read_from_the_r3_xml(self) -> None:
         import xml.etree.ElementTree as ET

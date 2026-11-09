@@ -428,30 +428,56 @@ def generic_rank_report(
     }
 
 
-def velocity_lp_axis_min(jacobian: np.ndarray, speed_limit: float) -> float:
-    """六个坐标轴方向上、|qdot| 不超过上限时的最大速度，再取最小。
+def _axis_directions() -> tuple[np.ndarray, ...]:
+    directions = []
+    for sign in (1.0, -1.0):
+        for axis in range(3):
+            direction = np.zeros(3)
+            direction[axis] = sign
+            directions.append(direction)
+    return tuple(directions)
 
-    这是速度多面体在坐标轴上的支撑，比伪逆更接近限速最优，但仍不是多面体的内切球半径。
+
+def _octant_directions() -> tuple[np.ndarray, ...]:
+    directions = []
+    for x in (-1.0, 1.0):
+        for y in (-1.0, 1.0):
+            for z in (-1.0, 1.0):
+                direction = np.array([x, y, z], dtype=np.float64)
+                directions.append(direction / np.linalg.norm(direction))
+    return tuple(directions)
+
+
+AXIS_VELOCITY_DIRECTIONS = _axis_directions()
+FIXED14_VELOCITY_DIRECTIONS = AXIS_VELOCITY_DIRECTIONS + _octant_directions()
+
+
+def velocity_lp_direction_min(jacobian: np.ndarray, speed_limit: float, directions: tuple[np.ndarray, ...]) -> float:
+    """预固定方向上、|qdot| 不超过上限时的最大速度，再取这些方向里的最小。
+
+    六个坐标轴是一组；再加上八个体对角线后仍不是速度多面体的内切球，也不是全方向最快。
     """
     from scipy.optimize import linprog
 
     width = jacobian.shape[1]
     worst = float("inf")
-    for sign in (1.0, -1.0):
-        for axis in range(3):
-            direction = np.zeros(3)
-            direction[axis] = sign
-            cost = np.zeros(width + 1)
-            cost[-1] = -1.0
-            equalities = np.zeros((3, width + 1))
-            equalities[:, :width] = jacobian
-            equalities[:, -1] = -direction
-            bounds = [(-speed_limit, speed_limit)] * width + [(0.0, None)]
-            solved = linprog(cost, A_eq=equalities, b_eq=np.zeros(3), bounds=bounds, method="highs")
-            if not solved.success:
-                return 0.0
-            worst = min(worst, float(solved.x[-1]))
+    for direction in directions:
+        cost = np.zeros(width + 1)
+        cost[-1] = -1.0
+        equalities = np.zeros((3, width + 1))
+        equalities[:, :width] = jacobian
+        equalities[:, -1] = -np.asarray(direction, dtype=np.float64)
+        bounds = [(-speed_limit, speed_limit)] * width + [(0.0, None)]
+        solved = linprog(cost, A_eq=equalities, b_eq=np.zeros(3), bounds=bounds, method="highs")
+        if not solved.success:
+            return 0.0
+        worst = min(worst, float(solved.x[-1]))
     return 0.0 if not np.isfinite(worst) else worst
+
+
+def velocity_lp_axis_min(jacobian: np.ndarray, speed_limit: float) -> float:
+    """六个坐标轴方向上的限速速度最小值。不是全方向速度。"""
+    return velocity_lp_direction_min(jacobian, speed_limit, AXIS_VELOCITY_DIRECTIONS)
 
 
 def translational_manipulability(jacobian: np.ndarray) -> np.ndarray:
@@ -551,6 +577,138 @@ def solve_target(design: Design, target: np.ndarray, task: TaskSpec) -> tuple[np
     return None, None
 
 
+def rotation_angle_rad(current_quat: np.ndarray, desired_quat: np.ndarray) -> float:
+    """当前工具系到目标工具系的旋转角，单位 rad。"""
+    relative = quat_matrix(desired_quat) @ quat_matrix(current_quat).T
+    cosine = float(np.clip((np.trace(relative) - 1.0) * 0.5, -1.0, 1.0))
+    return float(np.arccos(cosine))
+
+
+def so3_log_world(current_quat: np.ndarray, desired_quat: np.ndarray) -> np.ndarray:
+    """把当前工具姿态转到目标姿态的世界系旋转向量。
+
+    几何雅可比的转动行是世界系角速度，所以这个误差和工具 site 的世界姿态一致。
+    site 相对足体的四元数是常量，不另造一套角速度。
+    """
+    relative = quat_matrix(desired_quat) @ quat_matrix(current_quat).T
+    sine_axis = so3_vee(relative)
+    theta = rotation_angle_rad(current_quat, desired_quat)
+    sine = float(np.sin(theta))
+    if abs(sine) < 1e-8:
+        return sine_axis
+    return sine_axis * (theta / sine)
+
+
+def _damped_step_rows(jacobian: np.ndarray, error: np.ndarray, damping: float) -> np.ndarray:
+    gram = jacobian @ jacobian.T + (damping**2) * np.eye(jacobian.shape[0])
+    try:
+        lagrange = np.linalg.solve(gram, error)
+    except np.linalg.LinAlgError:
+        return np.zeros(jacobian.shape[1], dtype=np.float64)
+    return jacobian.T @ lagrange
+
+
+def solve_pose(
+    design: Design,
+    target_position: np.ndarray,
+    target_quat: np.ndarray,
+    task: TaskSpec,
+    *,
+    position_tolerance_m: float = 0.01,
+    rotation_tolerance_rad: float = math.radians(5.0),
+    characteristic_length_m: float = 0.1,
+    extra_starts: list[np.ndarray] | None = None,
+) -> dict[str, object]:
+    """多起点六维阻尼最小二乘。位置和 SO(3) 容差分开。
+
+    成功还要同时满足关节限位、胶囊无碰撞和静力矩。没解出不是不可达证明。
+    特征长度只用来配平平移误差和转动误差的步长，不进入通过判定。
+    """
+    count = len(design.module_ids)
+    limit = float(task.joint_sample_limit)
+    target_position = np.asarray(target_position, dtype=np.float64)
+    target_quat = np.asarray(target_quat, dtype=np.float64)
+    starts = ik_start_poses(count, task.ik_starts, limit)
+    for extra in extra_starts or []:
+        starts.append(np.clip(np.asarray(extra, dtype=np.float64), -limit, limit))
+    best_pos = float("inf")
+    best_rot = float("inf")
+    for start in starts:
+        pose = start.copy()
+        for _ in range(int(task.ik_iterations)):
+            chain = forward_chain(design, pose.reshape(1, -1), tool_point=task.tool_point)
+            position_error = target_position - chain["ee"][0]
+            rotation_error = so3_log_world(chain["ee_quat"][0], target_quat)
+            position_miss = float(np.linalg.norm(position_error))
+            rotation_miss = rotation_angle_rad(chain["ee_quat"][0], target_quat)
+            best_pos = min(best_pos, position_miss)
+            best_rot = min(best_rot, rotation_miss)
+            if position_miss <= position_tolerance_m and rotation_miss <= rotation_tolerance_rad and _pose_is_feasible(chain, task):
+                return {
+                    "solved": True,
+                    "q": pose,
+                    "position_error_m": position_miss,
+                    "rotation_error_rad": rotation_miss,
+                    "jacobian6": geometric_jacobian(chain)[0],
+                }
+            scaled = np.concatenate([position_error / characteristic_length_m, rotation_error])
+            jacobian6 = geometric_jacobian(chain)[0]
+            jacobian6 = jacobian6.copy()
+            jacobian6[:3, :] /= characteristic_length_m
+            step = _damped_step_rows(jacobian6, scaled, float(task.ik_damping))
+            pose = np.clip(pose + step, -limit, limit)
+    return {
+        "solved": False,
+        "q": None,
+        "position_error_m": None if not np.isfinite(best_pos) else best_pos,
+        "rotation_error_rad": None if not np.isfinite(best_rot) else best_rot,
+        "jacobian6": None,
+    }
+
+
+def evaluate_pose_targets(
+    design: Design,
+    targets: list[dict[str, object]],
+    task: TaskSpec,
+    *,
+    position_tolerance_m: float = 0.01,
+    rotation_tolerance_rad: float = math.radians(5.0),
+) -> dict[str, object]:
+    """固定六维目标集上的可行比例。分母是目标数。秩满不计入通过。"""
+    rows = []
+    for target in targets:
+        solved = solve_pose(
+            design,
+            np.asarray(target["position_m"], dtype=np.float64),
+            np.asarray(target["quat_wxyz"], dtype=np.float64),
+            task,
+            position_tolerance_m=position_tolerance_m,
+            rotation_tolerance_rad=rotation_tolerance_rad,
+        )
+        rows.append(
+            {
+                "id": target.get("id"),
+                "solved": bool(solved["solved"]),
+                "position_error_m": solved["position_error_m"],
+                "rotation_error_rad": solved["rotation_error_rad"],
+            }
+        )
+    reached = sum(1 for row in rows if row["solved"])
+    return {
+        "tool_point": task.tool_point,
+        "position_tolerance_m": position_tolerance_m,
+        "rotation_tolerance_rad": rotation_tolerance_rad,
+        "target_count": len(targets),
+        "targets_reached": reached,
+        "feasible_fraction": reached / float(len(targets)) if targets else None,
+        "targets": rows,
+        "definition": (
+            "位置误差和 SO(3) 旋转角分开判定。通过还要满足关节限位、胶囊无碰撞和静力矩。"
+            "未解出只表示这个多起点预算没找到，不是不可达。六维秩不作为通过条件。"
+        ),
+    }
+
+
 def _median(values: list[float]) -> float:
     return float(np.median(np.asarray(values, dtype=np.float64)))
 
@@ -574,6 +732,7 @@ def evaluate_design(
     task_manips: list[float] = []
     task_speeds: list[float] = []
     task_speeds_lp: list[float] = []
+    task_speeds_lp14: list[float] = []
     torque_margins: list[float] = []
     rank_deficient = 0
     spatial_deficient = 0
@@ -591,6 +750,8 @@ def evaluate_design(
         task_speeds.append(float(velocity_capability(jacobian.reshape(1, 3, count), task.velocity_limit_rad_s)[0]))
         if task.compute_velocity_lp:
             task_speeds_lp.append(velocity_lp_axis_min(jacobian.reshape(3, count), task.velocity_limit_rad_s))
+        if task.compute_velocity_lp_fixed14:
+            task_speeds_lp14.append(velocity_lp_direction_min(jacobian.reshape(3, count), task.velocity_limit_rad_s, FIXED14_VELOCITY_DIRECTIONS))
         solved = forward_chain(design, pose.reshape(1, -1), tool_point=task.tool_point)
         peak = float(np.max(np.abs(static_torques(solved, task.payload_kg, task.gravity_m_s2)[0])))
         torque_margins.append(float(task.effort_limit_nm) - peak)
@@ -666,6 +827,8 @@ def evaluate_design(
         "task_velocity_valid": speed_valid,
         "task_velocity_is_pseudoinverse_lower_bound": True,
         "task_velocity_lp_median_m_s": _median(task_speeds_lp) if task_speeds_lp else None,
+        "task_velocity_lp_fixed14_median_m_s": _median(task_speeds_lp14) if task_speeds_lp14 else None,
+        "task_velocity_lp_fixed14_definition": "六个坐标轴加八个预固定体对角线，共 14 个方向上的限速速度再取最小。不是全方向速度。",
         "task_velocity_lp_definition": (
             "六个坐标轴正负方向上，关节速度盒约束线性规划的最大速度，再取最小。"
             "只在复核候选上计算。它仍不是整个速度多面体的内切球。"
