@@ -1,0 +1,2227 @@
+{
+  "status": "final_example_selection",
+  "not_a_user_task": true,
+  "not_global_optimum": true,
+  "elapsed_s": 278.27164143999835,
+  "budget": {
+    "coarse": "全部 224 种，默认盒和高远盒，1 cm，每轴 4 份共 64 点，4 起点，12 次迭代",
+    "review": "每个模块数粗筛前 4 名加全 0，1 cm，125 端点与 125 单元中心，6 起点，20 次迭代",
+    "pose": "12 个锥角位姿，种子 11 和 23，位置 1 cm，旋转 10°，4 起点，16 次迭代",
+    "concept": "每个驱动数、每个种子：种群 16、5 代。评价是 27 点、1 cm、3 起点、10 次迭代。两种子 11 和 23。",
+    "why_not_125_for_all": "64 点已能拉开力矩和速度；125 点只用于前段，避免 224 乘两套盒子超出本次时间。"
+  },
+  "coarse_spread": {
+    "default": {
+      "6": {
+        "min_reached": 34,
+        "max_reached": 51,
+        "n": 32
+      },
+      "7": {
+        "min_reached": 28,
+        "max_reached": 52,
+        "n": 64
+      },
+      "8": {
+        "min_reached": 24,
+        "max_reached": 49,
+        "n": 128
+      }
+    },
+    "high": {
+      "6": {
+        "min_reached": 40,
+        "max_reached": 42,
+        "n": 32
+      },
+      "7": {
+        "min_reached": 58,
+        "max_reached": 64,
+        "n": 64
+      },
+      "8": {
+        "min_reached": 50,
+        "max_reached": 64,
+        "n": 128
+      }
+    }
+  },
+  "tops": {
+    "default": {
+      "6": [
+        {
+          "bits": "01101",
+          "reached": 51,
+          "min_torque_margin_nm": 13.429294998417618,
+          "median_speed_m_s": 0.2997242790279733
+        },
+        {
+          "bits": "11000",
+          "reached": 50,
+          "min_torque_margin_nm": 14.522552085732515,
+          "median_speed_m_s": 0.33115380643698944
+        },
+        {
+          "bits": "10011",
+          "reached": 50,
+          "min_torque_margin_nm": 14.398281335389042,
+          "median_speed_m_s": 0.28222002026798154
+        },
+        {
+          "bits": "00010",
+          "reached": 50,
+          "min_torque_margin_nm": 14.164684225258647,
+          "median_speed_m_s": 0.30674461626076094
+        }
+      ],
+      "7": [
+        {
+          "bits": "000000",
+          "reached": 52,
+          "min_torque_margin_nm": 12.784794886896748,
+          "median_speed_m_s": 0.5658135733494294
+        },
+        {
+          "bits": "100000",
+          "reached": 51,
+          "min_torque_margin_nm": 12.235132868549332,
+          "median_speed_m_s": 0.48695808961009335
+        },
+        {
+          "bits": "110000",
+          "reached": 49,
+          "min_torque_margin_nm": 13.415360366711194,
+          "median_speed_m_s": 0.4776036892411219
+        },
+        {
+          "bits": "111001",
+          "reached": 48,
+          "min_torque_margin_nm": 13.303630529383113,
+          "median_speed_m_s": 0.4360885803384375
+        }
+      ],
+      "8": [
+        {
+          "bits": "0000000",
+          "reached": 49,
+          "min_torque_margin_nm": 10.330053622676605,
+          "median_speed_m_s": 0.6990366595777254
+        },
+        {
+          "bits": "1110000",
+          "reached": 47,
+          "min_torque_margin_nm": 10.326464836127986,
+          "median_speed_m_s": 0.5130469482931906
+        },
+        {
+          "bits": "1000000",
+          "reached": 47,
+          "min_torque_margin_nm": 9.966214788044388,
+          "median_speed_m_s": 0.5938043545577136
+        },
+        {
+          "bits": "1000001",
+          "reached": 47,
+          "min_torque_margin_nm": 9.801370075881188,
+          "median_speed_m_s": 0.5878495907947927
+        }
+      ]
+    },
+    "high": {
+      "6": [
+        {
+          "bits": "01101",
+          "reached": 42,
+          "min_torque_margin_nm": 15.2358376205003,
+          "median_speed_m_s": 0.19885522742881684
+        },
+        {
+          "bits": "01100",
+          "reached": 42,
+          "min_torque_margin_nm": 15.23423890068489,
+          "median_speed_m_s": 0.2047114424056962
+        },
+        {
+          "bits": "11001",
+          "reached": 42,
+          "min_torque_margin_nm": 15.218449844674664,
+          "median_speed_m_s": 0.279612664667786
+        },
+        {
+          "bits": "11000",
+          "reached": 42,
+          "min_torque_margin_nm": 15.217651272797605,
+          "median_speed_m_s": 0.29333045911048444
+        }
+      ],
+      "7": [
+        {
+          "bits": "110000",
+          "reached": 64,
+          "min_torque_margin_nm": 15.362790412756933,
+          "median_speed_m_s": 0.42984307855665377
+        },
+        {
+          "bits": "110001",
+          "reached": 64,
+          "min_torque_margin_nm": 15.355124950929355,
+          "median_speed_m_s": 0.4190234721108183
+        },
+        {
+          "bits": "110011",
+          "reached": 64,
+          "min_torque_margin_nm": 15.336665730319288,
+          "median_speed_m_s": 0.38405474329839795
+        },
+        {
+          "bits": "110010",
+          "reached": 64,
+          "min_torque_margin_nm": 15.31753541800461,
+          "median_speed_m_s": 0.37815029275750034
+        }
+      ],
+      "8": [
+        {
+          "bits": "1011101",
+          "reached": 64,
+          "min_torque_margin_nm": 15.394046087878658,
+          "median_speed_m_s": 0.5155322890700705
+        },
+        {
+          "bits": "1011100",
+          "reached": 64,
+          "min_torque_margin_nm": 15.21906472145731,
+          "median_speed_m_s": 0.5188614911693545
+        },
+        {
+          "bits": "0011001",
+          "reached": 64,
+          "min_torque_margin_nm": 15.159071839032816,
+          "median_speed_m_s": 0.6506597105951356
+        },
+        {
+          "bits": "0011000",
+          "reached": 64,
+          "min_torque_margin_nm": 15.111984988091095,
+          "median_speed_m_s": 0.6573288298655271
+        }
+      ]
+    }
+  },
+  "review": [
+    {
+      "count": 6,
+      "bits": "01101",
+      "interfaces_base_to_tip": [
+        0,
+        90,
+        90,
+        0,
+        90
+      ],
+      "reached": 89,
+      "targets": 125,
+      "fraction": 0.712,
+      "min_torque_margin_nm": 13.401080254840794,
+      "median_torque_margin_nm": 16.822642910480404,
+      "median_speed_m_s": 0.32758386094445674,
+      "median_manipulability": 0.01572157583422474,
+      "mass_kg": 4.2785400000000005,
+      "payload_kg": 0.4,
+      "mass_is_assumption": false,
+      "box": "default",
+      "set": "endpoints"
+    },
+    {
+      "count": 6,
+      "bits": "01101",
+      "interfaces_base_to_tip": [
+        0,
+        90,
+        90,
+        0,
+        90
+      ],
+      "reached": 95,
+      "targets": 125,
+      "fraction": 0.76,
+      "min_torque_margin_nm": 13.90286512254257,
+      "median_torque_margin_nm": 16.510160416677817,
+      "median_speed_m_s": 0.3553227488485492,
+      "median_manipulability": 0.016390271935714813,
+      "mass_kg": 4.2785400000000005,
+      "payload_kg": 0.4,
+      "mass_is_assumption": false,
+      "box": "default",
+      "set": "centers"
+    },
+    {
+      "count": 6,
+      "bits": "11000",
+      "interfaces_base_to_tip": [
+        90,
+        90,
+        0,
+        0,
+        0
+      ],
+      "reached": 99,
+      "targets": 125,
+      "fraction": 0.792,
+      "min_torque_margin_nm": 14.695545351412594,
+      "median_torque_margin_nm": 16.91015924973048,
+      "median_speed_m_s": 0.3340194194744556,
+      "median_manipulability": 0.015966779662339406,
+      "mass_kg": 4.2785400000000005,
+      "payload_kg": 0.4,
+      "mass_is_assumption": false,
+      "box": "default",
+      "set": "endpoints"
+    },
+    {
+      "count": 6,
+      "bits": "11000",
+      "interfaces_base_to_tip": [
+        90,
+        90,
+        0,
+        0,
+        0
+      ],
+      "reached": 83,
+      "targets": 125,
+      "fraction": 0.664,
+      "min_torque_margin_nm": 15.439793683917742,
+      "median_torque_margin_nm": 17.259689689704686,
+      "median_speed_m_s": 0.36201166922714667,
+      "median_manipulability": 0.018452015359834376,
+      "mass_kg": 4.2785400000000005,
+      "payload_kg": 0.4,
+      "mass_is_assumption": false,
+      "box": "default",
+      "set": "centers"
+    },
+    {
+      "count": 6,
+      "bits": "10011",
+      "interfaces_base_to_tip": [
+        90,
+        0,
+        0,
+        90,
+        90
+      ],
+      "reached": 93,
+      "targets": 125,
+      "fraction": 0.744,
+      "min_torque_margin_nm": 14.48553962732528,
+      "median_torque_margin_nm": 16.730087610363096,
+      "median_speed_m_s": 0.3039143937734373,
+      "median_manipulability": 0.015892058143870676,
+      "mass_kg": 4.2785400000000005,
+      "payload_kg": 0.4,
+      "mass_is_assumption": false,
+      "box": "default",
+      "set": "endpoints"
+    },
+    {
+      "count": 6,
+      "bits": "10011",
+      "interfaces_base_to_tip": [
+        90,
+        0,
+        0,
+        90,
+        90
+      ],
+      "reached": 82,
+      "targets": 125,
+      "fraction": 0.656,
+      "min_torque_margin_nm": 15.22474706439362,
+      "median_torque_margin_nm": 17.182545098536103,
+      "median_speed_m_s": 0.31549018746098756,
+      "median_manipulability": 0.015180244347369707,
+      "mass_kg": 4.2785400000000005,
+      "payload_kg": 0.4,
+      "mass_is_assumption": false,
+      "box": "default",
+      "set": "centers"
+    },
+    {
+      "count": 6,
+      "bits": "00010",
+      "interfaces_base_to_tip": [
+        0,
+        0,
+        0,
+        90,
+        0
+      ],
+      "reached": 86,
+      "targets": 125,
+      "fraction": 0.688,
+      "min_torque_margin_nm": 14.164677081118732,
+      "median_torque_margin_nm": 16.79817489703098,
+      "median_speed_m_s": 0.31381490374365606,
+      "median_manipulability": 0.01239145699211177,
+      "mass_kg": 4.2785400000000005,
+      "payload_kg": 0.4,
+      "mass_is_assumption": false,
+      "box": "default",
+      "set": "endpoints"
+    },
+    {
+      "count": 6,
+      "bits": "00010",
+      "interfaces_base_to_tip": [
+        0,
+        0,
+        0,
+        90,
+        0
+      ],
+      "reached": 95,
+      "targets": 125,
+      "fraction": 0.76,
+      "min_torque_margin_nm": 14.519026172126626,
+      "median_torque_margin_nm": 17.384800686228076,
+      "median_speed_m_s": 0.3475328561409608,
+      "median_manipulability": 0.013131986088899499,
+      "mass_kg": 4.2785400000000005,
+      "payload_kg": 0.4,
+      "mass_is_assumption": false,
+      "box": "default",
+      "set": "centers"
+    },
+    {
+      "count": 6,
+      "bits": "00000",
+      "interfaces_base_to_tip": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "reached": 94,
+      "targets": 125,
+      "fraction": 0.752,
+      "min_torque_margin_nm": 14.484301636062042,
+      "median_torque_margin_nm": 16.854736951160007,
+      "median_speed_m_s": 0.42780890553977624,
+      "median_manipulability": 0.022651906494905442,
+      "mass_kg": 4.2785400000000005,
+      "payload_kg": 0.4,
+      "mass_is_assumption": false,
+      "box": "default",
+      "set": "endpoints"
+    },
+    {
+      "count": 6,
+      "bits": "00000",
+      "interfaces_base_to_tip": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "reached": 95,
+      "targets": 125,
+      "fraction": 0.76,
+      "min_torque_margin_nm": 14.9993774817947,
+      "median_torque_margin_nm": 17.42479872739084,
+      "median_speed_m_s": 0.44448670596233003,
+      "median_manipulability": 0.022641426707628767,
+      "mass_kg": 4.2785400000000005,
+      "payload_kg": 0.4,
+      "mass_is_assumption": false,
+      "box": "default",
+      "set": "centers"
+    },
+    {
+      "count": 7,
+      "bits": "000000",
+      "interfaces_base_to_tip": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "reached": 105,
+      "targets": 125,
+      "fraction": 0.84,
+      "min_torque_margin_nm": 12.784794800003475,
+      "median_torque_margin_nm": 16.234254417371385,
+      "median_speed_m_s": 0.5733399566445764,
+      "median_manipulability": 0.04181652020581603,
+      "mass_kg": 4.991630000000001,
+      "payload_kg": 0.4,
+      "mass_is_assumption": false,
+      "box": "default",
+      "set": "endpoints"
+    },
+    {
+      "count": 7,
+      "bits": "000000",
+      "interfaces_base_to_tip": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "reached": 99,
+      "targets": 125,
+      "fraction": 0.792,
+      "min_torque_margin_nm": 12.825558540345403,
+      "median_torque_margin_nm": 16.578151336282314,
+      "median_speed_m_s": 0.5848519072944747,
+      "median_manipulability": 0.03956069588217137,
+      "mass_kg": 4.991630000000001,
+      "payload_kg": 0.4,
+      "mass_is_assumption": false,
+      "box": "default",
+      "set": "centers"
+    },
+    {
+      "count": 7,
+      "bits": "100000",
+      "interfaces_base_to_tip": [
+        90,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "reached": 98,
+      "targets": 125,
+      "fraction": 0.784,
+      "min_torque_margin_nm": 12.26795637587652,
+      "median_torque_margin_nm": 15.718956765833791,
+      "median_speed_m_s": 0.49298911572372733,
+      "median_manipulability": 0.03328968766773388,
+      "mass_kg": 4.991630000000001,
+      "payload_kg": 0.4,
+      "mass_is_assumption": false,
+      "box": "default",
+      "set": "endpoints"
+    },
+    {
+      "count": 7,
+      "bits": "100000",
+      "interfaces_base_to_tip": [
+        90,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "reached": 92,
+      "targets": 125,
+      "fraction": 0.736,
+      "min_torque_margin_nm": 13.085606272065807,
+      "median_torque_margin_nm": 16.287165422129632,
+      "median_speed_m_s": 0.5058030338987727,
+      "median_manipulability": 0.029397822656866315,
+      "mass_kg": 4.991630000000001,
+      "payload_kg": 0.4,
+      "mass_is_assumption": false,
+      "box": "default",
+      "set": "centers"
+    },
+    {
+      "count": 7,
+      "bits": "110000",
+      "interfaces_base_to_tip": [
+        90,
+        90,
+        0,
+        0,
+        0,
+        0
+      ],
+      "reached": 97,
+      "targets": 125,
+      "fraction": 0.776,
+      "min_torque_margin_nm": 11.689461109008015,
+      "median_torque_margin_nm": 15.816569202994856,
+      "median_speed_m_s": 0.48889286289973694,
+      "median_manipulability": 0.0343283796313285,
+      "mass_kg": 4.991630000000001,
+      "payload_kg": 0.4,
+      "mass_is_assumption": false,
+      "box": "default",
+      "set": "endpoints"
+    },
+    {
+      "count": 7,
+      "bits": "110000",
+      "interfaces_base_to_tip": [
+        90,
+        90,
+        0,
+        0,
+        0,
+        0
+      ],
+      "reached": 97,
+      "targets": 125,
+      "fraction": 0.776,
+      "min_torque_margin_nm": 13.74673727921456,
+      "median_torque_margin_nm": 16.134447580685418,
+      "median_speed_m_s": 0.4870711342784148,
+      "median_manipulability": 0.031588361157051124,
+      "mass_kg": 4.991630000000001,
+      "payload_kg": 0.4,
+      "mass_is_assumption": false,
+      "box": "default",
+      "set": "centers"
+    },
+    {
+      "count": 7,
+      "bits": "111001",
+      "interfaces_base_to_tip": [
+        90,
+        90,
+        90,
+        0,
+        0,
+        90
+      ],
+      "reached": 88,
+      "targets": 125,
+      "fraction": 0.704,
+      "min_torque_margin_nm": 13.303629848392937,
+      "median_torque_margin_nm": 16.248238401456145,
+      "median_speed_m_s": 0.4414273645538637,
+      "median_manipulability": 0.03137901741132355,
+      "mass_kg": 4.991630000000001,
+      "payload_kg": 0.4,
+      "mass_is_assumption": false,
+      "box": "default",
+      "set": "endpoints"
+    },
+    {
+      "count": 7,
+      "bits": "111001",
+      "interfaces_base_to_tip": [
+        90,
+        90,
+        90,
+        0,
+        0,
+        90
+      ],
+      "reached": 75,
+      "targets": 125,
+      "fraction": 0.6,
+      "min_torque_margin_nm": 12.932009118471,
+      "median_torque_margin_nm": 16.31602544296604,
+      "median_speed_m_s": 0.4394163415712755,
+      "median_manipulability": 0.028823570588194476,
+      "mass_kg": 4.991630000000001,
+      "payload_kg": 0.4,
+      "mass_is_assumption": false,
+      "box": "default",
+      "set": "centers"
+    },
+    {
+      "count": 8,
+      "bits": "0000000",
+      "interfaces_base_to_tip": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "reached": 106,
+      "targets": 125,
+      "fraction": 0.848,
+      "min_torque_margin_nm": 10.135856431422647,
+      "median_torque_margin_nm": 15.122664645615801,
+      "median_speed_m_s": 0.7024734771625427,
+      "median_manipulability": 0.06703245705750391,
+      "mass_kg": 5.704720000000001,
+      "payload_kg": 0.4,
+      "mass_is_assumption": false,
+      "box": "default",
+      "set": "endpoints"
+    },
+    {
+      "count": 8,
+      "bits": "0000000",
+      "interfaces_base_to_tip": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "reached": 106,
+      "targets": 125,
+      "fraction": 0.848,
+      "min_torque_margin_nm": 10.908743671242659,
+      "median_torque_margin_nm": 15.379611207980567,
+      "median_speed_m_s": 0.692046147398726,
+      "median_manipulability": 0.05795422846105619,
+      "mass_kg": 5.704720000000001,
+      "payload_kg": 0.4,
+      "mass_is_assumption": false,
+      "box": "default",
+      "set": "centers"
+    },
+    {
+      "count": 8,
+      "bits": "1110000",
+      "interfaces_base_to_tip": [
+        90,
+        90,
+        90,
+        0,
+        0,
+        0,
+        0
+      ],
+      "reached": 88,
+      "targets": 125,
+      "fraction": 0.704,
+      "min_torque_margin_nm": 10.824138810698184,
+      "median_torque_margin_nm": 14.50947746172708,
+      "median_speed_m_s": 0.523182569800689,
+      "median_manipulability": 0.04758912706373998,
+      "mass_kg": 5.704720000000001,
+      "payload_kg": 0.4,
+      "mass_is_assumption": false,
+      "box": "default",
+      "set": "endpoints"
+    },
+    {
+      "count": 8,
+      "bits": "1110000",
+      "interfaces_base_to_tip": [
+        90,
+        90,
+        90,
+        0,
+        0,
+        0,
+        0
+      ],
+      "reached": 83,
+      "targets": 125,
+      "fraction": 0.664,
+      "min_torque_margin_nm": 11.870682502988767,
+      "median_torque_margin_nm": 14.719412107069036,
+      "median_speed_m_s": 0.5122354424634131,
+      "median_manipulability": 0.04090506367934121,
+      "mass_kg": 5.704720000000001,
+      "payload_kg": 0.4,
+      "mass_is_assumption": false,
+      "box": "default",
+      "set": "centers"
+    },
+    {
+      "count": 8,
+      "bits": "1000000",
+      "interfaces_base_to_tip": [
+        90,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "reached": 94,
+      "targets": 125,
+      "fraction": 0.752,
+      "min_torque_margin_nm": 10.02140258268733,
+      "median_torque_margin_nm": 14.715696016004156,
+      "median_speed_m_s": 0.5946458606827887,
+      "median_manipulability": 0.04973780487141123,
+      "mass_kg": 5.704720000000001,
+      "payload_kg": 0.4,
+      "mass_is_assumption": false,
+      "box": "default",
+      "set": "endpoints"
+    },
+    {
+      "count": 8,
+      "bits": "1000000",
+      "interfaces_base_to_tip": [
+        90,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "reached": 96,
+      "targets": 125,
+      "fraction": 0.768,
+      "min_torque_margin_nm": 11.158895298687662,
+      "median_torque_margin_nm": 15.520079895674264,
+      "median_speed_m_s": 0.592019986091439,
+      "median_manipulability": 0.04028009207550576,
+      "mass_kg": 5.704720000000001,
+      "payload_kg": 0.4,
+      "mass_is_assumption": false,
+      "box": "default",
+      "set": "centers"
+    },
+    {
+      "count": 8,
+      "bits": "1000001",
+      "interfaces_base_to_tip": [
+        90,
+        0,
+        0,
+        0,
+        0,
+        0,
+        90
+      ],
+      "reached": 91,
+      "targets": 125,
+      "fraction": 0.728,
+      "min_torque_margin_nm": 9.869561626060257,
+      "median_torque_margin_nm": 14.771252090193167,
+      "median_speed_m_s": 0.5823001784655248,
+      "median_manipulability": 0.052627978432428696,
+      "mass_kg": 5.704720000000001,
+      "payload_kg": 0.4,
+      "mass_is_assumption": false,
+      "box": "default",
+      "set": "endpoints"
+    },
+    {
+      "count": 8,
+      "bits": "1000001",
+      "interfaces_base_to_tip": [
+        90,
+        0,
+        0,
+        0,
+        0,
+        0,
+        90
+      ],
+      "reached": 87,
+      "targets": 125,
+      "fraction": 0.696,
+      "min_torque_margin_nm": 11.004560059992198,
+      "median_torque_margin_nm": 15.487906027465652,
+      "median_speed_m_s": 0.5852736683707839,
+      "median_manipulability": 0.04403006886606404,
+      "mass_kg": 5.704720000000001,
+      "payload_kg": 0.4,
+      "mass_is_assumption": false,
+      "box": "default",
+      "set": "centers"
+    },
+    {
+      "count": 6,
+      "bits": "01101",
+      "interfaces_base_to_tip": [
+        0,
+        90,
+        90,
+        0,
+        90
+      ],
+      "reached": 83,
+      "targets": 125,
+      "fraction": 0.664,
+      "min_torque_margin_nm": 15.362142191081972,
+      "median_torque_margin_nm": 17.85987877500388,
+      "median_speed_m_s": 0.20130226504894114,
+      "median_manipulability": 0.012291047064360171,
+      "mass_kg": 4.2785400000000005,
+      "payload_kg": 0.4,
+      "mass_is_assumption": false,
+      "box": "high",
+      "set": "endpoints"
+    },
+    {
+      "count": 6,
+      "bits": "01101",
+      "interfaces_base_to_tip": [
+        0,
+        90,
+        90,
+        0,
+        90
+      ],
+      "reached": 94,
+      "targets": 125,
+      "fraction": 0.752,
+      "min_torque_margin_nm": 15.296022087245529,
+      "median_torque_margin_nm": 17.87221211355127,
+      "median_speed_m_s": 0.19624016884019646,
+      "median_manipulability": 0.011937644309491718,
+      "mass_kg": 4.2785400000000005,
+      "payload_kg": 0.4,
+      "mass_is_assumption": false,
+      "box": "high",
+      "set": "centers"
+    },
+    {
+      "count": 6,
+      "bits": "01100",
+      "interfaces_base_to_tip": [
+        0,
+        90,
+        90,
+        0,
+        0
+      ],
+      "reached": 83,
+      "targets": 125,
+      "fraction": 0.664,
+      "min_torque_margin_nm": 15.360161200057131,
+      "median_torque_margin_nm": 17.879546866570152,
+      "median_speed_m_s": 0.20621847003686652,
+      "median_manipulability": 0.012022565653334146,
+      "mass_kg": 4.2785400000000005,
+      "payload_kg": 0.4,
+      "mass_is_assumption": false,
+      "box": "high",
+      "set": "endpoints"
+    },
+    {
+      "count": 6,
+      "bits": "01100",
+      "interfaces_base_to_tip": [
+        0,
+        90,
+        90,
+        0,
+        0
+      ],
+      "reached": 94,
+      "targets": 125,
+      "fraction": 0.752,
+      "min_torque_margin_nm": 15.29051176970195,
+      "median_torque_margin_nm": 17.87164226842968,
+      "median_speed_m_s": 0.19618231849424186,
+      "median_manipulability": 0.012184818238876675,
+      "mass_kg": 4.2785400000000005,
+      "payload_kg": 0.4,
+      "mass_is_assumption": false,
+      "box": "high",
+      "set": "centers"
+    },
+    {
+      "count": 6,
+      "bits": "11001",
+      "interfaces_base_to_tip": [
+        90,
+        90,
+        0,
+        0,
+        90
+      ],
+      "reached": 83,
+      "targets": 125,
+      "fraction": 0.664,
+      "min_torque_margin_nm": 15.524078920376589,
+      "median_torque_margin_nm": 17.74482661147542,
+      "median_speed_m_s": 0.26809522362591176,
+      "median_manipulability": 0.02306531991376225,
+      "mass_kg": 4.2785400000000005,
+      "payload_kg": 0.4,
+      "mass_is_assumption": false,
+      "box": "high",
+      "set": "endpoints"
+    },
+    {
+      "count": 6,
+      "bits": "11001",
+      "interfaces_base_to_tip": [
+        90,
+        90,
+        0,
+        0,
+        90
+      ],
+      "reached": 95,
+      "targets": 125,
+      "fraction": 0.76,
+      "min_torque_margin_nm": 15.253825910939527,
+      "median_torque_margin_nm": 17.79358167384577,
+      "median_speed_m_s": 0.2531339793644948,
+      "median_manipulability": 0.022425710613902278,
+      "mass_kg": 4.2785400000000005,
+      "payload_kg": 0.4,
+      "mass_is_assumption": false,
+      "box": "high",
+      "set": "centers"
+    },
+    {
+      "count": 6,
+      "bits": "11000",
+      "interfaces_base_to_tip": [
+        90,
+        90,
+        0,
+        0,
+        0
+      ],
+      "reached": 83,
+      "targets": 125,
+      "fraction": 0.664,
+      "min_torque_margin_nm": 15.530702662933049,
+      "median_torque_margin_nm": 17.74752077750724,
+      "median_speed_m_s": 0.2804217612412481,
+      "median_manipulability": 0.023448797605067115,
+      "mass_kg": 4.2785400000000005,
+      "payload_kg": 0.4,
+      "mass_is_assumption": false,
+      "box": "high",
+      "set": "endpoints"
+    },
+    {
+      "count": 6,
+      "bits": "11000",
+      "interfaces_base_to_tip": [
+        90,
+        90,
+        0,
+        0,
+        0
+      ],
+      "reached": 95,
+      "targets": 125,
+      "fraction": 0.76,
+      "min_torque_margin_nm": 15.246860088390406,
+      "median_torque_margin_nm": 17.806810819990268,
+      "median_speed_m_s": 0.2660314023082793,
+      "median_manipulability": 0.022822918756688872,
+      "mass_kg": 4.2785400000000005,
+      "payload_kg": 0.4,
+      "mass_is_assumption": false,
+      "box": "high",
+      "set": "centers"
+    },
+    {
+      "count": 6,
+      "bits": "00000",
+      "interfaces_base_to_tip": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "reached": 81,
+      "targets": 125,
+      "fraction": 0.648,
+      "min_torque_margin_nm": 15.523462211487473,
+      "median_torque_margin_nm": 17.633005040014154,
+      "median_speed_m_s": 0.31644960218553037,
+      "median_manipulability": 0.017659396745347816,
+      "mass_kg": 4.2785400000000005,
+      "payload_kg": 0.4,
+      "mass_is_assumption": false,
+      "box": "high",
+      "set": "endpoints"
+    },
+    {
+      "count": 6,
+      "bits": "00000",
+      "interfaces_base_to_tip": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "reached": 90,
+      "targets": 125,
+      "fraction": 0.72,
+      "min_torque_margin_nm": 15.26241036549272,
+      "median_torque_margin_nm": 17.67641749200679,
+      "median_speed_m_s": 0.2984008666704744,
+      "median_manipulability": 0.016883901748503287,
+      "mass_kg": 4.2785400000000005,
+      "payload_kg": 0.4,
+      "mass_is_assumption": false,
+      "box": "high",
+      "set": "centers"
+    },
+    {
+      "count": 7,
+      "bits": "110000",
+      "interfaces_base_to_tip": [
+        90,
+        90,
+        0,
+        0,
+        0,
+        0
+      ],
+      "reached": 125,
+      "targets": 125,
+      "fraction": 1.0,
+      "min_torque_margin_nm": 15.363378275210746,
+      "median_torque_margin_nm": 16.797840852171543,
+      "median_speed_m_s": 0.43483759887015194,
+      "median_manipulability": 0.05200640773097247,
+      "mass_kg": 4.991630000000001,
+      "payload_kg": 0.4,
+      "mass_is_assumption": false,
+      "box": "high",
+      "set": "endpoints"
+    },
+    {
+      "count": 7,
+      "bits": "110000",
+      "interfaces_base_to_tip": [
+        90,
+        90,
+        0,
+        0,
+        0,
+        0
+      ],
+      "reached": 125,
+      "targets": 125,
+      "fraction": 1.0,
+      "min_torque_margin_nm": 16.06864679725519,
+      "median_torque_margin_nm": 16.91904987960899,
+      "median_speed_m_s": 0.4461512770167339,
+      "median_manipulability": 0.05409118389351437,
+      "mass_kg": 4.991630000000001,
+      "payload_kg": 0.4,
+      "mass_is_assumption": false,
+      "box": "high",
+      "set": "centers"
+    },
+    {
+      "count": 7,
+      "bits": "110001",
+      "interfaces_base_to_tip": [
+        90,
+        90,
+        0,
+        0,
+        0,
+        90
+      ],
+      "reached": 125,
+      "targets": 125,
+      "fraction": 1.0,
+      "min_torque_margin_nm": 15.355883685594613,
+      "median_torque_margin_nm": 16.755359688119015,
+      "median_speed_m_s": 0.42223734890938713,
+      "median_manipulability": 0.05110018047557233,
+      "mass_kg": 4.991630000000001,
+      "payload_kg": 0.4,
+      "mass_is_assumption": false,
+      "box": "high",
+      "set": "endpoints"
+    },
+    {
+      "count": 7,
+      "bits": "110001",
+      "interfaces_base_to_tip": [
+        90,
+        90,
+        0,
+        0,
+        0,
+        90
+      ],
+      "reached": 125,
+      "targets": 125,
+      "fraction": 1.0,
+      "min_torque_margin_nm": 16.0549231037597,
+      "median_torque_margin_nm": 16.870251571092798,
+      "median_speed_m_s": 0.43372076288558514,
+      "median_manipulability": 0.05315978622418321,
+      "mass_kg": 4.991630000000001,
+      "payload_kg": 0.4,
+      "mass_is_assumption": false,
+      "box": "high",
+      "set": "centers"
+    },
+    {
+      "count": 7,
+      "bits": "110011",
+      "interfaces_base_to_tip": [
+        90,
+        90,
+        0,
+        0,
+        90,
+        90
+      ],
+      "reached": 125,
+      "targets": 125,
+      "fraction": 1.0,
+      "min_torque_margin_nm": 15.339802468219286,
+      "median_torque_margin_nm": 16.74454717282152,
+      "median_speed_m_s": 0.38913830610545497,
+      "median_manipulability": 0.048570510735627695,
+      "mass_kg": 4.991630000000001,
+      "payload_kg": 0.4,
+      "mass_is_assumption": false,
+      "box": "high",
+      "set": "endpoints"
+    },
+    {
+      "count": 7,
+      "bits": "110011",
+      "interfaces_base_to_tip": [
+        90,
+        90,
+        0,
+        0,
+        90,
+        90
+      ],
+      "reached": 125,
+      "targets": 125,
+      "fraction": 1.0,
+      "min_torque_margin_nm": 16.00264777012298,
+      "median_torque_margin_nm": 16.80981430031478,
+      "median_speed_m_s": 0.3985372387252197,
+      "median_manipulability": 0.04996896012178397,
+      "mass_kg": 4.991630000000001,
+      "payload_kg": 0.4,
+      "mass_is_assumption": false,
+      "box": "high",
+      "set": "centers"
+    },
+    {
+      "count": 7,
+      "bits": "110010",
+      "interfaces_base_to_tip": [
+        90,
+        90,
+        0,
+        0,
+        90,
+        0
+      ],
+      "reached": 125,
+      "targets": 125,
+      "fraction": 1.0,
+      "min_torque_margin_nm": 15.321293298708296,
+      "median_torque_margin_nm": 16.7208811491988,
+      "median_speed_m_s": 0.38136695113636,
+      "median_manipulability": 0.04836212002652682,
+      "mass_kg": 4.991630000000001,
+      "payload_kg": 0.4,
+      "mass_is_assumption": false,
+      "box": "high",
+      "set": "endpoints"
+    },
+    {
+      "count": 7,
+      "bits": "110010",
+      "interfaces_base_to_tip": [
+        90,
+        90,
+        0,
+        0,
+        90,
+        0
+      ],
+      "reached": 125,
+      "targets": 125,
+      "fraction": 1.0,
+      "min_torque_margin_nm": 16.023996494906772,
+      "median_torque_margin_nm": 16.786715614850362,
+      "median_speed_m_s": 0.38991119332102475,
+      "median_manipulability": 0.04944752760888451,
+      "mass_kg": 4.991630000000001,
+      "payload_kg": 0.4,
+      "mass_is_assumption": false,
+      "box": "high",
+      "set": "centers"
+    },
+    {
+      "count": 7,
+      "bits": "000000",
+      "interfaces_base_to_tip": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "reached": 125,
+      "targets": 125,
+      "fraction": 1.0,
+      "min_torque_margin_nm": 15.206580929710274,
+      "median_torque_margin_nm": 16.91082847961464,
+      "median_speed_m_s": 0.5447164988948489,
+      "median_manipulability": 0.05195704001418749,
+      "mass_kg": 4.991630000000001,
+      "payload_kg": 0.4,
+      "mass_is_assumption": false,
+      "box": "high",
+      "set": "endpoints"
+    },
+    {
+      "count": 7,
+      "bits": "000000",
+      "interfaces_base_to_tip": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "reached": 125,
+      "targets": 125,
+      "fraction": 1.0,
+      "min_torque_margin_nm": 15.932446543833574,
+      "median_torque_margin_nm": 16.91704066478493,
+      "median_speed_m_s": 0.5552954403942703,
+      "median_manipulability": 0.053445858885832934,
+      "mass_kg": 4.991630000000001,
+      "payload_kg": 0.4,
+      "mass_is_assumption": false,
+      "box": "high",
+      "set": "centers"
+    },
+    {
+      "count": 8,
+      "bits": "1011101",
+      "interfaces_base_to_tip": [
+        90,
+        0,
+        90,
+        90,
+        90,
+        0,
+        90
+      ],
+      "reached": 125,
+      "targets": 125,
+      "fraction": 1.0,
+      "min_torque_margin_nm": 15.362469263455264,
+      "median_torque_margin_nm": 16.544407747326417,
+      "median_speed_m_s": 0.5108467248829675,
+      "median_manipulability": 0.06609776187921569,
+      "mass_kg": 5.704720000000001,
+      "payload_kg": 0.4,
+      "mass_is_assumption": false,
+      "box": "high",
+      "set": "endpoints"
+    },
+    {
+      "count": 8,
+      "bits": "1011101",
+      "interfaces_base_to_tip": [
+        90,
+        0,
+        90,
+        90,
+        90,
+        0,
+        90
+      ],
+      "reached": 125,
+      "targets": 125,
+      "fraction": 1.0,
+      "min_torque_margin_nm": 15.46335300112963,
+      "median_torque_margin_nm": 16.36934167887763,
+      "median_speed_m_s": 0.5123795066218262,
+      "median_manipulability": 0.06684558949710932,
+      "mass_kg": 5.704720000000001,
+      "payload_kg": 0.4,
+      "mass_is_assumption": false,
+      "box": "high",
+      "set": "centers"
+    },
+    {
+      "count": 8,
+      "bits": "1011100",
+      "interfaces_base_to_tip": [
+        90,
+        0,
+        90,
+        90,
+        90,
+        0,
+        0
+      ],
+      "reached": 125,
+      "targets": 125,
+      "fraction": 1.0,
+      "min_torque_margin_nm": 15.217843273229422,
+      "median_torque_margin_nm": 16.403079548490403,
+      "median_speed_m_s": 0.5180170992409584,
+      "median_manipulability": 0.06554366073002832,
+      "mass_kg": 5.704720000000001,
+      "payload_kg": 0.4,
+      "mass_is_assumption": false,
+      "box": "high",
+      "set": "endpoints"
+    },
+    {
+      "count": 8,
+      "bits": "1011100",
+      "interfaces_base_to_tip": [
+        90,
+        0,
+        90,
+        90,
+        90,
+        0,
+        0
+      ],
+      "reached": 125,
+      "targets": 125,
+      "fraction": 1.0,
+      "min_torque_margin_nm": 15.318532358109378,
+      "median_torque_margin_nm": 16.28100559446466,
+      "median_speed_m_s": 0.5173829971934076,
+      "median_manipulability": 0.06557396950692018,
+      "mass_kg": 5.704720000000001,
+      "payload_kg": 0.4,
+      "mass_is_assumption": false,
+      "box": "high",
+      "set": "centers"
+    },
+    {
+      "count": 8,
+      "bits": "0011001",
+      "interfaces_base_to_tip": [
+        0,
+        0,
+        90,
+        90,
+        0,
+        0,
+        90
+      ],
+      "reached": 125,
+      "targets": 125,
+      "fraction": 1.0,
+      "min_torque_margin_nm": 15.119340288957416,
+      "median_torque_margin_nm": 16.720310536567634,
+      "median_speed_m_s": 0.6517558598110789,
+      "median_manipulability": 0.09324360083799534,
+      "mass_kg": 5.704720000000001,
+      "payload_kg": 0.4,
+      "mass_is_assumption": false,
+      "box": "high",
+      "set": "endpoints"
+    },
+    {
+      "count": 8,
+      "bits": "0011001",
+      "interfaces_base_to_tip": [
+        0,
+        0,
+        90,
+        90,
+        0,
+        0,
+        90
+      ],
+      "reached": 125,
+      "targets": 125,
+      "fraction": 1.0,
+      "min_torque_margin_nm": 15.443068543117679,
+      "median_torque_margin_nm": 16.755690818501687,
+      "median_speed_m_s": 0.6629339174553572,
+      "median_manipulability": 0.09451235374257161,
+      "mass_kg": 5.704720000000001,
+      "payload_kg": 0.4,
+      "mass_is_assumption": false,
+      "box": "high",
+      "set": "centers"
+    },
+    {
+      "count": 8,
+      "bits": "0011000",
+      "interfaces_base_to_tip": [
+        0,
+        0,
+        90,
+        90,
+        0,
+        0,
+        0
+      ],
+      "reached": 125,
+      "targets": 125,
+      "fraction": 1.0,
+      "min_torque_margin_nm": 15.063370955106226,
+      "median_torque_margin_nm": 16.736979099465547,
+      "median_speed_m_s": 0.6605519159314667,
+      "median_manipulability": 0.09445122977470502,
+      "mass_kg": 5.704720000000001,
+      "payload_kg": 0.4,
+      "mass_is_assumption": false,
+      "box": "high",
+      "set": "endpoints"
+    },
+    {
+      "count": 8,
+      "bits": "0011000",
+      "interfaces_base_to_tip": [
+        0,
+        0,
+        90,
+        90,
+        0,
+        0,
+        0
+      ],
+      "reached": 125,
+      "targets": 125,
+      "fraction": 1.0,
+      "min_torque_margin_nm": 15.389304462564722,
+      "median_torque_margin_nm": 16.747111114734302,
+      "median_speed_m_s": 0.6695963554934538,
+      "median_manipulability": 0.09524717289186861,
+      "mass_kg": 5.704720000000001,
+      "payload_kg": 0.4,
+      "mass_is_assumption": false,
+      "box": "high",
+      "set": "centers"
+    },
+    {
+      "count": 8,
+      "bits": "0000000",
+      "interfaces_base_to_tip": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "reached": 125,
+      "targets": 125,
+      "fraction": 1.0,
+      "min_torque_margin_nm": 14.473895925270554,
+      "median_torque_margin_nm": 16.03327610215333,
+      "median_speed_m_s": 0.755168390932401,
+      "median_manipulability": 0.10525294619062894,
+      "mass_kg": 5.704720000000001,
+      "payload_kg": 0.4,
+      "mass_is_assumption": false,
+      "box": "high",
+      "set": "endpoints"
+    },
+    {
+      "count": 8,
+      "bits": "0000000",
+      "interfaces_base_to_tip": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "reached": 125,
+      "targets": 125,
+      "fraction": 1.0,
+      "min_torque_margin_nm": 14.836576905516235,
+      "median_torque_margin_nm": 16.1099226239556,
+      "median_speed_m_s": 0.757253849210086,
+      "median_manipulability": 0.10657409713631029,
+      "mass_kg": 5.704720000000001,
+      "payload_kg": 0.4,
+      "mass_is_assumption": false,
+      "box": "high",
+      "set": "centers"
+    }
+  ],
+  "heavy_4kg": [
+    {
+      "count": 7,
+      "bits": "000000",
+      "interfaces_base_to_tip": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "reached": 52,
+      "targets": 64,
+      "fraction": 0.8125,
+      "min_torque_margin_nm": 1.673117609735197,
+      "median_torque_margin_nm": 7.625295988390865,
+      "median_speed_m_s": 0.5658135733494294,
+      "median_manipulability": 0.044708895242476204,
+      "mass_kg": 4.991630000000001,
+      "payload_kg": 4.0,
+      "mass_is_assumption": false
+    },
+    {
+      "count": 6,
+      "bits": "00010",
+      "interfaces_base_to_tip": [
+        0,
+        0,
+        0,
+        90,
+        0
+      ],
+      "reached": 50,
+      "targets": 64,
+      "fraction": 0.78125,
+      "min_torque_margin_nm": 4.610962784188194,
+      "median_torque_margin_nm": 11.17922546990039,
+      "median_speed_m_s": 0.30674461626076094,
+      "median_manipulability": 0.01194907556485534,
+      "mass_kg": 4.2785400000000005,
+      "payload_kg": 4.0,
+      "mass_is_assumption": false
+    },
+    {
+      "count": 6,
+      "bits": "10011",
+      "interfaces_base_to_tip": [
+        90,
+        0,
+        0,
+        90,
+        90
+      ],
+      "reached": 50,
+      "targets": 64,
+      "fraction": 0.78125,
+      "min_torque_margin_nm": 6.376187459069072,
+      "median_torque_margin_nm": 10.492312566343102,
+      "median_speed_m_s": 0.28222002026798154,
+      "median_manipulability": 0.01335987116236977,
+      "mass_kg": 4.2785400000000005,
+      "payload_kg": 4.0,
+      "mass_is_assumption": false
+    },
+    {
+      "count": 7,
+      "bits": "110000",
+      "interfaces_base_to_tip": [
+        90,
+        90,
+        0,
+        0,
+        0,
+        0
+      ],
+      "reached": 49,
+      "targets": 64,
+      "fraction": 0.765625,
+      "min_torque_margin_nm": 2.2909556963051116,
+      "median_torque_margin_nm": 7.528245354168897,
+      "median_speed_m_s": 0.4776036892411219,
+      "median_manipulability": 0.034930293299795655,
+      "mass_kg": 4.991630000000001,
+      "payload_kg": 4.0,
+      "mass_is_assumption": false
+    },
+    {
+      "count": 7,
+      "bits": "100000",
+      "interfaces_base_to_tip": [
+        90,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "reached": 51,
+      "targets": 64,
+      "fraction": 0.796875,
+      "min_torque_margin_nm": 3.132804274979655,
+      "median_torque_margin_nm": 8.06235476948662,
+      "median_speed_m_s": 0.48695808961009335,
+      "median_manipulability": 0.034108431016821004,
+      "mass_kg": 4.991630000000001,
+      "payload_kg": 4.0,
+      "mass_is_assumption": false
+    },
+    {
+      "count": 7,
+      "bits": "111001",
+      "interfaces_base_to_tip": [
+        90,
+        90,
+        90,
+        0,
+        0,
+        90
+      ],
+      "reached": 48,
+      "targets": 64,
+      "fraction": 0.75,
+      "min_torque_margin_nm": 4.4548062935711155,
+      "median_torque_margin_nm": 8.600013259682553,
+      "median_speed_m_s": 0.4360885803384375,
+      "median_manipulability": 0.03198420981557954,
+      "mass_kg": 4.991630000000001,
+      "payload_kg": 4.0,
+      "mass_is_assumption": false
+    },
+    {
+      "count": 8,
+      "bits": "0000000",
+      "interfaces_base_to_tip": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "reached": 45,
+      "targets": 64,
+      "fraction": 0.703125,
+      "min_torque_margin_nm": 0.4324737393966842,
+      "median_torque_margin_nm": 6.443442190686186,
+      "median_speed_m_s": 0.7062874295777389,
+      "median_manipulability": 0.07491356628512383,
+      "mass_kg": 5.704720000000001,
+      "payload_kg": 4.0,
+      "mass_is_assumption": false
+    },
+    {
+      "count": 8,
+      "bits": "1110000",
+      "interfaces_base_to_tip": [
+        90,
+        90,
+        90,
+        0,
+        0,
+        0,
+        0
+      ],
+      "reached": 46,
+      "targets": 64,
+      "fraction": 0.71875,
+      "min_torque_margin_nm": 0.2928096479116924,
+      "median_torque_margin_nm": 5.868403484275146,
+      "median_speed_m_s": 0.5134532917160368,
+      "median_manipulability": 0.05123002782712767,
+      "mass_kg": 5.704720000000001,
+      "payload_kg": 4.0,
+      "mass_is_assumption": false
+    },
+    {
+      "count": 6,
+      "bits": "11000",
+      "interfaces_base_to_tip": [
+        90,
+        90,
+        0,
+        0,
+        0
+      ],
+      "reached": 50,
+      "targets": 64,
+      "fraction": 0.78125,
+      "min_torque_margin_nm": 5.281422611083638,
+      "median_torque_margin_nm": 10.380266485622638,
+      "median_speed_m_s": 0.33115380643698944,
+      "median_manipulability": 0.014994594552812945,
+      "mass_kg": 4.2785400000000005,
+      "payload_kg": 4.0,
+      "mass_is_assumption": false
+    },
+    {
+      "count": 8,
+      "bits": "1000001",
+      "interfaces_base_to_tip": [
+        90,
+        0,
+        0,
+        0,
+        0,
+        0,
+        90
+      ],
+      "reached": 47,
+      "targets": 64,
+      "fraction": 0.734375,
+      "min_torque_margin_nm": 0.8716556102403317,
+      "median_torque_margin_nm": 6.363493996022786,
+      "median_speed_m_s": 0.5878495907947927,
+      "median_manipulability": 0.0573443819342238,
+      "mass_kg": 5.704720000000001,
+      "payload_kg": 4.0,
+      "mass_is_assumption": false
+    },
+    {
+      "count": 6,
+      "bits": "00000",
+      "interfaces_base_to_tip": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "reached": 47,
+      "targets": 64,
+      "fraction": 0.734375,
+      "min_torque_margin_nm": 4.336491931495793,
+      "median_torque_margin_nm": 9.558142580400364,
+      "median_speed_m_s": 0.4252132904256423,
+      "median_manipulability": 0.021842882575586683,
+      "mass_kg": 4.2785400000000005,
+      "payload_kg": 4.0,
+      "mass_is_assumption": false
+    },
+    {
+      "count": 8,
+      "bits": "1000000",
+      "interfaces_base_to_tip": [
+        90,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "reached": 47,
+      "targets": 64,
+      "fraction": 0.734375,
+      "min_torque_margin_nm": 1.264262119085906,
+      "median_torque_margin_nm": 6.651383129796137,
+      "median_speed_m_s": 0.5938043545577136,
+      "median_manipulability": 0.05832265802867036,
+      "mass_kg": 5.704720000000001,
+      "payload_kg": 4.0,
+      "mass_is_assumption": false
+    },
+    {
+      "count": 6,
+      "bits": "01101",
+      "interfaces_base_to_tip": [
+        0,
+        90,
+        90,
+        0,
+        90
+      ],
+      "reached": 51,
+      "targets": 64,
+      "fraction": 0.796875,
+      "min_torque_margin_nm": 2.3115322264006224,
+      "median_torque_margin_nm": 10.527421000584885,
+      "median_speed_m_s": 0.2997242790279733,
+      "median_manipulability": 0.014401146963083675,
+      "mass_kg": 4.2785400000000005,
+      "payload_kg": 4.0,
+      "mass_is_assumption": false
+    }
+  ],
+  "pose": [
+    {
+      "count": 6,
+      "bits": "00000",
+      "reached": 2,
+      "targets": 12,
+      "fraction": 0.16666666666666666,
+      "seed": 11
+    },
+    {
+      "count": 6,
+      "bits": "00000",
+      "reached": 3,
+      "targets": 12,
+      "fraction": 0.25,
+      "seed": 23
+    },
+    {
+      "count": 6,
+      "bits": "01101",
+      "reached": 1,
+      "targets": 12,
+      "fraction": 0.08333333333333333,
+      "seed": 11
+    },
+    {
+      "count": 6,
+      "bits": "01101",
+      "reached": 0,
+      "targets": 12,
+      "fraction": 0.0,
+      "seed": 23
+    },
+    {
+      "count": 6,
+      "bits": "11000",
+      "reached": 1,
+      "targets": 12,
+      "fraction": 0.08333333333333333,
+      "seed": 11
+    },
+    {
+      "count": 6,
+      "bits": "11000",
+      "reached": 2,
+      "targets": 12,
+      "fraction": 0.16666666666666666,
+      "seed": 23
+    },
+    {
+      "count": 7,
+      "bits": "000000",
+      "reached": 5,
+      "targets": 12,
+      "fraction": 0.4166666666666667,
+      "seed": 11
+    },
+    {
+      "count": 7,
+      "bits": "000000",
+      "reached": 8,
+      "targets": 12,
+      "fraction": 0.6666666666666666,
+      "seed": 23
+    },
+    {
+      "count": 7,
+      "bits": "100000",
+      "reached": 5,
+      "targets": 12,
+      "fraction": 0.4166666666666667,
+      "seed": 11
+    },
+    {
+      "count": 7,
+      "bits": "100000",
+      "reached": 8,
+      "targets": 12,
+      "fraction": 0.6666666666666666,
+      "seed": 23
+    },
+    {
+      "count": 8,
+      "bits": "0000000",
+      "reached": 8,
+      "targets": 12,
+      "fraction": 0.6666666666666666,
+      "seed": 11
+    },
+    {
+      "count": 8,
+      "bits": "0000000",
+      "reached": 9,
+      "targets": 12,
+      "fraction": 0.75,
+      "seed": 23
+    },
+    {
+      "count": 8,
+      "bits": "1110000",
+      "reached": 7,
+      "targets": 12,
+      "fraction": 0.5833333333333334,
+      "seed": 11
+    },
+    {
+      "count": 8,
+      "bits": "1110000",
+      "reached": 6,
+      "targets": 12,
+      "fraction": 0.5,
+      "seed": 23
+    }
+  ],
+  "concept": {
+    "budget": "每个驱动数、每个种子：种群 16、5 代。评价是 27 点、1 cm、3 起点、10 次迭代。两种子 11 和 23。",
+    "physical_baseline_same_budget": {
+      "count": 6,
+      "bits": "00000",
+      "interfaces_base_to_tip": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "reached": 20,
+      "targets": 27,
+      "fraction": 0.7407407407407407,
+      "min_torque_margin_nm": 14.484302411650633,
+      "median_torque_margin_nm": 16.440732892676373,
+      "median_speed_m_s": 0.41271442553519266,
+      "median_manipulability": 0.022385986424898058,
+      "mass_kg": 4.2785400000000005,
+      "payload_kg": 0.4,
+      "mass_is_assumption": false
+    },
+    "runs": [
+      {
+        "count": 6,
+        "seed": 11,
+        "best": {
+          "feasible_fraction": 0.8148148148148148,
+          "mass_kg_assumed": 3.4839549319663643,
+          "mass_is_assumption": true,
+          "count": 6,
+          "seed": 11
+        },
+        "front_size": 8
+      },
+      {
+        "count": 6,
+        "seed": 23,
+        "best": {
+          "feasible_fraction": 0.7037037037037037,
+          "mass_kg_assumed": 3.602717106845515,
+          "mass_is_assumption": true,
+          "count": 6,
+          "seed": 23
+        },
+        "front_size": 5
+      },
+      {
+        "count": 7,
+        "seed": 11,
+        "best": {
+          "feasible_fraction": 0.9259259259259259,
+          "mass_kg_assumed": 4.274932394706878,
+          "mass_is_assumption": true,
+          "count": 7,
+          "seed": 11
+        },
+        "front_size": 10
+      },
+      {
+        "count": 7,
+        "seed": 23,
+        "best": {
+          "feasible_fraction": 0.9259259259259259,
+          "mass_kg_assumed": 4.668899582068497,
+          "mass_is_assumption": true,
+          "count": 7,
+          "seed": 23
+        },
+        "front_size": 9
+      },
+      {
+        "count": 8,
+        "seed": 11,
+        "best": {
+          "feasible_fraction": 0.9259259259259259,
+          "mass_kg_assumed": 4.741901180739704,
+          "mass_is_assumption": true,
+          "count": 8,
+          "seed": 11
+        },
+        "front_size": 7
+      },
+      {
+        "count": 8,
+        "seed": 23,
+        "best": {
+          "feasible_fraction": 0.9259259259259259,
+          "mass_kg_assumed": 4.214601051821487,
+          "mass_is_assumption": true,
+          "count": 8,
+          "seed": 23
+        },
+        "front_size": 5
+      }
+    ],
+    "credible_mass_and_coverage_win": [
+      {
+        "feasible_fraction": 0.8148148148148148,
+        "mass_kg_assumed": 3.4839549319663643,
+        "mass_is_assumption": true,
+        "count": 6,
+        "seed": 11
+      }
+    ],
+    "conclusion": "一种子在 27 点上出现假设质量 3.48 kg、可行比例 0.81，高于 6 模块全 0 的 0.74。另一种子最好只有 0.70，而且没有 125 点复核。不作为可信的概念备选。",
+    "credible_after_second_seed": false
+  },
+  "recommendations": {
+    "near_light": {
+      "count": 6,
+      "bits": "00000",
+      "interfaces_base_to_tip_deg": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "modules": [
+        "zbot_r3",
+        "zbot_r3",
+        "zbot_r3",
+        "zbot_r3",
+        "zbot_r3",
+        "zbot_r3"
+      ],
+      "mass_kg": 4.27854,
+      "endpoints": "94/125",
+      "centers": "95/125",
+      "min_torque_margin_nm": 14.48,
+      "median_speed_m_s": 0.428,
+      "gain_vs_8_zero_endpoints": -0.09599999999999997,
+      "why": "近处要轻。6 模块全 0 质量 4.279 kg，默认盒 94/125 与 95/125。8 模块全 0 是 106/125 与 106/125，但重 1.43 kg。",
+      "mjcf": "experiments/final_selection_mjcf/zbot_6_00000.xml"
+    },
+    "high_far": {
+      "count": 7,
+      "bits": "000000",
+      "interfaces_base_to_tip_deg": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "modules": [
+        "zbot_r3",
+        "zbot_r3",
+        "zbot_r3",
+        "zbot_r3",
+        "zbot_r3",
+        "zbot_r3",
+        "zbot_r3"
+      ],
+      "mass_kg": 4.99163,
+      "endpoints": "125/125",
+      "centers": "125/125",
+      "min_torque_margin_nm": 15.21,
+      "median_speed_m_s": 0.545,
+      "gain_vs_6_zero_endpoints": 0.352,
+      "gain_vs_6_zero_centers": 0.28,
+      "why": "高远盒上 7 和 8 模块全 0 都是 125/125。覆盖不再增加时取更轻的 7 模块全 0。6 模块全 0 只有 81/125 和 90/125。",
+      "mjcf": "experiments/final_selection_mjcf/zbot_7_000000.xml"
+    },
+    "pose_6d": {
+      "count": 8,
+      "bits": "0000000",
+      "interfaces_base_to_tip_deg": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "modules": [
+        "zbot_r3",
+        "zbot_r3",
+        "zbot_r3",
+        "zbot_r3",
+        "zbot_r3",
+        "zbot_r3",
+        "zbot_r3",
+        "zbot_r3"
+      ],
+      "mass_kg": 5.70472,
+      "seed_11": "8/12",
+      "seed_23": "9/12",
+      "comparison": {
+        "6_00000": [
+          "2/12",
+          "3/12"
+        ],
+        "7_000000": [
+          "5/12",
+          "8/12"
+        ],
+        "8_0000000": [
+          "8/12",
+          "9/12"
+        ]
+      },
+      "why": "工具 z 轴在世界 -Z 周围 25° 锥内、滚转 ±90°。两种子都是 8 模块全 0 高于 7，7 高于 6。这和含 6 模块零位姿的那组目标不同，位姿结论依赖目标集。容差是 1 cm 和 10°。",
+      "mjcf": "experiments/final_selection_mjcf/zbot_8_0000000.xml"
+    },
+    "light_load_speed": {
+      "count": 8,
+      "bits": "0000000",
+      "interfaces_base_to_tip_deg": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "modules": [
+        "zbot_r3",
+        "zbot_r3",
+        "zbot_r3",
+        "zbot_r3",
+        "zbot_r3",
+        "zbot_r3",
+        "zbot_r3",
+        "zbot_r3"
+      ],
+      "mass_kg": 5.70472,
+      "endpoints": "106/125",
+      "centers": "106/125",
+      "median_speed_m_s": 0.702,
+      "baseline_6_speed_m_s": 0.428,
+      "min_torque_margin_nm": 10.14,
+      "why": "0.4 kg 默认盒上，8 模块全 0 的伪逆速度 0.702 m/s，6 模块 0.428 m/s，7 模块 0.573 m/s。这是保守下界，不是全方向最快。覆盖也高于 6 模块。",
+      "mjcf": "experiments/final_selection_mjcf/zbot_8_0000000.xml"
+    },
+    "heavy_4kg": {
+      "count": 6,
+      "bits": "10011",
+      "interfaces_base_to_tip_deg": [
+        90,
+        0,
+        0,
+        90,
+        90
+      ],
+      "modules": [
+        "zbot_r3",
+        "zbot_r3",
+        "zbot_r3",
+        "zbot_r3",
+        "zbot_r3",
+        "zbot_r3"
+      ],
+      "mass_kg": 4.27854,
+      "reached": "50/64",
+      "min_torque_margin_nm": 6.38,
+      "compared_with": "7 模块全 0 是 52/64，但最小裕度只有 1.67 N·m；8 模块全 0 是 45/64，裕度 0.43 N·m；6 模块全 0 是 47/64，裕度 4.34 N·m。",
+      "why": "4 kg 下少 2 个格，换来明显更高的最小力矩裕度。接口从基座起是 90、0、0、90、90 度。",
+      "mjcf": "experiments/final_selection_mjcf/zbot_6_10011.xml"
+    },
+    "concept_alternative": null,
+    "concept_note": "一种子在 27 点上出现假设质量 3.48 kg、可行比例 0.81，高于 6 模块全 0 的 0.74。另一种子最好只有 0.70，而且没有 125 点复核。不作为可信的概念备选。",
+    "manipulability_note": "平移可操作度随关节数变大，没有用来排名。",
+    "not_global_optimum": true,
+    "not_a_user_task": true
+  }
+}

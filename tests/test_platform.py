@@ -1,0 +1,521 @@
+"""平台核心的回归与搜索测试。不依赖 MJLab。"""
+
+from __future__ import annotations
+
+import sys
+import unittest
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "src"))
+
+import numpy as np
+
+from zbot_exolimb_grasp.config_gen import BASELINE, forward_kinematics
+from zbot_exolimb_grasp.constants import NOMINAL_JOINT_POS, SOURCE_COMMIT, STRAIGHT_JOINT_POS, TOTAL_MASS
+from zbot_exolimb_grasp.platform.exporting import assert_mjcf_matches, export_mjcf
+from zbot_exolimb_grasp.platform.model import (
+    actuation_report,
+    angular_jacobian_finite_difference,
+    assembly_errors,
+    baseline_design,
+    evaluate_design,
+    forward_chain,
+    generic_rank_report,
+    geometric_jacobian,
+    task_targets,
+    zbot_chain,
+)
+from zbot_exolimb_grasp.platform.nsga2 import Individual, dominates, feasible_front, nsga2
+from zbot_exolimb_grasp.platform.schema import Design, SearchSpec, TaskSpec
+from zbot_exolimb_grasp.platform.search import run_search, validate_search
+
+
+STRAIGHT_EE = np.array([2.12137298e-4, 0.0, 1.00478799])
+NOMINAL_EE = np.array([2.66836957e-4, 0.124544078, 0.455248373])
+
+
+class BaselineTests(unittest.TestCase):
+    def test_straight_and_nominal_match_r3(self) -> None:
+        design = baseline_design()
+        straight = forward_chain(design, np.array(STRAIGHT_JOINT_POS))["ee"][0]
+        nominal = forward_chain(design, np.array(NOMINAL_JOINT_POS))["ee"][0]
+        self.assertTrue(np.allclose(straight, STRAIGHT_EE, atol=1e-8))
+        self.assertTrue(np.allclose(nominal, NOMINAL_EE, atol=1e-8))
+        reference, _ = forward_kinematics(np.array(NOMINAL_JOINT_POS), BASELINE)
+        self.assertTrue(np.allclose(nominal, reference, atol=1e-8))
+
+    def test_mass_matches_six_module_arm(self) -> None:
+        self.assertAlmostEqual(forward_chain(baseline_design(), np.zeros((1, 6)))["mass_kg"], TOTAL_MASS, places=5)
+
+    def test_angular_jacobian_matches_finite_difference(self) -> None:
+        pose = np.array([0.3, -0.7, 1.1, -0.4, 0.8, -0.2])
+        analytic = geometric_jacobian(forward_chain(baseline_design(), pose))[0, 3:, :]
+        numeric = angular_jacobian_finite_difference(baseline_design(), pose)
+        self.assertLess(np.max(np.abs(analytic - numeric)), 1e-6)
+
+    def test_parallel_concept_axes_are_structurally_degenerate(self) -> None:
+        design = Design(
+            tuple("concept_axial" for _ in range(6)),
+            tuple(0.0 for _ in range(5)),
+            tuple({"length_m": 0.12} for _ in range(6)),
+        )
+        report = generic_rank_report(design, samples=8, seed=1)
+        self.assertTrue(report["structurally_degenerate"])
+        zbot = generic_rank_report(baseline_design(), samples=8, seed=1)
+        self.assertFalse(zbot["structurally_degenerate"])
+        lengths = [row["rank_deficient_fraction"] for row in zbot["by_length"]]
+        self.assertTrue(all(value == 0.0 for value in lengths))
+
+    def test_jacobian_finite_difference(self) -> None:
+        design = zbot_chain(4, (0.0, math_pi() / 2, 0.0))
+        rng = np.random.default_rng(2)
+        pose = rng.uniform(-1.5, 1.5, size=4)
+        base = forward_chain(design, pose)
+        jac = base["jacobian"][0]
+        numeric = np.zeros((3, 4))
+        step = 1e-6
+        for index in range(4):
+            bumped = pose.copy()
+            bumped[index] += step
+            numeric[:, index] = (forward_chain(design, bumped)["ee"][0] - base["ee"][0]) / step
+        self.assertLess(np.max(np.abs(jac - numeric)), 1e-5)
+
+    def test_length_changes_tip_and_mass(self) -> None:
+        def chain(length: float) -> Design:
+            return Design(
+                ("zbot_r3", "concept_axial", "zbot_r3"),
+                (0.0, 0.0),
+                ({}, {"length_m": length}, {}),
+            )
+
+        short = chain(0.08)
+        long = chain(0.16)
+        self.assertGreater(forward_chain(long, np.zeros(3))["mass_kg"], forward_chain(short, np.zeros(3))["mass_kg"])
+        pose = np.array([0.4, 0.7, -0.2])
+        short_ee = forward_chain(short, pose)["ee"][0]
+        long_ee = forward_chain(long, pose)["ee"][0]
+        self.assertGreater(np.linalg.norm(long_ee - short_ee), 0.05)
+
+
+class RuleTests(unittest.TestCase):
+    def test_cross_family_is_illegal(self) -> None:
+        design = Design(
+            ("zbot_r3", "demo_unreleased"),
+            (0.0,),
+            ({}, {"length_m": 0.1}),
+        )
+        errors = assembly_errors(design)
+        self.assertTrue(any("接口族" in item for item in errors))
+
+    def test_illegal_twist_and_count(self) -> None:
+        design = Design(("zbot_r3", "zbot_r3"), (0.3,), ({}, {}))
+        self.assertTrue(any("方位" in item for item in errors) for errors in [assembly_errors(design)])
+        short = Design(("zbot_r3", "zbot_r3"), (0.0,), ({}, {}))
+        self.assertTrue(any("数量" in item for item in assembly_errors(short)))
+
+    def test_physical_rejects_size_parameter(self) -> None:
+        design = Design(("zbot_r3", "zbot_r3", "zbot_r3"), (0.0, 0.0), ({"length_m": 1.0}, {}, {}))
+        self.assertTrue(any("实物" in item for item in assembly_errors(design)))
+
+    def test_search_input_validation(self) -> None:
+        spec = SearchSpec(population=3, generations=0, task=TaskSpec(sample_count=4, payload_kg=-1))
+        errors = validate_search(spec)
+        self.assertGreaterEqual(len(errors), 3)
+
+
+class ConstraintTests(unittest.TestCase):
+    def test_baseline_q0_is_feasible_under_default_payload(self) -> None:
+        metrics = evaluate_design(baseline_design(), TaskSpec(sample_count=64, seed=0))
+        self.assertFalse(metrics["q0_collision"])
+        self.assertTrue(metrics["q0_torque_ok"])
+        self.assertEqual(metrics["unsupported"][0], "网格精确碰撞")
+
+    def test_infeasible_not_in_front(self) -> None:
+        feasible = Individual(genome="a", objectives=[0.2, 0.2], violation=0.0)
+        infeasible = Individual(genome="b", objectives=[0.0, 0.0], violation=0.4)
+        self.assertTrue(dominates(feasible, infeasible))
+        self.assertFalse(dominates(infeasible, feasible))
+
+
+class SearchTests(unittest.TestCase):
+    def test_optimizer_is_deterministic_and_respects_constraints(self) -> None:
+        spec = SearchSpec(
+            mode="mixed",
+            count_min=3,
+            count_max=4,
+            population=6,
+            generations=2,
+            seed=7,
+            task=TaskSpec(sample_count=0, seed=7, payload_kg=0.2, grid_divisions=2, ik_starts=2, ik_iterations=4),
+        )
+        first = run_search(spec, start=baseline_design())
+        second = run_search(spec, start=baseline_design())
+        self.assertEqual(first["feasible_pareto"], second["feasible_pareto"])
+        for row in first["feasible_pareto"]:
+            self.assertEqual(row["violation"], 0.0)
+            self.assertEqual(row["metrics"]["feasible"], True)
+        self.assertIn("mass_kg", first["baseline"]["metrics"])
+
+    def test_parameter_change_changes_evaluation(self) -> None:
+        left = Design(
+            ("zbot_r3", "concept_axial", "zbot_r3"),
+            (0.0, 0.0),
+            ({}, {"length_m": 0.08}, {}),
+        )
+        right = Design(
+            ("zbot_r3", "concept_axial", "zbot_r3"),
+            (0.0, 0.0),
+            ({}, {"length_m": 0.15}, {}),
+        )
+        task = TaskSpec(sample_count=64, seed=3)
+        a = evaluate_design(left, task)
+        b = evaluate_design(right, task)
+        self.assertGreater(b["mass_kg"], a["mass_kg"] + 0.2)
+        self.assertGreater(np.linalg.norm(np.array(a["ee_straight"]) - np.array(b["ee_straight"])), 0.05)
+
+    def test_tiny_problem_improves_or_stays_nondominated(self) -> None:
+        def evaluate(genomes: list[tuple[float, float]]):
+            rows = []
+            for x, y in genomes:
+                rows.append(([x, y], 0.0 if x >= 0 else 1.0, {}))
+            return rows
+
+        def initialize(rng, population):
+            return [tuple(rng.uniform(-0.2, 1.0, size=2)) for _ in range(population)]
+
+        def vary(left, right, rng):
+            child_a = tuple(float(np.clip(0.5 * (a + b) + rng.normal(0, 0.05), -0.2, 1)) for a, b in zip(left, right))
+            child_b = tuple(float(np.clip(0.5 * (a + b) + rng.normal(0, 0.05), -0.2, 1)) for a, b in zip(right, left))
+            return child_a, child_b
+
+        pop = nsga2(population=8, generations=6, seed=1, initialize=initialize, vary=vary, evaluate=evaluate)
+        front = feasible_front(pop)
+        self.assertTrue(front)
+        self.assertTrue(all(item.violation == 0.0 and item.objectives[0] >= -1e-9 for item in front))
+
+
+class SixDofTests(unittest.TestCase):
+    def test_module_count_is_driven_joint_count(self) -> None:
+        baseline = actuation_report(baseline_design())
+        self.assertEqual(baseline["driven_joint_count"], 6)
+        self.assertEqual(baseline["module_count"], 6)
+        self.assertEqual(baseline["passive_body_count"], 6)
+        mixed = Design(
+            ("zbot_r3", "zbot_r3", "zbot_r3", "zbot_r3", "zbot_r3", "concept_axial"),
+            (0.0, 0.0, 0.0, 0.0, 0.0),
+            ({}, {}, {}, {}, {}, {"length_m": 0.1}),
+        )
+        report = actuation_report(mixed)
+        self.assertEqual(report["driven_joint_count"], 6)
+        self.assertEqual(report["passive_body_count"], 5)
+        self.assertEqual(actuation_report(zbot_chain(4))["driven_joint_count"], 4)
+
+    def test_physical_six_has_exactly_32_legal_twists(self) -> None:
+        seen = set()
+        for mask in range(32):
+            twists = tuple((math_pi() / 2 if mask & (1 << index) else 0.0) for index in range(5))
+            design = zbot_chain(6, twists)
+            self.assertEqual(assembly_errors(design), [])
+            self.assertEqual(actuation_report(design)["driven_joint_count"], 6)
+            seen.add(tuple(round(value, 6) for value in design.twists_rad))
+        self.assertEqual(len(seen), 32)
+        self.assertIn((0.0, 0.0, 0.0, 0.0, 0.0), seen)
+
+    def test_seven_and_eight_match_finite_difference_and_mjcf(self) -> None:
+        from zbot_exolimb_grasp.platform.exporting import assert_mjcf_matches
+        from zbot_exolimb_grasp.platform.model import angular_jacobian_finite_difference, geometric_jacobian
+
+        for count, interfaces in ((7, 64), (8, 128)):
+            design = zbot_chain(count)
+            self.assertEqual(actuation_report(design)["driven_joint_count"], count)
+            self.assertEqual(len(design.twists_rad), count - 1)
+            pose = np.linspace(-1.2, 1.1, count)
+            chain = forward_chain(design, pose)
+            numeric_linear = np.zeros((3, count))
+            step = 1e-6
+            for index in range(count):
+                bumped = pose.copy()
+                bumped[index] += step
+                numeric_linear[:, index] = (forward_chain(design, bumped)["ee"][0] - chain["ee"][0]) / step
+            self.assertLess(np.max(np.abs(chain["jacobian"][0] - numeric_linear)), 1e-5)
+            angular = geometric_jacobian(chain)[0, 3:, :]
+            self.assertLess(np.max(np.abs(angular - angular_jacobian_finite_difference(design, pose))), 1e-6)
+            assert_mjcf_matches(design, samples=2, seed=count)
+            illegal = zbot_chain(count, tuple([0.2] + [0.0] * (count - 2)))
+            self.assertTrue(any("方位" in item for item in assembly_errors(illegal)))
+            self.assertEqual(interfaces, 1 << (count - 1))
+            xml = export_mjcf(design)
+            self.assertEqual(xml.count("<joint "), count)
+            distal = forward_chain(design, pose)["jacobian"][0][:, -1]
+            self.assertLess(float(np.linalg.norm(distal)), 1e-8)
+            self.assertGreater(float(np.linalg.norm(forward_chain(design, pose)["jacobian"][0][:, -2])), 1e-3)
+            self.assertEqual(xml.count("-6.28 6.28"), count)
+
+    def test_redundant_rank_uses_six_not_joint_count(self) -> None:
+        design = zbot_chain(7)
+        report = generic_rank_report(design, samples=8, seed=1)
+        self.assertFalse(report["structurally_degenerate"])
+        at_tenth = next(row for row in report["by_length"] if row["characteristic_length_m"] == 0.1)
+        self.assertLess(at_tenth["rank_deficient_fraction"], 0.5)
+        straight = forward_chain(design, np.zeros(7))["ee"][0]
+        blocked = evaluate_design(
+            design,
+            TaskSpec(ik_starts=2, ik_iterations=6, position_tolerance_m=0.01, sample_count=0, joint_sample_limit=1e-6),
+            targets=(straight + np.array([0.3, 0.0, 0.0])).reshape(1, 3),
+            target_set="custom",
+        )
+        self.assertEqual(blocked["task_targets_reached"], 0)
+        self.assertEqual(len(blocked["example_q"]), 7)
+        near = evaluate_design(
+            design,
+            TaskSpec(ik_starts=1, ik_iterations=2, position_tolerance_m=0.01, sample_count=0, joint_sample_limit=0.2),
+            targets=straight.reshape(1, 3),
+            target_set="custom",
+        )
+        self.assertEqual(near["task_targets_reached"], 1)
+        self.assertTrue(all(abs(value) <= 0.2 + 1e-8 for value in near["example_q"]))
+
+    def test_axis_lp_can_exceed_pseudoinverse_lower_bound(self) -> None:
+        from zbot_exolimb_grasp.platform.model import velocity_capability, velocity_lp_axis_min
+
+        jacobian = np.array(
+            [
+                [1.0, 0.0, 0.0, 0.5],
+                [0.0, 1.0, 0.0, 0.5],
+                [0.0, 0.0, 1.0, 0.5],
+            ]
+        )
+        pseudo = float(velocity_capability(jacobian.reshape(1, 3, 4), 1.0)[0])
+        linear = velocity_lp_axis_min(jacobian, 1.0)
+        self.assertGreater(linear, pseudo + 0.1)
+        self.assertAlmostEqual(linear, 1.5, places=5)
+        from zbot_exolimb_grasp.platform.model import FIXED14_VELOCITY_DIRECTIONS, velocity_lp_direction_min
+
+        wider = velocity_lp_direction_min(jacobian, 1.0, FIXED14_VELOCITY_DIRECTIONS)
+        self.assertLessEqual(wider, linear + 1e-6)
+        self.assertEqual(len(FIXED14_VELOCITY_DIRECTIONS), 14)
+
+    def test_six_dimensional_ik_recovers_a_known_sole_pose(self) -> None:
+        from zbot_exolimb_grasp.platform.model import rotation_angle_rad, solve_pose
+
+        task = TaskSpec(
+            tool_point="foot_1_sole",
+            ik_starts=4,
+            ik_iterations=30,
+            ik_damping=0.08,
+            payload_kg=0.4,
+            effort_limit_nm=20.0,
+            sample_count=0,
+        )
+        for count in (6, 7, 8):
+            design = zbot_chain(count)
+            true_q = np.linspace(-0.8, 0.7, count)
+            chain = forward_chain(design, true_q, tool_point="foot_1_sole")
+            solved = solve_pose(
+                design,
+                chain["ee"][0],
+                chain["ee_quat"][0],
+                task,
+                position_tolerance_m=0.01,
+                rotation_tolerance_rad=math_pi() / 36.0,
+                extra_starts=[true_q + 0.15],
+            )
+            self.assertTrue(solved["solved"])
+            self.assertLess(solved["position_error_m"], 0.01)
+            self.assertLess(solved["rotation_error_rad"], math_pi() / 36.0)
+            again = forward_chain(design, solved["q"], tool_point="foot_1_sole")
+            self.assertLess(float(np.linalg.norm(again["ee"][0] - chain["ee"][0])), 0.01)
+            self.assertLess(rotation_angle_rad(again["ee_quat"][0], chain["ee_quat"][0]), math_pi() / 36.0)
+            self.assertEqual(solved["jacobian6"].shape, (6, count))
+        missed = solve_pose(
+            zbot_chain(6),
+            np.array([5.0, 5.0, 5.0]),
+            np.array([1.0, 0.0, 0.0, 0.0]),
+            TaskSpec(tool_point="foot_1_sole", ik_starts=2, ik_iterations=4, sample_count=0),
+            position_tolerance_m=0.01,
+            rotation_tolerance_rad=math_pi() / 36.0,
+        )
+        self.assertFalse(missed["solved"])
+
+    def test_sole_site_is_read_from_the_r3_xml(self) -> None:
+        import xml.etree.ElementTree as ET
+
+        from zbot_exolimb_grasp.platform.model import sole_site
+
+        site = sole_site()
+        raw = None
+        for body in ET.parse(ROOT / "assets" / "zbot_6" / "ZBOT6.xml").iter("body"):
+            if body.get("name") == "foot_1":
+                raw = next(child for child in list(body) if child.tag == "site")
+        self.assertIsNotNone(raw)
+        self.assertEqual(site.name, "foot_1_sole")
+        self.assertEqual(site.body, "foot_1")
+        self.assertEqual(site.source_commit, SOURCE_COMMIT)
+        self.assertEqual(raw.get("name"), site.name)
+        self.assertEqual(tuple(float(part) for part in raw.get("pos").split()), site.pos_m)
+        self.assertEqual(tuple(float(part) for part in raw.get("quat").split()), site.quat_wxyz)
+        script = (ROOT / "web" / "src" / "platform" / "model.js").read_text(encoding="utf-8")
+        for token in raw.get("pos").split() + raw.get("quat").split():
+            self.assertIn(token, script)
+
+    def test_sole_offset_matches_finite_difference_and_mjcf(self) -> None:
+        from zbot_exolimb_grasp.platform.model import sole_site
+
+        site = sole_site()
+        for count in (6, 7, 8):
+            design = zbot_chain(count)
+            pose = np.linspace(-1.1, 0.9, count)
+            legacy = forward_chain(design, pose)
+            sole = forward_chain(design, pose, tool_point="foot_1_sole")
+            self.assertEqual(legacy["tool_point_applied"], "foot_joint_origin")
+            self.assertEqual(sole["tool_point_applied"], "foot_1_sole")
+            self.assertLess(float(np.linalg.norm(legacy["jacobian"][0][:, -1])), 1e-8)
+            offset = sole["ee"][0] - legacy["ee"][0]
+            self.assertAlmostEqual(float(np.linalg.norm(offset)), float(np.linalg.norm(site.pos_m)), places=8)
+            expected = np.cross(sole["axes"][-1][0], offset)
+            self.assertLess(float(np.max(np.abs(sole["jacobian"][0][:, -1] - expected))), 1e-8)
+            self.assertGreater(float(np.linalg.norm(expected)), 1e-3)
+            numeric = np.zeros((3, count))
+            step = 1e-6
+            for index in range(count):
+                bumped = pose.copy()
+                bumped[index] += step
+                numeric[:, index] = (
+                    forward_chain(design, bumped, tool_point="foot_1_sole")["ee"][0] - sole["ee"][0]
+                ) / step
+            self.assertLess(float(np.max(np.abs(sole["jacobian"][0] - numeric))), 1e-5)
+            angular = geometric_jacobian(sole)[0, 3:, :]
+            self.assertLess(
+                float(np.max(np.abs(angular - angular_jacobian_finite_difference(design, pose, tool_point="foot_1_sole")))),
+                1e-6,
+            )
+            assert_mjcf_matches(design, samples=1, seed=count, tool_point="foot_1_sole")
+        legacy_metrics = evaluate_design(
+            zbot_chain(6),
+            TaskSpec(grid_divisions=1, ik_starts=1, ik_iterations=1, sample_count=0),
+        )
+        self.assertEqual(legacy_metrics["tool_point"], "foot_joint_origin")
+        self.assertLess(legacy_metrics["distal_linear_jacobian_norm"], 1e-8)
+        sole_metrics = evaluate_design(
+            zbot_chain(6),
+            TaskSpec(grid_divisions=1, ik_starts=1, ik_iterations=1, sample_count=0, tool_point="foot_1_sole"),
+        )
+        self.assertEqual(sole_metrics["tool_point_applied"], "foot_1_sole")
+        self.assertGreater(sole_metrics["distal_linear_jacobian_norm"], 1e-3)
+        concept_tip = forward_chain(
+            Design(("zbot_r3", "zbot_r3", "concept_axial"), (0.0, math_pi() / 2), ({}, {}, {"length_m": 0.1})),
+            np.zeros(3),
+            tool_point="foot_1_sole",
+        )
+        self.assertEqual(concept_tip["tool_point_applied"], "concept_tip_no_sole")
+
+    def test_sole_search_locks_the_distal_module(self) -> None:
+        from zbot_exolimb_grasp.platform.search import Genome, _repair
+
+        spec = SearchSpec(
+            mode="mixed",
+            count_min=6,
+            count_max=6,
+            count_lock=6,
+            population=4,
+            generations=1,
+            objectives=("coverage", "mass"),
+            seed=3,
+            distal_module_id="zbot_r3",
+            task=TaskSpec(grid_divisions=1, ik_starts=1, ik_iterations=2, sample_count=0, tool_point="foot_1_sole"),
+        )
+        repaired = _repair(Genome(6, ["concept_axial"] * 8, [0.0] * 7, [0.1] * 8), spec)
+        self.assertEqual(repaired.module_ids[5], "zbot_r3")
+        result = run_search(spec, zbot_chain(6))
+        self.assertEqual(result["baseline"]["metrics"]["tool_point_applied"], "foot_1_sole")
+        for row in result["feasible_pareto"]:
+            self.assertEqual(row["design"]["modules"][-1]["id"], "zbot_r3")
+            self.assertEqual(row["metrics"]["tool_point_applied"], "foot_1_sole")
+
+
+class MetricTests(unittest.TestCase):
+    def test_same_task_grid_for_different_module_counts(self) -> None:
+        task = TaskSpec(grid_divisions=3, sample_count=0, ik_starts=1, ik_iterations=1)
+        targets = task_targets(task)
+        self.assertEqual(targets.shape, (27, 3))
+        again = task_targets(task)
+        self.assertTrue(np.allclose(targets, again))
+        short = evaluate_design(zbot_chain(3), task)
+        long = evaluate_design(zbot_chain(6), task)
+        self.assertEqual(short["task_target_count"], long["task_target_count"])
+        self.assertEqual(short["position_tolerance_m"], long["position_tolerance_m"])
+        self.assertNotIn("task_coverage", short)
+
+    def test_clustered_reach_is_not_full_spatial_coverage(self) -> None:
+        design = Design(
+            ("concept_axial", "concept_axial", "concept_axial"),
+            (0.0, 0.0),
+            ({"length_m": 0.06}, {"length_m": 0.06}, {"length_m": 0.06}),
+        )
+        task = TaskSpec(
+            center_m=(0.2, 0.2, 0.7),
+            half_m=(0.4, 0.4, 0.4),
+            grid_divisions=3,
+            ik_starts=3,
+            ik_iterations=8,
+            position_tolerance_m=0.05,
+            sample_count=80,
+            seed=1,
+            payload_kg=0.0,
+        )
+        metrics = evaluate_design(design, task)
+        self.assertLess(metrics["task_feasible_fraction"], 0.5)
+        self.assertIsNotNone(metrics["pose_hit_rate"])
+        self.assertGreater(metrics["pose_hit_rate"], metrics["task_feasible_fraction"])
+
+    def test_infeasible_poses_do_not_count_as_task_coverage(self) -> None:
+        task = TaskSpec(
+            sample_count=60,
+            seed=0,
+            effort_limit_nm=0.05,
+            payload_kg=2.0,
+            grid_divisions=2,
+            ik_starts=2,
+            ik_iterations=6,
+        )
+        metrics = evaluate_design(baseline_design(), task)
+        self.assertGreater(metrics["pose_hit_rate"], 0.0)
+        self.assertEqual(metrics["task_feasible_fraction"], 0.0)
+        self.assertFalse(metrics["task_manipulability_valid"])
+        self.assertIsNone(metrics["task_manipulability_median"])
+        self.assertTrue(metrics["feasible"])
+        self.assertFalse(metrics["q0_is_design_veto"])
+
+    def test_resolution_changes_denominator_without_claiming_monotonicity(self) -> None:
+        design = zbot_chain(4)
+        coarse_task = TaskSpec(grid_divisions=2, ik_starts=2, ik_iterations=5, sample_count=0)
+        fine_task = TaskSpec(grid_divisions=3, ik_starts=2, ik_iterations=5, sample_count=0)
+        coarse = evaluate_design(design, coarse_task)
+        fine = evaluate_design(design, fine_task)
+        self.assertEqual(coarse["task_target_count"], 8)
+        self.assertEqual(fine["task_target_count"], 27)
+        self.assertGreaterEqual(coarse["task_feasible_fraction"], 0.0)
+        self.assertLessEqual(fine["task_feasible_fraction"], 1.0)
+
+
+class ExportTests(unittest.TestCase):
+    def test_mjcf_matches_internal_fk(self) -> None:
+        assert_mjcf_matches(baseline_design(), samples=3, seed=1)
+        mixed = Design(
+            ("zbot_r3", "concept_axial", "zbot_r3"),
+            (math_pi() / 2, 0.0),
+            ({}, {"length_m": 0.11}, {}),
+        )
+        assert_mjcf_matches(mixed, samples=3, seed=2)
+        xml = export_mjcf(baseline_design())
+        self.assertEqual(xml.count("<joint "), 6)
+        self.assertIn('axis="0 0 1"', xml)
+
+
+def math_pi() -> float:
+    return float(np.pi)
+
+
+if __name__ == "__main__":
+    unittest.main()

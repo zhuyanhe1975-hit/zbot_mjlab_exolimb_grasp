@@ -1,0 +1,458 @@
+{
+  "availability": {
+    "grd_root": "/workspace/third_party/generative-robot-design",
+    "grd_present": true,
+    "torch": "2.5.1+cpu",
+    "mujoco": "4.0.0",
+    "pinocchio": "2.7.0",
+    "hppfcl": "2.4.4",
+    "pymoo": "0.6.2"
+  },
+  "pinned_commit": "a3df14550d50496f58246585bc1800ab33416a4c",
+  "verification_fk": {
+    "six_vs_mujoco_xml": [
+      {
+        "pose": "zero",
+        "origin_error_m": 8.596678924277512e-12,
+        "sole_error_m": 1.0328404798087831e-11
+      },
+      {
+        "pose": "nominal",
+        "origin_error_m": 7.563949466771192e-12,
+        "sole_error_m": 1.0345446721515827e-11
+      },
+      {
+        "pose": "spread",
+        "origin_error_m": 8.88433770995789e-12,
+        "sole_error_m": 9.383271937224436e-12
+      }
+    ],
+    "seven_eight_vs_exported_mjcf": [
+      {
+        "count": 7,
+        "error_m": 1.5246459650342103e-10
+      },
+      {
+        "count": 8,
+        "error_m": 1.8141854685183034e-10
+      }
+    ]
+  },
+  "verification_ik": {
+    "endpoint_reached": 123,
+    "center_reached": 125,
+    "previous_batch2": {
+      "endpoint": 120,
+      "centers": 125
+    },
+    "note": "同一 1 cm、125 点和胶囊/静力矩约束。求解器换成上游正运动学上的阻尼最小二乘加 Adam 精修，所以格点数可以和 120/125 有几个点的差别。未解出不是不可达。"
+  },
+  "verification_rank": {
+    "spearman": 0.5087266622670846,
+    "kendall": 0.4616406756364325,
+    "old_definition": "批次 2 自写 IK，27 点、2 cm、足底",
+    "new_definition": "上游 FK 的阻尼最小二乘加梯度精修，同一 27 点和 2 cm，并套用胶囊与静力矩",
+    "interpretation": "新后端在 2 cm、27 点上大量打满 26/27 或 27/27，方差比自写后端小，所以 Spearman 只有约 0.51，不是负相关。它没有把批次 2 的高低序颠倒成相反序。"
+  },
+  "representatives": [
+    {
+      "reached": 26,
+      "targets": 27,
+      "fraction": 0.9629629629629629,
+      "mass_kg": 4.2785400000000005,
+      "manipulability": 0.02513401010300133,
+      "velocity_pseudoinverse": 0.42520225828386404,
+      "torque_margin_nm": {
+        "0.4": 19.99970451515143,
+        "1.5": 19.998586737372793,
+        "4.0": 19.996046333330444
+      },
+      "count": 6,
+      "bits": "00000",
+      "high_fraction": 0.6666666666666666,
+      "pose_position_fraction": 1.0,
+      "mesh_hits_on_spread_pose": 0
+    },
+    {
+      "reached": 27,
+      "targets": 27,
+      "fraction": 1.0,
+      "mass_kg": 4.2785400000000005,
+      "manipulability": 0.01908634693376591,
+      "velocity_pseudoinverse": 0.32316356756360787,
+      "torque_margin_nm": {
+        "0.4": 19.96802867838439,
+        "1.5": 19.950186819122088,
+        "4.0": 19.909637138980493
+      },
+      "count": 6,
+      "bits": "10000",
+      "high_fraction": 0.6666666666666666,
+      "pose_position_fraction": 1.0,
+      "mesh_hits_on_spread_pose": 0
+    },
+    {
+      "reached": 27,
+      "targets": 27,
+      "fraction": 1.0,
+      "mass_kg": 4.991630000000001,
+      "manipulability": 0.05349463744569746,
+      "velocity_pseudoinverse": 0.5727704983043893,
+      "torque_margin_nm": {
+        "0.4": 19.99970451515143,
+        "1.5": 19.998586737372804,
+        "4.0": 19.996046333330476
+      },
+      "count": 7,
+      "bits": "000000",
+      "high_fraction": 1.0,
+      "pose_position_fraction": 1.0,
+      "mesh_hits_on_spread_pose": 0
+    },
+    {
+      "reached": 27,
+      "targets": 27,
+      "fraction": 1.0,
+      "mass_kg": 5.704720000000001,
+      "manipulability": 0.07823773766139502,
+      "velocity_pseudoinverse": 0.697023649267462,
+      "torque_margin_nm": {
+        "0.4": 19.999704515151414,
+        "1.5": 19.998586737372726,
+        "4.0": 19.99604633333025
+      },
+      "count": 8,
+      "bits": "0000000",
+      "high_fraction": 1.0,
+      "pose_position_fraction": 1.0,
+      "mesh_hits_on_spread_pose": 0
+    }
+  ],
+  "screen_rows": 224,
+  "pareto_default_physical": [
+    {
+      "count": 6,
+      "bits": "00000",
+      "fraction": 0.9629629629629629,
+      "mass_kg": 4.2785400000000005,
+      "velocity_pseudoinverse": 0.42520225828386404,
+      "torque_margin_0.4": 19.99970451515143
+    },
+    {
+      "count": 6,
+      "bits": "10000",
+      "fraction": 1.0,
+      "mass_kg": 4.2785400000000005,
+      "velocity_pseudoinverse": 0.32316356756360787,
+      "torque_margin_0.4": 19.96802867838439
+    },
+    {
+      "count": 6,
+      "bits": "01000",
+      "fraction": 1.0,
+      "mass_kg": 4.2785400000000005,
+      "velocity_pseudoinverse": 0.24310491630171754,
+      "torque_margin_0.4": 19.979006705961158
+    },
+    {
+      "count": 6,
+      "bits": "11000",
+      "fraction": 1.0,
+      "mass_kg": 4.2785400000000005,
+      "velocity_pseudoinverse": 0.3410771280946515,
+      "torque_margin_0.4": 19.947634896807884
+    },
+    {
+      "count": 6,
+      "bits": "01100",
+      "fraction": 1.0,
+      "mass_kg": 4.2785400000000005,
+      "velocity_pseudoinverse": 0.34881564432207834,
+      "torque_margin_0.4": 19.966200223957028
+    },
+    {
+      "count": 6,
+      "bits": "11100",
+      "fraction": 1.0,
+      "mass_kg": 4.2785400000000005,
+      "velocity_pseudoinverse": 0.3278721540190079,
+      "torque_margin_0.4": 19.960236062772104
+    },
+    {
+      "count": 6,
+      "bits": "01010",
+      "fraction": 1.0,
+      "mass_kg": 4.2785400000000005,
+      "velocity_pseudoinverse": 0.2674082455650727,
+      "torque_margin_0.4": 19.977135518476054
+    },
+    {
+      "count": 6,
+      "bits": "10001",
+      "fraction": 1.0,
+      "mass_kg": 4.2785400000000005,
+      "velocity_pseudoinverse": 0.3014990417303466,
+      "torque_margin_0.4": 19.970122907608527
+    },
+    {
+      "count": 6,
+      "bits": "11001",
+      "fraction": 1.0,
+      "mass_kg": 4.2785400000000005,
+      "velocity_pseudoinverse": 0.3311186865465148,
+      "torque_margin_0.4": 19.949523115587805
+    },
+    {
+      "count": 6,
+      "bits": "01011",
+      "fraction": 1.0,
+      "mass_kg": 4.2785400000000005,
+      "velocity_pseudoinverse": 0.2694719161862762,
+      "torque_margin_0.4": 19.975040624640318
+    },
+    {
+      "count": 6,
+      "bits": "01111",
+      "fraction": 1.0,
+      "mass_kg": 4.2785400000000005,
+      "velocity_pseudoinverse": 0.27659478857187153,
+      "torque_margin_0.4": 19.974607950150315
+    },
+    {
+      "count": 7,
+      "bits": "000000",
+      "fraction": 1.0,
+      "mass_kg": 4.991630000000001,
+      "velocity_pseudoinverse": 0.5727704983043893,
+      "torque_margin_0.4": 19.99970451515143
+    },
+    {
+      "count": 8,
+      "bits": "0000000",
+      "fraction": 1.0,
+      "mass_kg": 5.704720000000001,
+      "velocity_pseudoinverse": 0.697023649267462,
+      "torque_margin_0.4": 19.999704515151414
+    }
+  ],
+  "concept_pymoo": {
+    "budget": "每个驱动数种群 8、2 代。这不是穷尽，质量是 4 kg/m 假设。",
+    "fronts": {
+      "6": [
+        {
+          "feasible_fraction": 0.6666666666666666,
+          "mass_kg_assumed": 3.636580616710175,
+          "torque_margin_0.4": 19.308095373214808,
+          "velocity_pseudoinverse": 0.2828507670103685,
+          "mass_is_assumption": true
+        },
+        {
+          "feasible_fraction": 0.3333333333333333,
+          "mass_kg_assumed": 2.8491133941904643,
+          "torque_margin_0.4": 18.727775863509056,
+          "velocity_pseudoinverse": 0.24012677229628057,
+          "mass_is_assumption": true
+        },
+        {
+          "feasible_fraction": 0.5555555555555556,
+          "mass_kg_assumed": 3.115298612351612,
+          "torque_margin_0.4": 18.003073630872827,
+          "velocity_pseudoinverse": 0.12459270217634127,
+          "mass_is_assumption": true
+        },
+        {
+          "feasible_fraction": 0.7777777777777778,
+          "mass_kg_assumed": 4.0705871810067205,
+          "torque_margin_0.4": 17.573229055475313,
+          "velocity_pseudoinverse": 0.16471403202889176,
+          "mass_is_assumption": true
+        },
+        {
+          "feasible_fraction": 1.0,
+          "mass_kg_assumed": 3.5395166710876422,
+          "torque_margin_0.4": 11.842828192844156,
+          "velocity_pseudoinverse": 0.325211035510489,
+          "mass_is_assumption": true
+        },
+        {
+          "feasible_fraction": 0.6666666666666666,
+          "mass_kg_assumed": 2.963166976986149,
+          "torque_margin_0.4": 11.302435420607967,
+          "velocity_pseudoinverse": 0.24830813198719257,
+          "mass_is_assumption": true
+        },
+        {
+          "feasible_fraction": 0.5925925925925926,
+          "mass_kg_assumed": 3.3257754346695663,
+          "torque_margin_0.4": 16.65541598446424,
+          "velocity_pseudoinverse": 0.22094336822475646,
+          "mass_is_assumption": true
+        },
+        {
+          "feasible_fraction": 0.5555555555555556,
+          "mass_kg_assumed": 3.5242422955069506,
+          "torque_margin_0.4": 19.20266014965233,
+          "velocity_pseudoinverse": 0.16397337231614023,
+          "mass_is_assumption": true
+        }
+      ],
+      "7": [
+        {
+          "feasible_fraction": 0.6666666666666666,
+          "mass_kg_assumed": 3.6021835156220217,
+          "torque_margin_0.4": 17.407106268144602,
+          "velocity_pseudoinverse": 0.1335807082232795,
+          "mass_is_assumption": true
+        },
+        {
+          "feasible_fraction": 0.6666666666666666,
+          "mass_kg_assumed": 4.318286544970339,
+          "torque_margin_0.4": 11.819094278932898,
+          "velocity_pseudoinverse": 0.3982299598714878,
+          "mass_is_assumption": true
+        },
+        {
+          "feasible_fraction": 1.0,
+          "mass_kg_assumed": 3.5109012242990296,
+          "torque_margin_0.4": 12.209741646569515,
+          "velocity_pseudoinverse": 0.35993755887729806,
+          "mass_is_assumption": true
+        },
+        {
+          "feasible_fraction": 1.0,
+          "mass_kg_assumed": 4.991630000000001,
+          "torque_margin_0.4": 19.962528300017116,
+          "velocity_pseudoinverse": 0.43853625589111644,
+          "mass_is_assumption": true
+        },
+        {
+          "feasible_fraction": 0.5925925925925926,
+          "mass_kg_assumed": 3.8689237909490473,
+          "torque_margin_0.4": 18.53278573261348,
+          "velocity_pseudoinverse": 0.2563624716722337,
+          "mass_is_assumption": true
+        },
+        {
+          "feasible_fraction": 1.0,
+          "mass_kg_assumed": 4.680291201180133,
+          "torque_margin_0.4": 19.079459046390536,
+          "velocity_pseudoinverse": 0.23989590458626636,
+          "mass_is_assumption": true
+        },
+        {
+          "feasible_fraction": 0.8888888888888888,
+          "mass_kg_assumed": 4.293265869599267,
+          "torque_margin_0.4": 14.42396473862349,
+          "velocity_pseudoinverse": 0.3144244887705564,
+          "mass_is_assumption": true
+        },
+        {
+          "feasible_fraction": 0.6666666666666666,
+          "mass_kg_assumed": 3.6021835156220217,
+          "torque_margin_0.4": 17.407106268144602,
+          "velocity_pseudoinverse": 0.1335807082232795,
+          "mass_is_assumption": true
+        }
+      ],
+      "8": [
+        {
+          "feasible_fraction": 0.9259259259259259,
+          "mass_kg_assumed": 4.7219618275422635,
+          "torque_margin_0.4": 14.9935051457921,
+          "velocity_pseudoinverse": 0.35482634336075536,
+          "mass_is_assumption": true
+        },
+        {
+          "feasible_fraction": 1.0,
+          "mass_kg_assumed": 5.397674192354165,
+          "torque_margin_0.4": 10.091822516513293,
+          "velocity_pseudoinverse": 0.6054204574110977,
+          "mass_is_assumption": true
+        },
+        {
+          "feasible_fraction": 1.0,
+          "mass_kg_assumed": 5.246314341189004,
+          "torque_margin_0.4": 15.170261669634646,
+          "velocity_pseudoinverse": 0.5061652039522949,
+          "mass_is_assumption": true
+        },
+        {
+          "feasible_fraction": 1.0,
+          "mass_kg_assumed": 4.521292902846253,
+          "torque_margin_0.4": 10.2321445153622,
+          "velocity_pseudoinverse": 0.43526650827055924,
+          "mass_is_assumption": true
+        },
+        {
+          "feasible_fraction": 1.0,
+          "mass_kg_assumed": 4.86330274221053,
+          "torque_margin_0.4": 14.383011486694013,
+          "velocity_pseudoinverse": 0.2791768952890007,
+          "mass_is_assumption": true
+        },
+        {
+          "feasible_fraction": 1.0,
+          "mass_kg_assumed": 5.027611281426669,
+          "torque_margin_0.4": 13.015612876756744,
+          "velocity_pseudoinverse": 0.43611669519808893,
+          "mass_is_assumption": true
+        },
+        {
+          "feasible_fraction": 1.0,
+          "mass_kg_assumed": 5.311330292269154,
+          "torque_margin_0.4": 19.293819692963805,
+          "velocity_pseudoinverse": 0.5656984219362906,
+          "mass_is_assumption": true
+        },
+        {
+          "feasible_fraction": 1.0,
+          "mass_kg_assumed": 5.397674192354165,
+          "torque_margin_0.4": 10.089767112810963,
+          "velocity_pseudoinverse": 0.6419573531635636,
+          "mass_is_assumption": true
+        }
+      ]
+    }
+  },
+  "elapsed_s": 82.8969453009995,
+  "recommendation": {
+    "default_position": "6 模块全 0。新后端在 1 cm、125 点上是端点 123/125、单元中心 125/125，批次 2 是 120/125 和 125/125。中心点一致，端点多 3 个，来自求解器而不是任务定义。",
+    "high_box": "27 点的高远盒上 6 模块全 0 是 0.67，7 和 8 模块全 0 都是 1.0。覆盖并列时仍取更轻的 7 模块。",
+    "pose": "新的世界系姿态集（不是 6 模块零位姿）上，1 cm 且 5°：6 模块 10/12，7 模块 9/12，8 模块 7/12。批次 3 里 7 模块在含零位姿的 16 个目标上是 12/16、8 模块是 6/16。7 模块的位姿优势依赖目标集，不能当成所有姿态都更好；8 模块在两组里都更差。",
+    "heavy_payload": "伸直零位的静力矩几乎为零。弯臂上 Pinocchio 的 4 kg 裕度是 6 模块 6.51 N·m、7 模块 4.00 N·m、8 模块 0.47 N·m。8 模块的速度优势在重载弯臂上被力矩吃掉，和批次 3 一致。",
+    "light": "实物轻量仍是 6 模块全 0，4.279 kg。概念前沿里有约 3.6 kg 的假设质量，但 27 点可行比例只有约 0.67，低于实物，而且不是实测减重。",
+    "not_global": "没有全局最优。Spearman 0.51 是因为新后端在 2 cm 上大量打满，不是把旧排序颠倒。未进容差不是不可达。"
+  },
+  "pose_independent": {
+    "definition": "4 个位置 × 3 个世界系姿态（单位阵、绕 x 60°、绕 y -40°），不是 6 模块零位姿。位置 1 cm，旋转 5°。自写六维 IK，8 个起点里这里用 6 个、25 次迭代。",
+    "results": {
+      "6": {
+        "reached": 10,
+        "targets": 12,
+        "bent_margin": {
+          "0.4": 14.625120220183607,
+          "1.5": 12.146204887854914,
+          "4.0": 6.512306405289699
+        }
+      },
+      "7": {
+        "reached": 9,
+        "targets": 12,
+        "bent_margin": {
+          "0.4": 12.879188515242056,
+          "1.5": 10.164612282188585,
+          "4.0": 3.995120843430705
+        }
+      },
+      "8": {
+        "reached": 7,
+        "targets": 12,
+        "bent_margin": {
+          "0.4": 10.930651304335552,
+          "1.5": 7.733466247966664,
+          "4.0": 0.4671365744010245
+        }
+      }
+    }
+  }
+}

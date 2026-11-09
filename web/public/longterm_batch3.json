@@ -1,0 +1,300 @@
+{
+  "tool_point": "foot_1_sole",
+  "note": "批次 3 是示例场景和六维位姿，不是用户实测工况，也不是全局最优。",
+  "scenarios": [
+    {
+      "id": "default_p0.4",
+      "center_m": [
+        0.0,
+        0.05,
+        0.72
+      ],
+      "half_m": [
+        0.22,
+        0.22,
+        0.22
+      ],
+      "payload_kg": 0.4,
+      "note": "与批次 2 相同的默认盒，本批只用 64 点预算做横向对照"
+    },
+    {
+      "id": "default_p1.5",
+      "center_m": [
+        0.0,
+        0.05,
+        0.72
+      ],
+      "half_m": [
+        0.22,
+        0.22,
+        0.22
+      ],
+      "payload_kg": 1.5,
+      "note": "默认盒，载荷高于 0.4 kg"
+    },
+    {
+      "id": "default_p4.0",
+      "center_m": [
+        0.0,
+        0.05,
+        0.72
+      ],
+      "half_m": [
+        0.22,
+        0.22,
+        0.22
+      ],
+      "payload_kg": 4.0,
+      "note": "默认盒，更重载荷，用来看力矩上限"
+    },
+    {
+      "id": "high_p0.4",
+      "center_m": [
+        0.0,
+        0.22,
+        0.98
+      ],
+      "half_m": [
+        0.1,
+        0.1,
+        0.08
+      ],
+      "payload_kg": 0.4,
+      "note": "更远更高的小盒"
+    },
+    {
+      "id": "near_p0.4",
+      "center_m": [
+        0.15,
+        0.12,
+        0.48
+      ],
+      "half_m": [
+        0.1,
+        0.1,
+        0.08
+      ],
+      "payload_kg": 0.4,
+      "note": "更近更低的小盒"
+    },
+    {
+      "id": "side_p0.4",
+      "center_m": [
+        0.24,
+        -0.05,
+        0.64
+      ],
+      "half_m": [
+        0.1,
+        0.1,
+        0.1
+      ],
+      "payload_kg": 0.4,
+      "note": "偏到一侧的小盒"
+    },
+    {
+      "id": "high_p1.5",
+      "center_m": [
+        0.0,
+        0.22,
+        0.98
+      ],
+      "half_m": [
+        0.1,
+        0.1,
+        0.08
+      ],
+      "payload_kg": 1.5,
+      "note": "高处小盒加重载荷"
+    }
+  ],
+  "choices": [
+    {
+      "scenario": "default_p0.4",
+      "coverage": {
+        "count": 6,
+        "bits": "00000",
+        "endpoint_gain_vs_6_zero": 0.03125,
+        "center_gain_vs_6_zero": -0.015625
+      },
+      "speed_fixed14": {
+        "count": 8,
+        "bits": "0000000",
+        "ratio_vs_6_zero": 1.906035673699064,
+        "leader_count": 8,
+        "leader_bits": "0000000",
+        "leader_ratio_vs_6_zero": 1.906035673699064,
+        "leader_endpoint_drop_vs_6_zero": -0.015625
+      },
+      "light": {
+        "count": 6,
+        "bits": "00000",
+        "mass_kg": 4.2785400000000005
+      }
+    },
+    {
+      "scenario": "default_p1.5",
+      "coverage": {
+        "count": 6,
+        "bits": "00000",
+        "endpoint_gain_vs_6_zero": 0.03125,
+        "center_gain_vs_6_zero": -0.015625
+      },
+      "speed_fixed14": {
+        "count": 8,
+        "bits": "0000000",
+        "ratio_vs_6_zero": 1.906035673699064,
+        "leader_count": 8,
+        "leader_bits": "0000000",
+        "leader_ratio_vs_6_zero": 1.906035673699064,
+        "leader_endpoint_drop_vs_6_zero": -0.015625
+      },
+      "light": {
+        "count": 6,
+        "bits": "00000",
+        "mass_kg": 4.2785400000000005
+      }
+    },
+    {
+      "scenario": "default_p4.0",
+      "coverage": {
+        "count": 6,
+        "bits": "00000",
+        "endpoint_gain_vs_6_zero": 0.03125,
+        "center_gain_vs_6_zero": -0.015625
+      },
+      "speed_fixed14": {
+        "count": 6,
+        "bits": "00000",
+        "ratio_vs_6_zero": 1.0,
+        "leader_count": 8,
+        "leader_bits": "0000000",
+        "leader_ratio_vs_6_zero": 1.935849929334329,
+        "leader_endpoint_drop_vs_6_zero": 0.03125
+      },
+      "light": {
+        "count": 6,
+        "bits": "00000",
+        "mass_kg": 4.2785400000000005
+      }
+    },
+    {
+      "scenario": "high_p0.4",
+      "coverage": {
+        "count": 7,
+        "bits": "000000",
+        "endpoint_gain_vs_6_zero": 0.375,
+        "center_gain_vs_6_zero": 0.296875
+      },
+      "speed_fixed14": {
+        "count": 8,
+        "bits": "0000000",
+        "ratio_vs_6_zero": 3.1077311494068884,
+        "leader_count": 8,
+        "leader_bits": "0000000",
+        "leader_ratio_vs_6_zero": 3.1077311494068884,
+        "leader_endpoint_drop_vs_6_zero": -0.375
+      },
+      "light": {
+        "count": 6,
+        "bits": "00000",
+        "mass_kg": 4.2785400000000005
+      }
+    },
+    {
+      "scenario": "near_p0.4",
+      "coverage": {
+        "count": 6,
+        "bits": "00000",
+        "endpoint_gain_vs_6_zero": 0.125,
+        "center_gain_vs_6_zero": 0.015625
+      },
+      "speed_fixed14": {
+        "count": 6,
+        "bits": "00000",
+        "ratio_vs_6_zero": 1.0,
+        "leader_count": 6,
+        "leader_bits": "10000",
+        "leader_ratio_vs_6_zero": 1.0497298260266095,
+        "leader_endpoint_drop_vs_6_zero": -0.125
+      },
+      "light": {
+        "count": 6,
+        "bits": "00000",
+        "mass_kg": 4.2785400000000005
+      }
+    },
+    {
+      "scenario": "side_p0.4",
+      "coverage": {
+        "count": 6,
+        "bits": "00000",
+        "endpoint_gain_vs_6_zero": 0.0,
+        "center_gain_vs_6_zero": null
+      },
+      "speed_fixed14": {
+        "count": 6,
+        "bits": "00000",
+        "ratio_vs_6_zero": 1.0,
+        "leader_count": 6,
+        "leader_bits": "10000",
+        "leader_ratio_vs_6_zero": 1.0271132595449781,
+        "leader_endpoint_drop_vs_6_zero": 0.015625
+      },
+      "light": {
+        "count": 6,
+        "bits": "00000",
+        "mass_kg": 4.2785400000000005
+      }
+    },
+    {
+      "scenario": "high_p1.5",
+      "coverage": {
+        "count": 7,
+        "bits": "000000",
+        "endpoint_gain_vs_6_zero": 0.375,
+        "center_gain_vs_6_zero": 0.296875
+      },
+      "speed_fixed14": {
+        "count": 8,
+        "bits": "0000000",
+        "ratio_vs_6_zero": 3.1077311494068884,
+        "leader_count": 8,
+        "leader_bits": "0000000",
+        "leader_ratio_vs_6_zero": 3.1077311494068884,
+        "leader_endpoint_drop_vs_6_zero": -0.375
+      },
+      "light": {
+        "count": 6,
+        "bits": "00000",
+        "mass_kg": 4.2785400000000005
+      }
+    }
+  ],
+  "pose_summary": [
+    {
+      "count": 6,
+      "bits": "00000",
+      "strict_reached": 9,
+      "relaxed_reached": 9
+    },
+    {
+      "count": 6,
+      "bits": "10000",
+      "strict_reached": 8,
+      "relaxed_reached": 10
+    },
+    {
+      "count": 7,
+      "bits": "000000",
+      "strict_reached": 12,
+      "relaxed_reached": 12
+    },
+    {
+      "count": 8,
+      "bits": "0000000",
+      "strict_reached": 6,
+      "relaxed_reached": 6
+    }
+  ]
+}
