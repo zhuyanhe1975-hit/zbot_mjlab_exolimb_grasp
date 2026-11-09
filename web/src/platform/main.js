@@ -572,6 +572,21 @@ document.querySelector("#load-research").addEventListener("click", async () => {
     payload.recommendation?.not_global,
   ].filter(Boolean).join(" ");
 });
+document.querySelector("#load-final").addEventListener("click", async () => {
+  const response = await fetch(`${import.meta.env.BASE_URL}research_final.json`);
+  if (!response.ok) {
+    progressEl.textContent = "还没有最终示例选型。";
+    return;
+  }
+  const payload = await response.json();
+  document.querySelector("#tool-point").value = "foot_1_sole";
+  const lines = Object.entries(payload.recommendations ?? {}).map(([name, item]) => {
+    if (!item || typeof item !== "object") return "";
+    return `${name}：${item.count ?? "—"} 模块 ${item.bits ?? ""}`;
+  });
+  progressEl.textContent = [payload.note, payload.concept_conclusion, ...lines].filter(Boolean).join(" ");
+  poseArm();
+});
 document.querySelector("#load-batch3").addEventListener("click", async () => {
   const response = await fetch(`${import.meta.env.BASE_URL}longterm_batch3.json`);
   if (!response.ok) {

@@ -1,19 +1,20 @@
 {
-  "checkpoint_version": 3,
-  "status": "batch3_complete",
-  "longterm_status": "open",
+  "checkpoint_version": 4,
+  "status": "final_example_selection_delivered",
+  "longterm_status": "delivered_example_selection",
   "bounded_physical_selection_ready": true,
-  "suggest_close": false,
+  "suggest_close": true,
   "suggest_close_scope": {
-    "default_box_position_only": true,
-    "note": "批次 2 的 suggest_close 只收束默认位置盒上的加长搜索。它不收束载荷、任务区和六维位姿，也不表示长期任务完成。"
+    "delivered": "示例任务上的条件化实物选型",
+    "not_included": "用户实测工况、全局最优、概念长度穷尽、全方向速度、完整 SO(3) 工作空间"
   },
   "completed_batches": [
     "batch1_physical_6_7_8",
     "batch2_sole_and_concept",
-    "batch3_scenarios_and_pose"
+    "batch3_scenarios_and_pose",
+    "research_final"
   ],
-  "elapsed_s": 925.875159125997,
+  "elapsed_s": 1204.1468005659954,
   "batch1": {
     "checkpoint_version": 1,
     "cache_version": "batch1-screen-v1",
@@ -2237,5 +2238,179 @@
   "next_batch": {
     "not_started": true,
     "intent": "已测示例场景上的 6/7/8 实物规则可以交付，但这不是全局最优，长期状态也不标完成。没有证据支持继续加概念长度预算。下一批只应在出现一个用户给出的工况时，用同一足底点和这四台代表重核那一个工况。"
+  },
+  "final_selection": {
+    "source": "experiments/research_final.json",
+    "recommendations": {
+      "near_light": {
+        "count": 6,
+        "bits": "00000",
+        "interfaces_base_to_tip_deg": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "modules": [
+          "zbot_r3",
+          "zbot_r3",
+          "zbot_r3",
+          "zbot_r3",
+          "zbot_r3",
+          "zbot_r3"
+        ],
+        "mass_kg": 4.27854,
+        "endpoints": "94/125",
+        "centers": "95/125",
+        "min_torque_margin_nm": 14.48,
+        "median_speed_m_s": 0.428,
+        "gain_vs_8_zero_endpoints": -0.09599999999999997,
+        "why": "近处要轻。6 模块全 0 质量 4.279 kg，默认盒 94/125 与 95/125。8 模块全 0 是 106/125 与 106/125，但重 1.43 kg。",
+        "mjcf": "experiments/final_selection_mjcf/zbot_6_00000.xml"
+      },
+      "high_far": {
+        "count": 7,
+        "bits": "000000",
+        "interfaces_base_to_tip_deg": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "modules": [
+          "zbot_r3",
+          "zbot_r3",
+          "zbot_r3",
+          "zbot_r3",
+          "zbot_r3",
+          "zbot_r3",
+          "zbot_r3"
+        ],
+        "mass_kg": 4.99163,
+        "endpoints": "125/125",
+        "centers": "125/125",
+        "min_torque_margin_nm": 15.21,
+        "median_speed_m_s": 0.545,
+        "gain_vs_6_zero_endpoints": 0.352,
+        "gain_vs_6_zero_centers": 0.28,
+        "why": "高远盒上 7 和 8 模块全 0 都是 125/125。覆盖不再增加时取更轻的 7 模块全 0。6 模块全 0 只有 81/125 和 90/125。",
+        "mjcf": "experiments/final_selection_mjcf/zbot_7_000000.xml"
+      },
+      "pose_6d": {
+        "count": 8,
+        "bits": "0000000",
+        "interfaces_base_to_tip_deg": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "modules": [
+          "zbot_r3",
+          "zbot_r3",
+          "zbot_r3",
+          "zbot_r3",
+          "zbot_r3",
+          "zbot_r3",
+          "zbot_r3",
+          "zbot_r3"
+        ],
+        "mass_kg": 5.70472,
+        "seed_11": "8/12",
+        "seed_23": "9/12",
+        "comparison": {
+          "6_00000": [
+            "2/12",
+            "3/12"
+          ],
+          "7_000000": [
+            "5/12",
+            "8/12"
+          ],
+          "8_0000000": [
+            "8/12",
+            "9/12"
+          ]
+        },
+        "why": "工具 z 轴在世界 -Z 周围 25° 锥内、滚转 ±90°。两种子都是 8 模块全 0 高于 7，7 高于 6。这和含 6 模块零位姿的那组目标不同，位姿结论依赖目标集。容差是 1 cm 和 10°。",
+        "mjcf": "experiments/final_selection_mjcf/zbot_8_0000000.xml"
+      },
+      "light_load_speed": {
+        "count": 8,
+        "bits": "0000000",
+        "interfaces_base_to_tip_deg": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "modules": [
+          "zbot_r3",
+          "zbot_r3",
+          "zbot_r3",
+          "zbot_r3",
+          "zbot_r3",
+          "zbot_r3",
+          "zbot_r3",
+          "zbot_r3"
+        ],
+        "mass_kg": 5.70472,
+        "endpoints": "106/125",
+        "centers": "106/125",
+        "median_speed_m_s": 0.702,
+        "baseline_6_speed_m_s": 0.428,
+        "min_torque_margin_nm": 10.14,
+        "why": "0.4 kg 默认盒上，8 模块全 0 的伪逆速度 0.702 m/s，6 模块 0.428 m/s，7 模块 0.573 m/s。这是保守下界，不是全方向最快。覆盖也高于 6 模块。",
+        "mjcf": "experiments/final_selection_mjcf/zbot_8_0000000.xml"
+      },
+      "heavy_4kg": {
+        "count": 6,
+        "bits": "10011",
+        "interfaces_base_to_tip_deg": [
+          90,
+          0,
+          0,
+          90,
+          90
+        ],
+        "modules": [
+          "zbot_r3",
+          "zbot_r3",
+          "zbot_r3",
+          "zbot_r3",
+          "zbot_r3",
+          "zbot_r3"
+        ],
+        "mass_kg": 4.27854,
+        "reached": "50/64",
+        "min_torque_margin_nm": 6.38,
+        "compared_with": "7 模块全 0 是 52/64，但最小裕度只有 1.67 N·m；8 模块全 0 是 45/64，裕度 0.43 N·m；6 模块全 0 是 47/64，裕度 4.34 N·m。",
+        "why": "4 kg 下少 2 个格，换来明显更高的最小力矩裕度。接口从基座起是 90、0、0、90、90 度。",
+        "mjcf": "experiments/final_selection_mjcf/zbot_6_10011.xml"
+      },
+      "concept_alternative": null,
+      "concept_note": "一种子在 27 点上出现假设质量 3.48 kg、可行比例 0.81，高于 6 模块全 0 的 0.74。另一种子最好只有 0.70，而且没有 125 点复核。不作为可信的概念备选。",
+      "manipulability_note": "平移可操作度随关节数变大，没有用来排名。",
+      "not_global_optimum": true,
+      "not_a_user_task": true
+    },
+    "concept": "一种子在 27 点上出现假设质量 3.48 kg、可行比例 0.81，高于 6 模块全 0 的 0.74。另一种子最好只有 0.70，而且没有 125 点复核。不作为可信的概念备选。",
+    "elapsed_s": 278.27164143999835,
+    "budget": {
+      "coarse": "全部 224 种，默认盒和高远盒，1 cm，每轴 4 份共 64 点，4 起点，12 次迭代",
+      "review": "每个模块数粗筛前 4 名加全 0，1 cm，125 端点与 125 单元中心，6 起点，20 次迭代",
+      "pose": "12 个锥角位姿，种子 11 和 23，位置 1 cm，旋转 10°，4 起点，16 次迭代",
+      "concept": "每个驱动数、每个种子：种群 16、5 代。评价是 27 点、1 cm、3 起点、10 次迭代。两种子 11 和 23。",
+      "why_not_125_for_all": "64 点已能拉开力矩和速度；125 点只用于前段，避免 224 乘两套盒子超出本次时间。"
+    }
   }
 }
